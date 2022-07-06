@@ -1,0 +1,33 @@
+{
+  "name": "parser",
+  "version": "0.0.1",
+  "description": "Markwhen parser",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mark-when/parser.git"
+  },
+  "keywords": [
+    "markwhen",
+    "parser",
+    "timeline"
+  ],
+  "author": "Rob Koch",
+  "license": "AGPL",
+  "bugs": {
+    "url": "https://github.com/mark-when/parser/issues"
+  },
+  "homepage": "https://github.com/mark-when/parser#readme",
+  "dependencies": {
+    "luxon": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/luxon": "^2.3.2",
+    "typescript": "^4.7.4"
+  },
+  "files": ["lib/**/*"]
+}
