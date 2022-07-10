@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "prepublish": "tsc && jest"
+    "prepublish": "tsc && jest",
+    "watch": "tsc-watch --onSuccess \"yalc push\""
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,7 @@
     "@types/luxon": "^2.3.2",
     "jest": "^28.1.2",
     "ts-jest": "^28.0.5",
+    "tsc-watch": "^5.0.3",
     "typescript": "^4.7.4"
   },
   "files": [

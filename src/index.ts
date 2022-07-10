@@ -122,12 +122,12 @@ export interface Foldable {
   foldStartIndex?: number;
 }
 
-export function parse(eventsString?: string): Timelines {
-  if (!eventsString) {
+export function parse(timelineString?: string): Timelines {
+  if (!timelineString) {
     return { timelines: [emptyTimeline()] };
   }
 
-  const lines = eventsString.split("\n");
+  const lines = timelineString.split("\n");
   let lengthAtIndex: number[] = [];
   for (let i = 0; i < lines.length; i++) {
     if (i === 0) {
