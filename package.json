@@ -4,7 +4,7 @@
   "description": "Markwhen parser",
   "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "tsc"
   },
   "repository": {
@@ -26,8 +26,13 @@
     "luxon": "^2.4.0"
   },
   "devDependencies": {
+    "@types/jest": "^28.1.4",
     "@types/luxon": "^2.3.2",
+    "jest": "^28.1.2",
+    "ts-jest": "^28.0.5",
     "typescript": "^4.7.4"
   },
-  "files": ["lib/**/*"]
+  "files": [
+    "lib/**/*"
+  ]
 }
