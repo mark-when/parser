@@ -825,6 +825,54 @@ describe("parsing", () => {
       );
     });
   });
+
+  describe("work days", () => {
+    test("Less than a week", () => {
+      const markwhen = parse(`
+      July 10, 2022: Sunday
+      5 work days: til friday
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      // Til the end of Friday
+      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0)
+    });
+
+    test("Span over a weekend", () => {
+      const markwhen = parse(`
+      July 10, 2022: Sunday
+      10 work days: til next friday
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      // Til the end of Friday
+      checkDate(secondRange.toDateTime, 2022, 7, 23, 0, 0, 0)
+    });
+
+    test("From middle of week", () => {
+      const markwhen = parse(`
+      July 13, 2022 - 10 workdays: til next friday
+      `);
+
+      const firstRange = (markwhen.timelines[0].events[0] as Event).ranges.date
+      // Til the end of Friday
+      checkDate(firstRange.toDateTime, 2022, 7, 27, 0, 0, 0)
+    });
+
+    test("As from and to times", () => {
+      const markwhen = parse(`
+      July 11, 2022: Monday
+
+      // This is 10 work days after July 10, lasting for 10 work days
+      10 work days - 10 work days: til next friday
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      checkDate(secondRange.fromDateTime, 2022, 7, 26)
+      checkDate(secondRange.toDateTime, 2022, 8, 9)
+    });
+
+  });
 });
 
 function checkDate(

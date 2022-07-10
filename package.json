@@ -1,11 +1,12 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Markwhen parser",
   "main": "lib/index.js",
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublish": "tsc && jest"
   },
   "repository": {
     "type": "git",
