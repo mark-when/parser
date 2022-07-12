@@ -824,13 +824,46 @@ describe("parsing", () => {
         secondRange.toDateTime.plus({ days: 8, minutes: 6 })
       );
     });
+
+    test("yyyy-mm/relative", () => {
+      const markwhen = parse("2022-09/3 weeks: event");
+
+      const dateRange = firstEvent(markwhen).ranges.date;
+      let from = dateRange.fromDateTime;
+      checkDate(from, 2022, 9, 1, 0, 0, 0);
+
+      let to = dateRange.toDateTime;
+      checkDate(to, 2022, 9, 22);
+    });
+
+    test("yyyy-mm/week day", () => {
+      const markwhen = parse("2022-09/3 weekdays: event");
+
+      const dateRange = firstEvent(markwhen).ranges.date;
+      let from = dateRange.fromDateTime;
+      checkDate(from, 2022, 9, 1, 0, 0, 0);
+
+      let to = dateRange.toDateTime;
+      checkDate(to, 2022, 9, 6);
+    });
   });
 
-  describe("work days", () => {
+  describe("work/week days", () => {
     test("Less than a week", () => {
       const markwhen = parse(`
       July 10, 2022: Sunday
       5 work days: til friday
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      // Til the end of Friday
+      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0)
+    });
+
+    test("Less than a week (week)", () => {
+      const markwhen = parse(`
+      July 10, 2022: Sunday
+      5 week days: til friday
       `);
 
       const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
@@ -870,6 +903,39 @@ describe("parsing", () => {
       const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
       checkDate(secondRange.fromDateTime, 2022, 7, 26)
       checkDate(secondRange.toDateTime, 2022, 8, 9)
+    });
+
+    test("As from and to times (week)", () => {
+      const markwhen = parse(`
+      July 11, 2022: Monday
+
+      // This is 10 work days after July 10, lasting for 10 work days
+      10 week days - 10 week days: til next friday
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      checkDate(secondRange.fromDateTime, 2022, 7, 26)
+      checkDate(secondRange.toDateTime, 2022, 8, 9)
+    });
+
+    test("Business/week/work days", () => {
+      const markwhen = parse(`
+      July 11, 2022: Monday
+
+      // This is 10 work days after July 10, lasting for 10 work days
+      10 business days - 10 week days: til next friday
+
+      // beginning of the 13th til beginning of 20th
+      4 week days - 1 week: third event
+      `);
+
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      checkDate(secondRange.fromDateTime, 2022, 7, 26)
+      checkDate(secondRange.toDateTime, 2022, 8, 9)
+
+      const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date
+      checkDate(thirdRange.fromDateTime, 2022, 8, 13)
+      checkDate(thirdRange.toDateTime, 2022, 8, 20)
     });
 
   });

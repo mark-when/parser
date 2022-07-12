@@ -3,7 +3,9 @@ export const MILLISECOND_AMOUNT_REGEX = /(milliseconds|ms)/i;
 export const SECOND_AMOUNT_REGEX = /(seconds|second|secs|sec|s)/i;
 export const MINUTE_AMOUNT_REGEX = /(minutes|minute|mins|min)/i;
 export const HOUR_AMOUNT_REGEX = /(hours|hour|h)/i;
-export const DAY_AMOUNT_REGEX = /(?:work\s*)?(days|day|d)/i;
+// export const DAY_AMOUNT_REGEX = /(?:work\s*)?(days|day|d)/i;
+export const DAY_AMOUNT_REGEX =
+  /(?:(week\s*|work\s*|business\s*)?(days|day|d))/i;
 export const WEEK_AMOUNT_REGEX = /(weeks|week|w)/i;
 export const MONTH_AMOUNT_REGEX = /(months|month)/i;
 export const YEAR_AMOUNT_REGEX = /(years|year|y)/i;
@@ -20,8 +22,10 @@ export const RELATIVE_TIME_REGEX = new RegExp(
   `((before|after)?\\s*${EVENT_ID_REGEX.source}\\s*)?(?:plus|\\+)?\\s*(${AMOUNT_REGEX.source})+`
 );
 
-export const FULL_MONTH_REGEX = /january|february|march|april|may|june|july|august|september|october|november|december/;
-export const ABBR_MONTH_REGEX = /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/;
+export const FULL_MONTH_REGEX =
+  /january|february|march|april|may|june|july|august|september|october|november|december/;
+export const ABBR_MONTH_REGEX =
+  /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/;
 export const HUMAN_MONTH_REGEX = new RegExp(
   `(?:(${FULL_MONTH_REGEX.source})|(${ABBR_MONTH_REGEX.source}))`
 );
@@ -31,7 +35,8 @@ export const DAY_FIRST_MONTH_REGEX = new RegExp(
 export const MONTH_FIRST_MONTH_REGEX = new RegExp(
   `(${HUMAN_MONTH_REGEX.source}\\s+([0-3]?[0-9](?!\\d)))`
 );
-export const TIME_REGEX = /((1|2|3|4|5|6|7|8|9|10|11|12)(:\d{2})?([ap]m)|([012]?[0-9])(:\d{2}))/;
+export const TIME_REGEX =
+  /((1|2|3|4|5|6|7|8|9|10|11|12)(:\d{2})?([ap]m)|([012]?[0-9])(:\d{2}))/;
 export const CASUAL_MONTH_REGEX = new RegExp(
   `(?:(?:${DAY_FIRST_MONTH_REGEX.source}|${MONTH_FIRST_MONTH_REGEX.source}),?(?:\\s+(\\d{4}),?)?(?:\\s+${TIME_REGEX.source})?)|(${HUMAN_MONTH_REGEX.source}(?:\\s+(\\d{1,4}))?)`
 );
@@ -91,6 +96,7 @@ export const from_relativeAmountMillisecondsUnitMatchIndex = ++index;
 export const from_relativeAmountSecondsUnitMatchIndex = ++index;
 export const from_relativeAmountMinutesUnitMatchIndex = ++index;
 export const from_relativeAmountHoursUnitMatchIndex = ++index;
+export const from_relativeAmountWeekDayMatchIndex = ++index;
 export const from_relativeAmountDaysUnitMatchIndex = ++index;
 export const from_relativeAmountWeeksUnitMatchIndex = ++index;
 export const from_relativeAmountMonthsUnitMatchIndex = ++index;
@@ -152,6 +158,7 @@ export const to_relativeAmountMillisecondsUnitMatchIndex = ++index;
 export const to_relativeAmountSecondsUnitMatchIndex = ++index;
 export const to_relativeAmountMinutesUnitMatchIndex = ++index;
 export const to_relativeAmountHoursUnitMatchIndex = ++index;
+export const to_relativeAmountWeekDayMatchIndex = ++index;
 export const to_relativeAmountDaysUnitMatchIndex = ++index;
 export const to_relativeAmountWeeksUnitMatchIndex = ++index;
 export const to_relativeAmountMonthsUnitMatchIndex = ++index;
@@ -219,6 +226,7 @@ export const from_edtfRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountMinutesUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountHoursUnitMatchIndex = ++edtfIndex;
+export const from_edtfRelativeAmountWeekDayMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountDaysUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountWeeksUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountMonthsUnitMatchIndex = ++edtfIndex;
@@ -242,6 +250,7 @@ export const to_edtfRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountMinutesUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountHoursUnitMatchIndex = ++edtfIndex;
+export const to_edtfRelativeAmountWeekDayMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountDaysUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountWeeksUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountMonthsUnitMatchIndex = ++edtfIndex;

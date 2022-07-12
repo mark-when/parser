@@ -39,42 +39,40 @@ export class RelativeDate {
       } else if (value[6]) {
         priorDate = priorDate.plus({ hours: amount });
       } else if (value[7]) {
-        if (value[0].includes("work")) {
-          // Here be our work days.
-          const currentWeekday = priorDate.weekday;
+        // Here be our work days.
+        const currentWeekday = priorDate.weekday;
 
-          const saturday = 6;
-          const thisWeek = saturday - currentWeekday;
+        const saturday = 6;
+        const thisWeek = saturday - currentWeekday;
 
-          const lessThisWeek = amount - thisWeek;
-          if (lessThisWeek <= 0) {
-            // We have enough this week, just add the days
-            priorDate = priorDate.plus({ days: amount });
-          } else {
-            const numDaysInWeekend = 2;
-            const numDaysInWeek = 7;
-            const numWorkDaysInWeek = 5;
-
-            const firstWeek = thisWeek + numDaysInWeekend;
-
-            const weeks = ~~(lessThisWeek / numWorkDaysInWeek);
-            const remainder = lessThisWeek % numWorkDaysInWeek;
-
-            // Get up through Friday
-            const days = weeks * numDaysInWeek - numDaysInWeekend;
-
-            // If there's a remainder, add the last weekend back
-            const lastWeek = remainder ? numDaysInWeekend + remainder : 0;
-            priorDate = priorDate.plus({ days: firstWeek + days + lastWeek });
-          }
-        } else {
+        const lessThisWeek = amount - thisWeek;
+        if (lessThisWeek <= 0) {
+          // We have enough this week, just add the days
           priorDate = priorDate.plus({ days: amount });
+        } else {
+          const numDaysInWeekend = 2;
+          const numDaysInWeek = 7;
+          const numWorkDaysInWeek = 5;
+
+          const firstWeek = thisWeek + numDaysInWeekend;
+
+          const weeks = ~~(lessThisWeek / numWorkDaysInWeek);
+          const remainder = lessThisWeek % numWorkDaysInWeek;
+
+          // Get up through Friday
+          const days = weeks * numDaysInWeek - numDaysInWeekend;
+
+          // If there's a remainder, add the last weekend back
+          const lastWeek = remainder ? numDaysInWeekend + remainder : 0;
+          priorDate = priorDate.plus({ days: firstWeek + days + lastWeek });
         }
       } else if (value[8]) {
-        priorDate = priorDate.plus({ weeks: amount });
+        priorDate = priorDate.plus({ days: amount });
       } else if (value[9]) {
-        priorDate = priorDate.plus({ months: amount });
+        priorDate = priorDate.plus({ weeks: amount });
       } else if (value[10]) {
+        priorDate = priorDate.plus({ months: amount });
+      } else if (value[11]) {
         priorDate = priorDate.plus({ years: amount });
       }
       match = matches.next();
