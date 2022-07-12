@@ -1,6 +1,7 @@
 import { parse } from "../src/index";
 import { Timelines, Event, DateRange } from "../src/Types";
 import { DateTime } from "luxon";
+import { DAY_AMOUNT_REGEX } from "../src/regex";
 
 const firstEvent = (markwhen: Timelines) =>
   markwhen.timelines[0].events[0] as Event;
@@ -464,6 +465,27 @@ describe("parsing", () => {
     expect(to.equals(from.plus({ years: 3, months: 1, days: 8 }))).toBe(true);
   });
 
+  test("relative by id", () => {
+    const markwhen = parse(`
+5/9/2009: event !firstEvent
+after !firstEvent 1 month 1 day: next event
+after !firstEvent 3 years 8 days 1 month: third event
+
+1 day: after the third event !fourth
+!firstEvent 10 days: 5
+!fourth 10 days: 6`);
+
+    const [first, second, third, fourth, fifth, sixth] = ((m: Timelines) => {
+      return m.timelines[0].events.map(e => (e as Event).ranges.date)
+    })(markwhen)
+
+    checkDateTime(first.toDateTime, second.fromDateTime);
+    checkDateTime(first.toDateTime, third.fromDateTime)
+    checkDateTime(fourth.fromDateTime, third.toDateTime)
+    checkDateTime(fifth.fromDateTime, first.toDateTime)
+    checkDateTime(sixth.fromDateTime, fourth.toDateTime)
+  });
+
   test("event title", () => {
     const markwhen = parse(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
@@ -855,9 +877,10 @@ describe("parsing", () => {
       5 work days: til friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
       // Til the end of Friday
-      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0)
+      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
 
     test("Less than a week (week)", () => {
@@ -866,9 +889,10 @@ describe("parsing", () => {
       5 week days: til friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
       // Til the end of Friday
-      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0)
+      checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
 
     test("Span over a weekend", () => {
@@ -877,9 +901,10 @@ describe("parsing", () => {
       10 work days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
       // Til the end of Friday
-      checkDate(secondRange.toDateTime, 2022, 7, 23, 0, 0, 0)
+      checkDate(secondRange.toDateTime, 2022, 7, 23, 0, 0, 0);
     });
 
     test("From middle of week", () => {
@@ -887,9 +912,9 @@ describe("parsing", () => {
       July 13, 2022 - 10 workdays: til next friday
       `);
 
-      const firstRange = (markwhen.timelines[0].events[0] as Event).ranges.date
+      const firstRange = (markwhen.timelines[0].events[0] as Event).ranges.date;
       // Til the end of Friday
-      checkDate(firstRange.toDateTime, 2022, 7, 27, 0, 0, 0)
+      checkDate(firstRange.toDateTime, 2022, 7, 27, 0, 0, 0);
     });
 
     test("As from and to times", () => {
@@ -900,9 +925,10 @@ describe("parsing", () => {
       10 work days - 10 work days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
-      checkDate(secondRange.fromDateTime, 2022, 7, 26)
-      checkDate(secondRange.toDateTime, 2022, 8, 9)
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
+      checkDate(secondRange.fromDateTime, 2022, 7, 26);
+      checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
 
     test("As from and to times (week)", () => {
@@ -913,9 +939,10 @@ describe("parsing", () => {
       10 week days - 10 week days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
-      checkDate(secondRange.fromDateTime, 2022, 7, 26)
-      checkDate(secondRange.toDateTime, 2022, 8, 9)
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
+      checkDate(secondRange.fromDateTime, 2022, 7, 26);
+      checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
 
     test("Business/week/work days", () => {
@@ -929,15 +956,15 @@ describe("parsing", () => {
       4 week days - 1 week: third event
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date
-      checkDate(secondRange.fromDateTime, 2022, 7, 26)
-      checkDate(secondRange.toDateTime, 2022, 8, 9)
+      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
+        .date;
+      checkDate(secondRange.fromDateTime, 2022, 7, 26);
+      checkDate(secondRange.toDateTime, 2022, 8, 9);
 
-      const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date
-      checkDate(thirdRange.fromDateTime, 2022, 8, 13)
-      checkDate(thirdRange.toDateTime, 2022, 8, 20)
+      const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date;
+      checkDate(thirdRange.fromDateTime, 2022, 8, 13);
+      checkDate(thirdRange.toDateTime, 2022, 8, 20);
     });
-
   });
 });
 

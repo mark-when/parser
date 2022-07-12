@@ -110,6 +110,7 @@ import {
   to_edtfRelativeEventIdMatchIndex,
   edtfDatePartMatchIndex,
   VIEWERS_REGEX,
+  from_edtfRelativeEventIdMatchIndex,
 } from "./regex";
 
 export const sorts: Sort[] = ["none", "down", "up"];
@@ -577,7 +578,7 @@ function getDateRangeFromEDTFRegexMatch(
     granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
   } else if (relativeFromDate) {
     const relativeToEventId =
-      eventStartLineRegexMatch[from_relativeEventIdMatchIndex];
+      eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
     let relativeTo =
       relativeToEventId &&
       context.ids[relativeToEventId]?.ranges.date.toDateTime;
