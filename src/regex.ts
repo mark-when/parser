@@ -19,7 +19,7 @@ export const EVENT_ID_REGEX = /(?:^|\s)(!\w+)/;
 // whole regex, even though we just want any repeated amounts (e.g., 3 days, 4 hours, 6 seconds).
 // This works because the entire front part (`after !eventId plus`) is optional
 export const RELATIVE_TIME_REGEX = new RegExp(
-  `((before|after)?\\s*${EVENT_ID_REGEX.source}\\s*)?(?:plus|\\+)?\\s*(${AMOUNT_REGEX.source})+`
+  `(by|before|after)?(\\s*${EVENT_ID_REGEX.source}\\s*)?(?:plus|\\+)?\\s*(${AMOUNT_REGEX.source})+`
 );
 
 export const FULL_MONTH_REGEX =
@@ -86,8 +86,8 @@ export const from_slashDateTime24HourHourMatchIndex = ++index;
 export const from_slashDateTime24HourMinuteMatchIndex = ++index;
 
 export const from_relativeMatchIndex = ++index;
-export const from_relativeTimeMatchIndex = ++index;
 export const from_beforeOrAfterMatchIndex = ++index;
+export const from_relativeTimeMatchIndex = ++index;
 export const from_relativeEventIdMatchIndex = ++index;
 export const from_relativeAmountsMatchIndex = ++index;
 export const from_relativeAmountMatchIndex = ++index;
@@ -148,8 +148,8 @@ export const to_slashDateTime24HourHourMatchIndex = ++index;
 export const to_slashDateTime24HourMinuteMatchIndex = ++index;
 
 export const to_relativeMatchIndex = ++index;
-export const to_relativeTimeMatchIndex = ++index;
 export const to_beforeOrAfterMatchIndex = ++index;
+export const to_relativeTimeMatchIndex = ++index;
 export const to_relativeEventIdMatchIndex = ++index;
 export const to_relativeAmountsMatchIndex = ++index;
 export const to_relativeAmountMatchIndex = ++index;
@@ -216,8 +216,8 @@ export const from_edtfDateMonthPart = ++edtfIndex;
 export const from_edtfDateDayPart = ++edtfIndex;
 
 export const from_edtfRelativeMatchIndex = ++edtfIndex;
-export const from_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const from_edtfBeforeOrAfterMatchIndex = ++edtfIndex;
+export const from_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const from_edtfRelativeEventIdMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountsMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountMatchIndex = ++edtfIndex;
@@ -240,8 +240,8 @@ export const to_edtfDateMonthPart = ++edtfIndex;
 export const to_edtfDateDayPart = ++edtfIndex;
 
 export const to_edtfRelativeMatchIndex = ++edtfIndex;
-export const to_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const to_edtfBeforeOrAfterMatchIndex = ++edtfIndex;
+export const to_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const to_edtfRelativeEventIdMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountsMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountMatchIndex = ++edtfIndex;

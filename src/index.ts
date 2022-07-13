@@ -111,6 +111,7 @@ import {
   edtfDatePartMatchIndex,
   VIEWERS_REGEX,
   from_edtfRelativeEventIdMatchIndex,
+  from_edtfBeforeOrAfterMatchIndex,
 } from "./regex";
 
 export const sorts: Sort[] = ["none", "down", "up"];
@@ -542,6 +543,15 @@ function getPriorEventToDateTime(
   return priorEvent.ranges.date.toDateTime;
 }
 
+function getPriorEventFromDateTime(context: ParsingContext) {
+  debugger;
+  const priorEvent = getPriorEvent(context);
+  if (!priorEvent) {
+    return;
+  }
+  return priorEvent.ranges.date.fromDateTime;
+}
+
 function getDateRangeFromEDTFRegexMatch(
   line: string,
   i: number,
@@ -565,6 +575,14 @@ function getDateRangeFromEDTFRegexMatch(
 
   const relativeFromDate =
     eventStartLineRegexMatch[from_edtfRelativeMatchIndex];
+  let relativeFromBeforeOrAfter: "before" | "after" = "after";
+  if (
+    ["before", "by"].includes(
+      eventStartLineRegexMatch[from_edtfBeforeOrAfterMatchIndex] || ""
+    )
+  ) {
+    relativeFromBeforeOrAfter = "before";
+  }
   const relativeToDate = eventStartLineRegexMatch[to_edtfRelativeMatchIndex];
 
   const nowFrom = eventStartLineRegexMatch[from_edtfNowMatchIndex];
@@ -579,11 +597,23 @@ function getDateRangeFromEDTFRegexMatch(
   } else if (relativeFromDate) {
     const relativeToEventId =
       eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
+
     let relativeTo =
       relativeToEventId &&
-      context.ids[relativeToEventId]?.ranges.date.toDateTime;
+      (relativeFromBeforeOrAfter === "after"
+        ? context.ids[relativeToEventId]?.ranges.date.toDateTime
+        : context.ids[relativeToEventId]?.ranges.date.fromDateTime);
+
     if (!relativeTo) {
-      relativeTo = getPriorEventToDateTime(context) || DateTime.now();
+      const priorEvent = getPriorEvent(context);
+      if (!priorEvent) {
+        relativeTo = DateTime.now();
+      } else {
+        relativeTo =
+          relativeFromBeforeOrAfter === "after"
+            ? priorEvent.ranges.date.toDateTime
+            : priorEvent.ranges.date.fromDateTime;
+      }
     }
 
     if (!relativeToDate && !eventEndDate) {
@@ -591,8 +621,16 @@ function getDateRangeFromEDTFRegexMatch(
       // from date to determine the start time, we're going to use
       // the end time of the previous event as the start and make the
       // duration the provided relative time.
-      fromDateTime = relativeTo;
-      endDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+
+      if (relativeFromBeforeOrAfter === "before") {
+        // In the case of this being a 'before' relative date, the
+        // end date is relativeTo and the start date is `amount` before it.
+        endDateTime = relativeTo;
+        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo, true);
+      } else {
+        fromDateTime = relativeTo;
+        endDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+      }
     } else {
       fromDateTime = RelativeDate.from(relativeFromDate, relativeTo);
     }

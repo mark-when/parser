@@ -475,15 +475,14 @@ after !firstEvent 3 years 8 days 1 month: third event
 !firstEvent 10 days: 5
 !fourth 10 days: 6`);
 
-    const [first, second, third, fourth, fifth, sixth] = ((m: Timelines) => {
-      return m.timelines[0].events.map(e => (e as Event).ranges.date)
-    })(markwhen)
+    const [first, second, third, fourth, fifth, sixth] =
+      getDateRanges(markwhen);
 
     checkDateTime(first.toDateTime, second.fromDateTime);
-    checkDateTime(first.toDateTime, third.fromDateTime)
-    checkDateTime(fourth.fromDateTime, third.toDateTime)
-    checkDateTime(fifth.fromDateTime, first.toDateTime)
-    checkDateTime(sixth.fromDateTime, fourth.toDateTime)
+    checkDateTime(first.toDateTime, third.fromDateTime);
+    checkDateTime(fourth.fromDateTime, third.toDateTime);
+    checkDateTime(fifth.fromDateTime, first.toDateTime);
+    checkDateTime(sixth.fromDateTime, fourth.toDateTime);
   });
 
   test("event title", () => {
@@ -965,8 +964,113 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(thirdRange.fromDateTime, 2022, 8, 13);
       checkDate(thirdRange.toDateTime, 2022, 8, 20);
     });
+
+    test("Before 1", () => {
+      const markwhen = parse(`
+      July 11 2022: !monday Monday
+      
+      by !monday 7 work days: event
+      `);
+
+      const [first, second] = getDateRanges(markwhen);
+
+      checkDate(second.fromDateTime, 2022, 6, 30);
+      checkDateTime(second.toDateTime, first.fromDateTime);
+    });
+
+    test("Before 2", () => {
+      const markwhen = parse(`
+      July 11 2022: !monday Monday
+
+      August 18 2022: another event
+      
+      by !monday 7 work days: event
+      `);
+
+      const [first, , third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 6, 30);
+      checkDateTime(third.toDateTime, first.fromDateTime);
+    });
+
+    test("Before 3", () => {
+      const markwhen = parse(`
+      July 11 2022: !monday Monday
+
+      August 18 2022: another event
+      
+      by 7 work days: event
+      `);
+
+      const [, second, third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 8, 9);
+      checkDateTime(third.toDateTime, second.fromDateTime);
+    });
+
+    test("Before 4", () => {
+      const markwhen = parse(`
+      July 11 2022: !monday Monday
+
+      August 18 2022: another event
+      
+      by !monday 7 work days: event
+      `);
+
+      const [first, , third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 6, 30);
+      checkDateTime(third.toDateTime, first.fromDateTime);
+    });
+
+    test("Before 5", () => {
+      const markwhen = parse(`
+      group
+      July 11 2022: !monday Monday
+      endGroup
+      August 18 2022: another event
+      group
+      by !monday 7 work days: event
+      endGroup
+      `);
+
+      const [first, , third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 6, 30);
+      checkDateTime(third.toDateTime, first.fromDateTime);
+    });
+
+    test.only("Before with buffer", () => {
+      const markwhen = parse(`
+      group
+      July 11 2022: !monday Monday
+      endGroup
+      August 18 2022: another event
+      group
+
+      // 3 work days before !monday, for 7 business days
+      by !monday 3 week days - 7 business days: event
+      endGroup
+      `);
+
+      const [first, , third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 6, 27);
+      checkDate(third.toDateTime, 2022, 7, 6);
+    });
+
+    
   });
 });
+
+function getDateRanges(m: Timelines) {
+  return m.timelines[0].events.flatMap((e) => {
+    if (e instanceof Event) {
+      return [e.ranges.date];
+    }
+    return e.map((e) => e.ranges.date);
+  });
+}
 
 function checkDate(
   dateTime: DateTime,
