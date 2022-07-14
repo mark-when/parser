@@ -1040,7 +1040,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDateTime(third.toDateTime, first.fromDateTime);
     });
 
-    test.only("Before 6", () => {
+    test("Before 6", () => {
       const markwhen = parse(`dateFormat: d/M/y
       #announcements: red
       10/4/2023: ANNUAL CHURCH MEETING !ACM
@@ -1049,10 +1049,10 @@ after !firstEvent 3 years 8 days 1 month: third event
       before !event 10 week days: revise voting eligibility list
       January 27 2023 - 10 week days: something`);
 
-      const [first, second, third] = getDateRanges(markwhen);
+      const [,, third, fourth] = getDateRanges(markwhen);
 
-      checkDateTime(second.fromDateTime, third.fromDateTime);
-      checkDateTime(second.toDateTime, third.toDateTime);
+      checkDateTime(fourth.fromDateTime, third.fromDateTime);
+      checkDateTime(fourth.toDateTime, third.toDateTime);
     });
 
     test("Before with buffer", () => {
