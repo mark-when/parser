@@ -1040,7 +1040,22 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDateTime(third.toDateTime, first.fromDateTime);
     });
 
-    test.only("Before with buffer", () => {
+    test.only("Before 6", () => {
+      const markwhen = parse(`dateFormat: d/M/y
+      #announcements: red
+      10/4/2023: ANNUAL CHURCH MEETING !ACM
+      
+      10/2/2023: Event !event
+      before !event 10 week days: revise voting eligibility list
+      January 27 2023 - 10 week days: something`);
+
+      const [first, second, third] = getDateRanges(markwhen);
+
+      checkDateTime(second.fromDateTime, third.fromDateTime);
+      checkDateTime(second.toDateTime, third.toDateTime);
+    });
+
+    test("Before with buffer", () => {
       const markwhen = parse(`
       group
       July 11 2022: !monday Monday
@@ -1059,7 +1074,74 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(third.toDateTime, 2022, 7, 6);
     });
 
-    
+    test("Before with buffer", () => {
+      const markwhen = parse(`
+      group
+      July 11 2022: !monday Monday
+      endGroup
+      August 18 2022: another event
+      group
+
+      // 3 work days before !monday, for 7 business days
+      by !monday 3 week days - 7 business days: event
+      endGroup
+      `);
+
+      const [first, , third] = getDateRanges(markwhen);
+
+      checkDate(third.fromDateTime, 2022, 6, 27);
+      checkDate(third.toDateTime, 2022, 7, 6);
+    });
+  });
+
+  describe.skip("due dates & relative dates", () => {
+    test("to event 1", () => {
+      const markwhen = parse(`
+      2024: !event1 event
+      2022/!event1: from 2022 to !event1
+      `);
+
+      const [first, second] = getDateRanges(markwhen);
+
+      checkDate(second.fromDateTime, 2022, 1, 1);
+      checkDate(second.toDateTime, 2024, 1, 1);
+    });
+
+    test("to event 2", () => {
+      const markwhen = parse(`
+      2024: !event1 event
+      2022 - !event1: from 2022 to !event1
+      `);
+
+      const [first, second] = getDateRanges(markwhen);
+
+      checkDate(second.fromDateTime, 2022, 1, 1);
+      checkDate(second.toDateTime, 2024, 1, 1);
+    });
+
+    test("to event 3", () => {
+      const markwhen = parse(`
+      2024: !event1 event
+      !event1/2025: from 2024 to 2025
+      `);
+
+      const [first, second] = getDateRanges(markwhen);
+
+      checkDate(second.fromDateTime, 2022, 1, 1);
+      checkDate(second.toDateTime, 2024, 1, 1);
+    });
+
+    test("to event 4", () => {
+      const markwhen = parse(`
+      2024: !event1 event
+      !event1 - 2025: from 2024 to 2025
+      `);
+
+      const [first, second] = getDateRanges(markwhen);
+
+      checkDate(second.fromDateTime, 2022, 1, 1);
+      checkDate(second.toDateTime, 2024, 1, 1);
+    });
   });
 });
 
