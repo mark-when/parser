@@ -65,7 +65,7 @@ export class RelativeDate {
 }
 
 function removeWeekdays(amount: number, fromDate: DateTime): DateTime {
-  const currentWeekday = fromDate.weekday;
+  const currentWeekday = fromDate.weekday - 1;
   const lessThisWeek = amount - currentWeekday
 
   if (lessThisWeek <= 0) {
