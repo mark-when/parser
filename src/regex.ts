@@ -14,7 +14,7 @@ export const AMOUNT_REGEX = new RegExp(
   "g"
 );
 
-export const EVENT_ID_REGEX = /(?<!\w)(!\w+)/;
+export const EVENT_ID_REGEX = /(?:\W|^)(!\w+)/;
 // So this regex is kind of wrong - we're using the global flag here to make multiple matches for the
 // whole regex, even though we just want any repeated amounts (e.g., 3 days, 4 hours, 6 seconds).
 // This works because the entire front part (`after !eventId plus`) is optional
