@@ -503,8 +503,70 @@ after !firstEvent 3 years 8 days 1 month: third event
     );
     const third = markwhen.timelines[0].events[2] as Event;
     expect(third.event.eventDescription).toBe("third event");
-    expect(third.event.supplemental).toContain("more text");
-    expect(third.event.supplemental).toContain("even more text");
+    expect(third.event.supplemental[0].raw).toBe("more text");
+    expect(third.event.supplemental[1].raw).toBe("even more text");
+  });
+
+  test("list items", () => {
+    const markwhen = parse(
+      `dateFormat: d/M/y
+      5/9/2009: event
+      1 month 1 day: next event
+      - item 1
+      - item 2
+
+      3 years 8 days 1 month: third event
+
+      - item 3
+
+      - item 4`
+    );
+
+    const [first, second, third] = getEvents(markwhen);
+    expect(second.event.supplemental.length).toBe(2);
+    expect(second.event.supplemental[0].type).toBe("listItem");
+    expect(second.event.supplemental[0].raw).toBe("item 1");
+    expect(second.event.supplemental[1].type).toBe("listItem");
+    expect(second.event.supplemental[1].raw).toBe("item 2");
+
+    expect(third.event.supplemental.length).toBe(2);
+    expect(third.event.supplemental[0].type).toBe("listItem");
+    expect(third.event.supplemental[0].raw).toBe("item 3");
+    expect(third.event.supplemental[1].type).toBe("listItem");
+    expect(third.event.supplemental[1].raw).toBe("item 4");
+  });
+
+  test("checkbox items", () => {
+    const markwhen = parse(
+      `dateFormat: d/M/y
+      5/9/2009: event
+      1 month 1 day: next event
+      - [] item 1
+      - [ ] item 2
+
+      3 years 8 days 1 month: third event
+
+      - [x] item 3
+
+      - [x] item 4`
+    );
+
+    const [first, second, third] = getEvents(markwhen);
+    expect(second.event.supplemental.length).toBe(2);
+    expect(second.event.supplemental[0].type).toBe("checkbox");
+    expect(second.event.supplemental[0].raw).toBe("item 1");
+    expect(second.event.supplemental[0].value).toBe(false);
+    expect(second.event.supplemental[1].type).toBe("checkbox");
+    expect(second.event.supplemental[1].raw).toBe("item 2");
+    expect(second.event.supplemental[1].value).toBe(false);
+
+    expect(third.event.supplemental.length).toBe(2);
+    expect(third.event.supplemental[0].type).toBe("checkbox");
+    expect(third.event.supplemental[0].raw).toBe("item 3");
+    expect(third.event.supplemental[0].value).toBe(true);
+    expect(third.event.supplemental[1].type).toBe("checkbox");
+    expect(third.event.supplemental[1].raw).toBe("item 4");
+    expect(third.event.supplemental[1].value).toBe(true);
   });
 
   test("to now", () => {
@@ -1049,7 +1111,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       before !event 10 week days: revise voting eligibility list
       January 27 2023 - 10 week days: something`);
 
-      const [,, third, fourth] = getDateRanges(markwhen);
+      const [, , third, fourth] = getDateRanges(markwhen);
 
       checkDateTime(fourth.fromDateTime, third.fromDateTime);
       checkDateTime(fourth.toDateTime, third.toDateTime);
@@ -1151,6 +1213,15 @@ function getDateRanges(m: Timelines) {
       return [e.ranges.date];
     }
     return e.map((e) => e.ranges.date);
+  });
+}
+
+function getEvents(m: Timelines) {
+  return m.timelines[0].events.flatMap((e) => {
+    if (e instanceof Event) {
+      return [e];
+    }
+    return e;
   });
 }
 

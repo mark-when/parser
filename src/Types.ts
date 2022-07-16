@@ -1,5 +1,10 @@
 import { DateTime, Duration } from "luxon";
-import { AMOUNT_REGEX, COMMENT_REGEX, EVENT_ID_REGEX } from "./regex";
+import {
+  AMOUNT_REGEX,
+  COMMENT_REGEX,
+  EVENT_ID_REGEX,
+  to_relativeAmountHoursUnitMatchIndex,
+} from "./regex";
 
 export type DateTimeGranularity =
   | "instant"
@@ -66,7 +71,7 @@ export class RelativeDate {
 
 function removeWeekdays(amount: number, fromDate: DateTime): DateTime {
   const currentWeekday = fromDate.weekday - 1;
-  const lessThisWeek = amount - currentWeekday
+  const lessThisWeek = amount - currentWeekday;
 
   if (lessThisWeek <= 0) {
     // We have enough this week, just subtract the days
@@ -181,10 +186,43 @@ export const AT_REGEX = /@([\w\d\/]+)/g;
 export const TAG_REGEX = /(?: |^)#(\w+)/g;
 const PERCENT_REGEX = /(?:\s|^)(\d{1,3})%(?:\s|$)/;
 
+export enum BlockType {
+  TEXT = "text",
+  LIST_ITEM = "listItem",
+  CHECKBOX = "checkbox",
+}
+export class Block {
+  type: BlockType;
+  value?: any;
+  raw: string;
+
+  constructor(raw: string) {
+    this.raw = raw;
+    if (raw.startsWith("- []")) {
+      this.type = BlockType.CHECKBOX;
+      this.value = false;
+      this.raw = raw.substring(4).trim();
+    } else if (raw.startsWith("- [ ]")) {
+      this.type = BlockType.CHECKBOX;
+      this.value = false;
+      this.raw = raw.substring(5).trim();
+    } else if (raw.startsWith("- [x]")) {
+      this.type = BlockType.CHECKBOX;
+      this.value = true;
+      this.raw = raw.substring(5).trim();
+    } else if (raw.startsWith("- ")) {
+      this.type = BlockType.LIST_ITEM;
+      this.raw = raw.substring(2);
+    } else {
+      this.type = BlockType.TEXT;
+    }
+  }
+}
+
 export class EventDescription {
   eventDescription: string;
   tags: string[] = [];
-  supplemental: string[];
+  supplemental: Block[];
   googlePhotosLink?: string;
   locations: string[] = [];
   id?: string;
@@ -227,7 +265,8 @@ export class EventDescription {
     this.eventDescription = lines[0];
     this.supplemental = lines
       .slice(1)
-      .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim());
+      .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim())
+      .map((raw) => new Block(raw.trim()));
   }
 
   getInnerHtml() {
