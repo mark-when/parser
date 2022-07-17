@@ -115,6 +115,8 @@ import {
   from_beforeOrAfterMatchIndex,
   to_edtfBeforeOrAfterMatchIndex,
   to_beforeOrAfterMatchIndex,
+  LIST_ITEM_REGEX,
+  CHECKLIST_ITEM_REGEX,
 } from "./regex";
 
 export const sorts: Sort[] = ["none", "down", "up"];
@@ -259,6 +261,48 @@ class ParsingContext {
       },
     };
   }
+}
+
+function checkListItems(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  context: ParsingContext
+): false | Range[] {
+  const checklistItemMatch = line.match(CHECKLIST_ITEM_REGEX);
+  if (checklistItemMatch) {
+    const from = lengthAtIndex[i];
+    const to =
+      from + line.indexOf(checklistItemMatch[1]) + checklistItemMatch[1].length;
+    const indicator: Range = {
+      type: "checkboxItemIndicator",
+      from,
+      to,
+      content: checklistItemMatch.includes("x") || checklistItemMatch.includes("X")
+    };
+    const contents: Range = {
+      type: "listItemContents",
+      from: to + 1,
+      to: lengthAtIndex[i] - to - 1,
+    };
+    context.ranges.push(...[indicator, contents]);
+    return [indicator, contents];
+  } else if (line.match(LIST_ITEM_REGEX)) {
+    const from = lengthAtIndex[i];
+    const indicator = {
+      type: "listItemIndicator",
+      from: lengthAtIndex[i],
+      to: from + 1,
+    };
+    const contents = {
+      type: "listItemContents",
+      from: from + 1,
+      to: from + line.length - 1,
+    };
+    context.ranges.push(...[indicator, contents]);
+    return [indicator, contents];
+  }
+  return false;
 }
 
 function checkComments(
@@ -1009,16 +1053,28 @@ function checkEvent(
 
   let end = i;
   let nextLine;
-  do {
+
+  const matchedListItems = [];
+  while (true) {
     nextLine = lines[++end];
-  } while (
-    typeof nextLine === "string" &&
-    !nextLine.match(EDTF_START_REGEX) &&
-    !nextLine.match(EVENT_START_REGEX) &&
-    !nextLine.match(GROUP_START_REGEX) &&
-    !nextLine.match(PAGE_BREAK_REGEX) &&
-    !(context.eventSubgroup && nextLine.match(GROUP_END_REGEX))
-  );
+    if (
+      typeof nextLine !== "string" ||
+      nextLine.match(EDTF_START_REGEX) ||
+      nextLine.match(EVENT_START_REGEX) ||
+      nextLine.match(GROUP_START_REGEX) ||
+      nextLine.match(PAGE_BREAK_REGEX) ||
+      (context.eventSubgroup && nextLine.match(GROUP_END_REGEX))
+    ) {
+      break;
+    }
+
+    checkComments(nextLine, end, lengthAtIndex, context);
+    const listItems = checkListItems(nextLine, end, lengthAtIndex, context);
+    if (listItems) {
+      matchedListItems.push(...listItems);
+    }
+  }
+
   const eventGroup = lines.slice(i, end);
 
   const eventRange: Range = {
@@ -1039,7 +1095,7 @@ function checkEvent(
     .substring(indexOfDateRange + datePartOfLine.length + 1)
     .trim();
 
-  const eventDescription = new EventDescription(eventGroup);
+  const eventDescription = new EventDescription(eventGroup, matchedListItems);
   const event = new Event(line, eventRanges, eventDescription);
 
   if (event) {
@@ -1109,7 +1165,7 @@ export function parseTimeline(
 
     // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
     // but also breaks folding of comments under events
-    checkEvent(line, lines, i, lengthAtIndex, context);
+    i = checkEvent(line, lines, i, lengthAtIndex, context);
   }
 
   if (context.eventSubgroup) {

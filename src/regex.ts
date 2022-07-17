@@ -195,6 +195,8 @@ export const DATE_FORMAT_REGEX = /dateFormat:\s*d\/M\/y/;
 export const TAG_REGEX = /(?:^|\s)#(\w*)/g;
 export const GROUP_START_REGEX = /^(\s*)(group|section)(?:\s|$)/i;
 export const GROUP_END_REGEX = /^end(?:Group|Section)/i;
+export const LIST_ITEM_REGEX = /^- .*/
+export const CHECKLIST_ITEM_REGEX = /^- (\[(x|X| )?\]).*/
 export const PAGE_BREAK = "\n_-_-_break_-_-_\n";
 export const PAGE_BREAK_REGEX = /^_-_-_break_-_-_$/;
 

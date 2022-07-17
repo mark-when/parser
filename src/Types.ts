@@ -3,7 +3,6 @@ import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
   EVENT_ID_REGEX,
-  to_relativeAmountHoursUnitMatchIndex,
 } from "./regex";
 
 export type DateTimeGranularity =
@@ -223,14 +222,19 @@ export class EventDescription {
   eventDescription: string;
   tags: string[] = [];
   supplemental: Block[];
+  matchedListItems: Range[]
   googlePhotosLink?: string;
   locations: string[] = [];
   id?: string;
   percent?: number;
 
-  constructor(lines: string[]) {
+  constructor(lines: string[], matchedListItems: Range[]) {
+    this.matchedListItems = matchedListItems
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
+      if (line.match(COMMENT_REGEX)) {
+        continue
+      }
       line = line.replace(GOOGLE_PHOTOS_REGEX, (match) => {
         if (!this.googlePhotosLink) {
           this.googlePhotosLink = match;
