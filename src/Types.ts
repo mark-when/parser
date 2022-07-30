@@ -1,9 +1,5 @@
 import { DateTime, Duration } from "luxon";
-import {
-  AMOUNT_REGEX,
-  COMMENT_REGEX,
-  EVENT_ID_REGEX,
-} from "./regex";
+import { AMOUNT_REGEX, COMMENT_REGEX, EVENT_ID_REGEX } from "./regex";
 
 export type DateTimeGranularity =
   | "instant"
@@ -222,18 +218,18 @@ export class EventDescription {
   eventDescription: string;
   tags: string[] = [];
   supplemental: Block[];
-  matchedListItems: Range[]
+  matchedListItems: Range[];
   googlePhotosLink?: string;
   locations: string[] = [];
   id?: string;
   percent?: number;
 
   constructor(lines: string[], matchedListItems: Range[]) {
-    this.matchedListItems = matchedListItems
+    this.matchedListItems = matchedListItems;
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
       if (line.match(COMMENT_REGEX)) {
-        continue
+        continue;
       }
       line = line.replace(GOOGLE_PHOTOS_REGEX, (match) => {
         if (!this.googlePhotosLink) {
@@ -379,7 +375,19 @@ export interface Timelines {
   timelines: Timeline[];
 }
 
-export type Events = (Event | Event[])[];
+export type Events = (Event | EventSubGroup)[];
+
+export interface EventSubGroup extends Array<Event> {
+  tags?: string[];
+  title?: string;
+  range?: {
+    min: DateTime;
+    max: DateTime;
+    latest: DateTime;
+  };
+  startExpanded?: boolean;
+  style?: "group" | "section";
+}
 
 export interface TimelineMetadata {
   earliestTime: DateTime;

@@ -1,21 +1,10 @@
 import { DateTime } from "luxon";
-import { Event } from "./Types";
+import { Event, Events, EventSubGroup } from "./Types";
 
 export type Sort = "none" | "down" | "up";
-export interface EventSubGroup extends Array<Event> {
-  tags?: string[];
-  title?: string;
-  range?: {
-    min: DateTime;
-    max: DateTime;
-    latest: DateTime;
-  };
-  startExpanded?: boolean;
-  style?: "group" | "section";
-}
 
 export default function sortEvents(
-  events: (Event | EventSubGroup)[],
+  events: Events,
   sort: Sort
 ) {
   if (sort === "none") {

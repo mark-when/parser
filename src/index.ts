@@ -1,6 +1,6 @@
 import { DateTime, Duration } from "luxon";
 import { COLORS, hexToRgb, HUMAN_COLORS } from "./ColorUtils";
-import { Sort, EventSubGroup } from "./Sort";
+import { Sort } from "./Sort";
 import {
   Timeline,
   DateTimeGranularity,
@@ -17,6 +17,7 @@ import {
   GranularDateTime,
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,
+  EventSubGroup,
 } from "./Types";
 import {
   COMMENT_REGEX,
