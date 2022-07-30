@@ -386,7 +386,7 @@ export interface EventSubGroup extends Array<Event> {
     latest: DateTime;
   };
   startExpanded?: boolean;
-  style?: "group" | "section";
+  style?: GroupStyle;
 }
 
 export interface TimelineMetadata {
@@ -404,4 +404,4 @@ export interface TimelineMetadata {
   view: string[];
 }
 
-export type GroupStyle = "section" | "tight";
+export type GroupStyle = "section" | "group";
