@@ -18,6 +18,7 @@ import {
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,
   EventSubGroup,
+  RangeType,
 } from "./Types";
 import {
   COMMENT_REGEX,
@@ -276,13 +277,13 @@ function checkListItems(
     const to =
       from + line.indexOf(checklistItemMatch[1]) + checklistItemMatch[1].length;
     const indicator: Range = {
-      type: "checkboxItemIndicator",
+      type: RangeType.CheckboxItemIndicator,
       from,
       to,
       content: checklistItemMatch.includes("x") || checklistItemMatch.includes("X")
     };
     const contents: Range = {
-      type: "listItemContents",
+      type: RangeType.ListItemContents,
       from: to + 1,
       to: lengthAtIndex[i] - to - 1,
     };
@@ -291,12 +292,12 @@ function checkListItems(
   } else if (line.match(LIST_ITEM_REGEX)) {
     const from = lengthAtIndex[i];
     const indicator = {
-      type: "listItemIndicator",
+      type: RangeType.listItemIndicator,
       from: lengthAtIndex[i],
       to: from + 1,
     };
     const contents = {
-      type: "listItemContents",
+      type: RangeType.ListItemContents,
       from: from + 1,
       to: from + line.length - 1,
     };
@@ -316,7 +317,7 @@ function checkComments(
     const from = lengthAtIndex[i];
     const to = from + line.length;
     context.ranges.push({
-      type: "comment",
+      type: RangeType.Comment,
       from,
       to,
     });
@@ -365,13 +366,13 @@ function checkTagColors(
     const indexOfTag = line.indexOf(tagName);
     const from = lengthAtIndex[i] + indexOfTag - 1;
     context.ranges.push({
-      type: "tag",
+      type: RangeType.Tag,
       from,
       to: from + tagName.length + 1,
       content: { tag: tagName, color: context.tags[tagName] },
     });
     context.ranges.push({
-      type: "tagDefinition",
+      type: RangeType.tagDefinition,
       from,
       to: from + line.indexOf(colorDef) + colorDef.length,
       content: { tag: tagName, color: context.tags[tagName] },
@@ -400,7 +401,7 @@ function checkTitle(
     context.title = titleMatch[2].trim();
     const titleTagIndex = line.indexOf(titleMatch[1]);
     context.ranges.push({
-      type: "title",
+      type: RangeType.Title,
       from: lengthAtIndex[i] + titleTagIndex,
       to: lengthAtIndex[i] + titleTagIndex + titleMatch[1].length,
     });
@@ -423,7 +424,7 @@ function checkViewers(
       .split(/ |,/)
       .filter((email) => !!email && email.includes("@"));
     context.ranges.push({
-      type: "view",
+      type: RangeType.View,
       from: lengthAtIndex[i] + viewTagIndex,
       to: lengthAtIndex[i] + viewTagIndex + viewersMatch[1].length,
     });
@@ -436,7 +437,7 @@ function checkViewers(
           : 0
       );
       viewerRanges.push({
-        type: "viewer",
+        type: RangeType.Viewer,
         from: lengthAtIndex[i] + index,
         to: lengthAtIndex[i] + index + context.viewers[j].length,
       });
@@ -458,7 +459,7 @@ function checkDescription(
     context.description = descriptionMatch[2];
     const descriptionTagIndex = line.indexOf(descriptionMatch[1]);
     context.ranges.push({
-      type: "description",
+      type: RangeType.Description,
       from: lengthAtIndex[i] + descriptionTagIndex,
       to: lengthAtIndex[i] + descriptionTagIndex + descriptionMatch[1].length,
     });
@@ -481,7 +482,7 @@ function checkTags(
       }
       const from = lengthAtIndex[i] + line.indexOf("#" + m[1]);
       context.ranges.push({
-        type: "tag",
+        type: RangeType.Tag,
         from,
         to: from + m[1].length + 1,
         content: { tag: m[1], color: context.tags[m[1]] },
@@ -509,13 +510,13 @@ function checkGroupStart(
     context.ranges.push({
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + groupStart[0].length,
-      type: "section",
+      type: RangeType.Section,
     });
     context.eventSubgroup = parseGroupFromStartTag(line, groupStart);
 
     // Make new foldable
     context.foldables["section"] = {
-      type: "section",
+      type: RangeType.Section,
       startLine: i,
       startIndex: lengthAtIndex[i],
       endIndex: lengthAtIndex[i] + line.length,
@@ -540,7 +541,7 @@ function checkGroupEnd(
     context.ranges.push({
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + line.length,
-      type: "section",
+      type: RangeType.Section,
     });
     context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
     return true;
@@ -745,7 +746,7 @@ function getDateRangeFromEDTFRegexMatch(
 
   const indexOfDateRange = line.indexOf(datePart);
   const dateRangeInText = {
-    type: "dateRange",
+    type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
   };
@@ -1004,7 +1005,7 @@ function getDateRangeFromCasualRegexMatch(
 
   const indexOfDateRange = line.indexOf(datePart);
   const dateRangeInText = {
-    type: "dateRange",
+    type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
   };
@@ -1081,7 +1082,7 @@ function checkEvent(
   const eventRange: Range = {
     from: dateRange.dateRangeInText.from,
     to: lengthAtIndex[end],
-    type: "event",
+    type: RangeType.Event,
   };
 
   const eventRanges = {

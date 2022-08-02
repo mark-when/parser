@@ -304,10 +304,26 @@ export class EventDescription {
   }
 }
 
+export enum RangeType { 
+  Comment = "comment",
+  CheckboxItemIndicator = "checkboxItemIndicator",
+  listItemIndicator = "listItemIndicator",
+  ListItemContents = "listItemContents",
+  Tag = "tag",
+  tagDefinition = "tagDefinition",
+  Title = "title",
+  View = "view",
+  Viewer = "viewer",
+  Description = "description",
+  Section = "section",
+  DateRange = "dateRange",
+  Event = "event"
+}
+
 export type Range = {
   from: number;
   to: number;
-  type: string;
+  type: RangeType;
   content?: any;
 };
 
