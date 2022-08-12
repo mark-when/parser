@@ -274,18 +274,36 @@ function checkListItems(
   const checklistItemMatch = line.match(CHECKLIST_ITEM_REGEX);
   if (checklistItemMatch) {
     const from = lengthAtIndex[i];
-    const to =
-      from + line.indexOf(checklistItemMatch[1]) + checklistItemMatch[1].length;
+    const indexInLine =
+      line.indexOf(checklistItemMatch[1]) + checklistItemMatch[1].length;
+    const to = from + indexInLine;
     const indicator: Range = {
       type: RangeType.CheckboxItemIndicator,
       from,
       to,
-      content: checklistItemMatch.includes("x") || checklistItemMatch.includes("X")
+      lineFrom: {
+        line: i,
+        index: 0
+      },
+      lineTo: {
+        line: i,
+        index: indexInLine,
+      },
+      content:
+        checklistItemMatch.includes("x") || checklistItemMatch.includes("X"),
     };
     const contents: Range = {
       type: RangeType.ListItemContents,
       from: to + 1,
-      to: lengthAtIndex[i] - to - 1,
+      to: from - to - 1, // ? i dont get this
+      lineFrom: {
+        line: i,
+        index: indexInLine + 1,
+      },
+      lineTo: {
+        line: i,
+        index: line.length
+      }
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];
@@ -295,11 +313,27 @@ function checkListItems(
       type: RangeType.listItemIndicator,
       from: lengthAtIndex[i],
       to: from + 1,
+      lineFrom: {
+        line: i,
+        index: 0
+      },
+      lineTo: {
+        line: i,
+        index: 1
+      },
     };
     const contents = {
       type: RangeType.ListItemContents,
       from: from + 1,
       to: from + line.length - 1,
+      lineFrom: {
+        line: i,
+        index: 1
+      },
+      lineTo: {
+        line: 1,
+        index: line.length
+      }
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];
@@ -320,6 +354,14 @@ function checkComments(
       type: RangeType.Comment,
       from,
       to,
+      lineFrom: {
+        line: i,
+        index: 0,
+      },
+      lineTo: {
+        line: i,
+        index: line.length
+      }
     });
 
     const currentFoldableComment = context.currentFoldableComment();
@@ -369,12 +411,30 @@ function checkTagColors(
       type: RangeType.Tag,
       from,
       to: from + tagName.length + 1,
+      lineFrom: {
+        line: i,
+        index: indexOfTag - 1
+      },
+      lineTo: {
+        line: i,
+        index: indexOfTag + tagName.length
+      },
       content: { tag: tagName, color: context.tags[tagName] },
     });
+
+    const indexOfColorDefPlusLength = line.indexOf(colorDef) + colorDef.length;
     context.ranges.push({
       type: RangeType.tagDefinition,
       from,
-      to: from + line.indexOf(colorDef) + colorDef.length,
+      to: from + indexOfColorDefPlusLength,
+      lineFrom: {
+        line: i,
+        index: indexOfTag - 1,
+      },
+      lineTo: {
+        line: i,
+        index: indexOfTag - 1 + indexOfColorDefPlusLength
+      },
       content: { tag: tagName, color: context.tags[tagName] },
     });
     return true;
@@ -404,6 +464,14 @@ function checkTitle(
       type: RangeType.Title,
       from: lengthAtIndex[i] + titleTagIndex,
       to: lengthAtIndex[i] + titleTagIndex + titleMatch[1].length,
+      lineFrom: {
+        line: i,
+        index: titleTagIndex
+      },
+      lineTo: {
+        line: i,
+        index: titleTagIndex + titleMatch[1].length
+      }
     });
     return true;
   }
@@ -427,6 +495,14 @@ function checkViewers(
       type: RangeType.View,
       from: lengthAtIndex[i] + viewTagIndex,
       to: lengthAtIndex[i] + viewTagIndex + viewersMatch[1].length,
+      lineFrom: {
+        line: i,
+        index: viewTagIndex,
+      },
+      lineTo: {
+        line: i,
+        index: viewTagIndex + viewersMatch[1].length
+      }
     });
     const viewerRanges = [] as Range[];
     for (let j = 0; j < context.viewers.length; j++) {
@@ -440,6 +516,14 @@ function checkViewers(
         type: RangeType.Viewer,
         from: lengthAtIndex[i] + index,
         to: lengthAtIndex[i] + index + context.viewers[j].length,
+        lineFrom: {
+          line: i,
+          index,
+        },
+        lineTo: {
+          line: i,
+          index: index + context.viewers[j].length
+        }
       });
     }
     context.ranges.push(...viewerRanges);
@@ -462,6 +546,14 @@ function checkDescription(
       type: RangeType.Description,
       from: lengthAtIndex[i] + descriptionTagIndex,
       to: lengthAtIndex[i] + descriptionTagIndex + descriptionMatch[1].length,
+      lineFrom: {
+        line: i,
+        index: descriptionTagIndex,
+      },
+      lineTo: {
+        line: i,
+        index: descriptionTagIndex + descriptionMatch[1].length
+      }
     });
     return true;
   }
@@ -480,11 +572,20 @@ function checkTags(
       if (!context.tags[m[1]]) {
         context.tags[m[1]] = COLORS[context.paletteIndex++ % COLORS.length];
       }
-      const from = lengthAtIndex[i] + line.indexOf("#" + m[1]);
+      const indexOfTag = line.indexOf("#" + m[1]);
+      const from = lengthAtIndex[i] + indexOfTag;
       context.ranges.push({
         type: RangeType.Tag,
         from,
         to: from + m[1].length + 1,
+        lineFrom: {
+          line: i,
+          index: indexOfTag,
+        },
+        lineTo: {
+          line: i,
+          index: indexOfTag + m[1].length + 1
+        },
         content: { tag: m[1], color: context.tags[m[1]] },
       });
     }
@@ -511,6 +612,14 @@ function checkGroupStart(
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + groupStart[0].length,
       type: RangeType.Section,
+      lineFrom: {
+        line: i,
+        index: 0
+      },
+      lineTo: {
+        line: i,
+        index: groupStart[0].length
+      }
     });
     context.eventSubgroup = parseGroupFromStartTag(line, groupStart);
 
@@ -542,6 +651,14 @@ function checkGroupEnd(
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + line.length,
       type: RangeType.Section,
+      lineFrom: {
+        line: i,
+        index: 0
+      },
+      lineTo: {
+        line: i,
+        index: line.length
+      }
     });
     context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
     return true;
@@ -745,10 +862,18 @@ function getDateRangeFromEDTFRegexMatch(
   }
 
   const indexOfDateRange = line.indexOf(datePart);
-  const dateRangeInText = {
+  const dateRangeInText: Range = {
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    lineFrom: {
+      line: i,
+      index: indexOfDateRange,
+    },
+    lineTo: {
+      line: i,
+      index: indexOfDateRange + datePart.length + 1
+    }
   };
   context.ranges.push(dateRangeInText);
 
@@ -1004,10 +1129,18 @@ function getDateRangeFromCasualRegexMatch(
   }
 
   const indexOfDateRange = line.indexOf(datePart);
-  const dateRangeInText = {
+  const dateRangeInText: Range = {
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    lineFrom: {
+      line: i,
+      index: indexOfDateRange
+    },
+    lineTo: {
+      line: i,
+      index: indexOfDateRange + datePart.length + 1
+    }
   };
   context.ranges.push(dateRangeInText);
 
@@ -1083,6 +1216,14 @@ function checkEvent(
     from: dateRange.dateRangeInText.from,
     to: lengthAtIndex[end],
     type: RangeType.Event,
+    lineFrom: {
+      line: dateRange.dateRangeInText.lineFrom.line,
+      index: dateRange.dateRangeInText.lineFrom.index
+    },
+    lineTo: {
+      line: i,
+      index: line.length
+    }
   };
 
   const eventRanges = {

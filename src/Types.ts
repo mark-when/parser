@@ -304,7 +304,7 @@ export class EventDescription {
   }
 }
 
-export enum RangeType { 
+export enum RangeType {
   Comment = "comment",
   CheckboxItemIndicator = "checkboxItemIndicator",
   listItemIndicator = "listItemIndicator",
@@ -317,7 +317,12 @@ export enum RangeType {
   Description = "description",
   Section = "section",
   DateRange = "dateRange",
-  Event = "event"
+  Event = "event",
+}
+
+export interface Line {
+  line: number;
+  index: number;
 }
 
 export type Range = {
@@ -325,6 +330,8 @@ export type Range = {
   to: number;
   type: RangeType;
   content?: any;
+  lineFrom: Line;
+  lineTo: Line;
 };
 
 export type EventRanges = { event: Range; date: DateRangePart };
