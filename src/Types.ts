@@ -410,6 +410,7 @@ export interface EventSubGroup extends Array<Event> {
   };
   startExpanded?: boolean;
   style?: GroupStyle;
+  rangeInText?: Range
 }
 
 export interface TimelineMetadata {

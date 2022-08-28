@@ -608,7 +608,7 @@ function checkGroupStart(
     }
 
     context.finishFoldableSection(i, lengthAtIndex[i] - 1);
-    context.ranges.push({
+    const range = {
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + groupStart[0].length,
       type: RangeType.Section,
@@ -620,8 +620,9 @@ function checkGroupStart(
         line: i,
         index: groupStart[0].length
       }
-    });
-    context.eventSubgroup = parseGroupFromStartTag(line, groupStart);
+    }
+    context.ranges.push(range);
+    context.eventSubgroup = parseGroupFromStartTag(line, groupStart, range);
 
     // Make new foldable
     context.foldables["section"] = {
@@ -1581,11 +1582,13 @@ function parseAsCasualDayAbbrMonth(s: string): GranularDateTime {
 
 function parseGroupFromStartTag(
   s: string,
-  regexMatch: RegExpMatchArray
+  regexMatch: RegExpMatchArray,
+  range: Range
 ): EventSubGroup {
   const group: EventSubGroup = [];
   group.tags = [];
   group.style = "group";
+  group.rangeInText = range
 
   s = s
     .replace(GROUP_START_REGEX, (match, startToken, groupOrSection) => {
