@@ -318,6 +318,8 @@ export enum RangeType {
   Section = "section",
   DateRange = "dateRange",
   Event = "event",
+  Edit = "edit",
+  Editor = "editor"
 }
 
 export interface Line {
@@ -390,6 +392,7 @@ export function emptyTimeline(): Timeline {
       endStringIndex: 0,
       preferredInterpolationFormat: undefined,
       view: [],
+      edit: []
     },
   };
 }
@@ -410,7 +413,7 @@ export interface EventSubGroup extends Array<Event> {
   };
   startExpanded?: boolean;
   style?: GroupStyle;
-  rangeInText?: Range
+  rangeInText?: Range;
 }
 
 export interface TimelineMetadata {
@@ -426,6 +429,7 @@ export interface TimelineMetadata {
   maxDuration: Duration;
   preferredInterpolationFormat: string | undefined;
   view: string[];
+  edit: string[];
 }
 
 export type GroupStyle = "section" | "group";

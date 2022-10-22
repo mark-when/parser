@@ -1205,6 +1205,82 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(second.toDateTime, 2024, 1, 1);
     });
   });
+
+  describe("viewers and editors", () => {
+    test("no viewers specified, none parsed", () => {
+      const markwhen = parse(`title: my timelines
+      description: my description
+      now - 10 years: an event`);
+
+      expect(markwhen.timelines[0].metadata.view.length).toBe(0);
+    });
+
+    test("Single viewer", () => {
+      const markwhen = parse(`title: my timelines
+
+      view: example@example.com
+
+      description: my description
+      now - 10 years: an event`);
+
+      const viewers = markwhen.timelines[0].metadata.view;
+      expect(viewers.length).toBe(1);
+      expect(viewers).toContain("example@example.com");
+    });
+
+    test("Multiple viewers", () => {
+      const markwhen = parse(`title: my timelines
+
+      view: example@example.com, example2@example.com someoneelse@g.co
+
+      description: my description
+      now - 10 years: an event`);
+
+      const viewers = markwhen.timelines[0].metadata.view;
+      [
+        "example@example.com",
+        "example2@example.com",
+        "someoneelse@g.co",
+      ].forEach((e) => expect(viewers).toContain(e));
+    });
+
+    test("no editors specified, none parsed", () => {
+      const markwhen = parse(`title: my timelines
+      description: my description
+      now - 10 years: an event`);
+
+      expect(markwhen.timelines[0].metadata.edit.length).toBe(0);
+    });
+
+    test("Single editor", () => {
+      const markwhen = parse(`title: my timelines
+
+      edit: example@example.com
+
+      description: my description
+      now - 10 years: an event`);
+
+      const editors = markwhen.timelines[0].metadata.edit;
+      expect(editors.length).toBe(1);
+      expect(editors).toContain("example@example.com");
+    });
+
+    test("Multiple editors", () => {
+      const markwhen = parse(`title: my timelines
+
+      edit: example@example.com, example2@example.com someoneelse@g.co
+
+      description: my description
+      now - 10 years: an event`);
+
+      const editors = markwhen.timelines[0].metadata.edit;
+      [
+        "example@example.com",
+        "example2@example.com",
+        "someoneelse@g.co",
+      ].forEach((e) => expect(editors).toContain(e));
+    });
+  });
 });
 
 function getDateRanges(m: Timelines) {

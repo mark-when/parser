@@ -119,6 +119,7 @@ import {
   to_beforeOrAfterMatchIndex,
   LIST_ITEM_REGEX,
   CHECKLIST_ITEM_REGEX,
+  EDITORS_REGEX,
 } from "./regex";
 
 export const sorts: Sort[] = ["none", "down", "up"];
@@ -175,6 +176,7 @@ class ParsingContext {
   ranges: Range[];
   preferredInterpolationFormat: string | undefined;
   viewers: string[];
+  editors: string[];
 
   constructor() {
     this.events = [];
@@ -191,6 +193,7 @@ class ParsingContext {
     this.foldables = {};
     this.ranges = [];
     this.viewers = [];
+    this.editors = [];
   }
 
   currentFoldableSection() {
@@ -260,6 +263,7 @@ class ParsingContext {
         ...(this.title ? { title: this.title } : {}),
         ...(this.description ? { description: this.description } : {}),
         view: this.viewers ? this.viewers : [],
+        edit: this.editors,
       },
     };
   }
@@ -283,7 +287,7 @@ function checkListItems(
       to,
       lineFrom: {
         line: i,
-        index: 0
+        index: 0,
       },
       lineTo: {
         line: i,
@@ -302,8 +306,8 @@ function checkListItems(
       },
       lineTo: {
         line: i,
-        index: line.length
-      }
+        index: line.length,
+      },
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];
@@ -315,11 +319,11 @@ function checkListItems(
       to: from + 1,
       lineFrom: {
         line: i,
-        index: 0
+        index: 0,
       },
       lineTo: {
         line: i,
-        index: 1
+        index: 1,
       },
     };
     const contents = {
@@ -328,12 +332,12 @@ function checkListItems(
       to: from + line.length - 1,
       lineFrom: {
         line: i,
-        index: 1
+        index: 1,
       },
       lineTo: {
         line: 1,
-        index: line.length
-      }
+        index: line.length,
+      },
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];
@@ -360,8 +364,8 @@ function checkComments(
       },
       lineTo: {
         line: i,
-        index: line.length
-      }
+        index: line.length,
+      },
     });
 
     const currentFoldableComment = context.currentFoldableComment();
@@ -413,11 +417,11 @@ function checkTagColors(
       to: from + tagName.length + 1,
       lineFrom: {
         line: i,
-        index: indexOfTag - 1
+        index: indexOfTag - 1,
       },
       lineTo: {
         line: i,
-        index: indexOfTag + tagName.length
+        index: indexOfTag + tagName.length,
       },
       content: { tag: tagName, color: context.tags[tagName] },
     });
@@ -433,7 +437,7 @@ function checkTagColors(
       },
       lineTo: {
         line: i,
-        index: indexOfTag - 1 + indexOfColorDefPlusLength
+        index: indexOfTag - 1 + indexOfColorDefPlusLength,
       },
       content: { tag: tagName, color: context.tags[tagName] },
     });
@@ -442,7 +446,12 @@ function checkTagColors(
   return false;
 }
 
-function checkDateFormat(line: string, context: ParsingContext) {
+function checkDateFormat(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  context: ParsingContext
+): boolean {
   if (line.match(DATE_FORMAT_REGEX)) {
     context.dateFormat = EUROPEAN_DATE_FORMAT;
     return true;
@@ -466,16 +475,72 @@ function checkTitle(
       to: lengthAtIndex[i] + titleTagIndex + titleMatch[1].length,
       lineFrom: {
         line: i,
-        index: titleTagIndex
+        index: titleTagIndex,
       },
       lineTo: {
         line: i,
-        index: titleTagIndex + titleMatch[1].length
-      }
+        index: titleTagIndex + titleMatch[1].length,
+      },
     });
     return true;
   }
   return false;
+}
+
+function checkEditors(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  context: ParsingContext
+): boolean {
+  const editorsMatch = line.match(EDITORS_REGEX);
+  if (!editorsMatch) {
+    return false;
+  }
+
+  const editTagIndex = line.indexOf(editorsMatch[1]);
+  context.editors = editorsMatch[2]
+    .trim()
+    .split(/ |,/)
+    .filter((email) => !!email && email.includes("@"));
+  context.ranges.push({
+    type: RangeType.Edit,
+    from: lengthAtIndex[i] + editTagIndex,
+    to: lengthAtIndex[i] + editTagIndex + editorsMatch[1].length,
+    lineFrom: {
+      line: i,
+      index: editTagIndex,
+    },
+    lineTo: {
+      line: i,
+      index: editTagIndex + editorsMatch[1].length,
+    },
+  });
+
+  const editorRanges = [] as Range[];
+  for (let j = 0; j < context.viewers.length; j++) {
+    const index = line.indexOf(
+      context.viewers[j],
+      editorRanges.length
+        ? editorRanges[editorRanges.length - 1].from - lengthAtIndex[i]
+        : 0
+    );
+    editorRanges.push({
+      type: RangeType.Editor,
+      from: lengthAtIndex[i] + index,
+      to: lengthAtIndex[i] + index + context.viewers[j].length,
+      lineFrom: {
+        line: i,
+        index,
+      },
+      lineTo: {
+        line: i,
+        index: index + context.viewers[j].length,
+      },
+    });
+  }
+  context.ranges.push(...editorRanges);
+  return true;
 }
 
 function checkViewers(
@@ -501,8 +566,8 @@ function checkViewers(
       },
       lineTo: {
         line: i,
-        index: viewTagIndex + viewersMatch[1].length
-      }
+        index: viewTagIndex + viewersMatch[1].length,
+      },
     });
     const viewerRanges = [] as Range[];
     for (let j = 0; j < context.viewers.length; j++) {
@@ -522,8 +587,8 @@ function checkViewers(
         },
         lineTo: {
           line: i,
-          index: index + context.viewers[j].length
-        }
+          index: index + context.viewers[j].length,
+        },
       });
     }
     context.ranges.push(...viewerRanges);
@@ -552,8 +617,8 @@ function checkDescription(
       },
       lineTo: {
         line: i,
-        index: descriptionTagIndex + descriptionMatch[1].length
-      }
+        index: descriptionTagIndex + descriptionMatch[1].length,
+      },
     });
     return true;
   }
@@ -584,7 +649,7 @@ function checkTags(
         },
         lineTo: {
           line: i,
-          index: indexOfTag + m[1].length + 1
+          index: indexOfTag + m[1].length + 1,
         },
         content: { tag: m[1], color: context.tags[m[1]] },
       });
@@ -614,13 +679,13 @@ function checkGroupStart(
       type: RangeType.Section,
       lineFrom: {
         line: i,
-        index: 0
+        index: 0,
       },
       lineTo: {
         line: i,
-        index: groupStart[0].length
-      }
-    }
+        index: groupStart[0].length,
+      },
+    };
     context.ranges.push(range);
     context.eventSubgroup = parseGroupFromStartTag(line, groupStart, range);
 
@@ -654,12 +719,12 @@ function checkGroupEnd(
       type: RangeType.Section,
       lineFrom: {
         line: i,
-        index: 0
+        index: 0,
       },
       lineTo: {
         line: i,
-        index: line.length
-      }
+        index: line.length,
+      },
     });
     context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
     return true;
@@ -673,17 +738,18 @@ function checkNonEvents(
   lengthAtIndex: number[],
   context: ParsingContext
 ): boolean {
-  return (
-    checkComments(line, i, lengthAtIndex, context) ||
-    checkTagColors(line, i, lengthAtIndex, context) ||
-    checkDateFormat(line, context) ||
-    checkTitle(line, i, lengthAtIndex, context) ||
-    checkViewers(line, i, lengthAtIndex, context) ||
-    checkDescription(line, i, lengthAtIndex, context) ||
-    checkTags(line, i, lengthAtIndex, context) ||
-    checkGroupStart(line, i, lengthAtIndex, context) ||
-    checkGroupEnd(line, i, lengthAtIndex, context)
-  );
+  return [
+    checkComments,
+    checkTagColors,
+    checkDateFormat,
+    checkTitle,
+    checkViewers,
+    checkEditors,
+    checkDescription,
+    checkTags,
+    checkGroupStart,
+    checkGroupEnd,
+  ].some((f) => f(line, i, lengthAtIndex, context));
 }
 
 function getPriorEvent(context: ParsingContext): Event | undefined {
@@ -873,8 +939,8 @@ function getDateRangeFromEDTFRegexMatch(
     },
     lineTo: {
       line: i,
-      index: indexOfDateRange + datePart.length + 1
-    }
+      index: indexOfDateRange + datePart.length + 1,
+    },
   };
   context.ranges.push(dateRangeInText);
 
@@ -1136,12 +1202,12 @@ function getDateRangeFromCasualRegexMatch(
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
     lineFrom: {
       line: i,
-      index: indexOfDateRange
+      index: indexOfDateRange,
     },
     lineTo: {
       line: i,
-      index: indexOfDateRange + datePart.length + 1
-    }
+      index: indexOfDateRange + datePart.length + 1,
+    },
   };
   context.ranges.push(dateRangeInText);
 
@@ -1219,12 +1285,12 @@ function checkEvent(
     type: RangeType.Event,
     lineFrom: {
       line: dateRange.dateRangeInText.lineFrom.line,
-      index: dateRange.dateRangeInText.lineFrom.index
+      index: dateRange.dateRangeInText.lineFrom.index,
     },
     lineTo: {
       line: i,
-      index: line.length
-    }
+      index: line.length,
+    },
   };
 
   const eventRanges = {
@@ -1588,7 +1654,7 @@ function parseGroupFromStartTag(
   const group: EventSubGroup = [];
   group.tags = [];
   group.style = "group";
-  group.rangeInText = range
+  group.rangeInText = range;
 
   s = s
     .replace(GROUP_START_REGEX, (match, startToken, groupOrSection) => {
