@@ -1,5 +1,5 @@
 import { DateTime, Duration } from "luxon";
-import { AMOUNT_REGEX, COMMENT_REGEX, EVENT_ID_REGEX } from "./regex";
+import { AMOUNT_REGEX, COMMENT_REGEX, EVENT_ID_REGEX, TAG_REGEX } from "./regex";
 
 export type DateTimeGranularity =
   | "instant"
@@ -178,7 +178,6 @@ export const LINK_REGEX = /\[([^\]]+)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/g;
 export const LOCATION_REGEX = /\[([^\]]+)\]\((location|map)\)/g;
 export const GOOGLE_PHOTOS_REGEX = /(?:https:\/\/)?photos.app.goo.gl\/\w+/g;
 export const AT_REGEX = /@([\w\d\/]+)/g;
-export const TAG_REGEX = /(?: |^)#(\w+)/g;
 const PERCENT_REGEX = /(?:\s|^)(\d{1,3})%(?:\s|$)/;
 
 export enum BlockType {

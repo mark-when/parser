@@ -1156,6 +1156,34 @@ after !firstEvent 3 years 8 days 1 month: third event
     });
   });
 
+  describe("tags", () => {
+    test("skips number only", () => {
+      const markwhen = parse(`title: my timelines
+      description: my description
+      now - 10 years: an event #1
+      1 year: event #2
+      3 years: event #third`);
+
+      const tagLiterals = Object.keys(markwhen.timelines[0].tags);
+      expect(tagLiterals).toHaveLength(1);
+      expect(tagLiterals).toContainEqual("third");
+    });
+
+    test("skips number only 2", () => {
+      const markwhen = parse(`title: my timelines
+      description: my description
+      now - 10 years: an event #1 #3342 #098
+      1 year: event #2 #another #tag
+      3 years: event #third #fourth #fifth #332334b #5`);
+
+      const tagLiterals = Object.keys(markwhen.timelines[0].tags);
+      expect(tagLiterals).toHaveLength(6);
+      ["another", "tag", "third", "fourth", "fifth", "332334b"].forEach((i) =>
+        expect(tagLiterals).toContain(i)
+      );
+    });
+  });
+
   describe.skip("due dates & relative dates", () => {
     test("to event 1", () => {
       const markwhen = parse(`

@@ -13,7 +13,6 @@ import {
   DateRangePart,
   Timelines,
   emptyTimeline,
-  TAG_REGEX,
   GranularDateTime,
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,
@@ -21,6 +20,7 @@ import {
   RangeType,
 } from "./Types";
 import {
+  TAG_REGEX,
   COMMENT_REGEX,
   TAG_COLOR_REGEX,
   DATE_FORMAT_REGEX,
