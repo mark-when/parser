@@ -18,6 +18,7 @@ import {
   EUROPEAN_DATE_FORMAT,
   EventSubGroup,
   RangeType,
+  DateRange,
 } from "./Types";
 import {
   TAG_REGEX,
@@ -130,6 +131,27 @@ export interface Foldable {
   startLine: number;
   startIndex?: number;
   foldStartIndex?: number;
+}
+
+export function parseDateRange(
+  dateRangeString: string
+): DateRangePart | undefined {
+  const parsingContext = new ParsingContext();
+  let dateRange = getDateRangeFromEDTFRegexMatch(
+    dateRangeString,
+    0,
+    [],
+    parsingContext
+  );
+  if (!dateRange) {
+    dateRange = getDateRangeFromCasualRegexMatch(
+      dateRangeString,
+      0,
+      [],
+      parsingContext
+    );
+  }
+  return dateRange
 }
 
 export function parse(timelineString?: string): Timelines {

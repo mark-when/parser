@@ -1,4 +1,4 @@
-import { parse } from "../src/index";
+import { parse, parseDateRange } from "../src/index";
 import { Timelines, Event, DateRange } from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
@@ -1308,6 +1308,35 @@ after !firstEvent 3 years 8 days 1 month: third event
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
     });
+  });
+
+  describe.only("Date range parsing", () => {
+    test("parse now", () => {
+      const range = parseDateRange("now:");
+      expect(range).toBeTruthy();
+      expect(range?.fromDateTime.day).toBe(range?.toDateTime.day);
+    });
+
+    test("parse month", () => {
+      const range = parseDateRange("10/2022:");
+      expect(range).toBeTruthy();
+      checkDate(range!.fromDateTime, 2022, 10, 1);
+      checkDate(range!.toDateTime, 2022, 11, 1);
+    });
+
+    test("parse range", () => {
+      const range = parseDateRange("2000-02-21/2001-01-01:");
+      expect(range).toBeTruthy();
+      checkDate(range!.fromDateTime, 2000, 2, 21);
+      checkDate(range!.toDateTime, 2001, 1, 2);
+    });
+
+    test("parse relative", () => {
+      const range = parseDateRange("2000-02-21 / 3 years:");
+      expect(range).toBeTruthy();
+      checkDate(range!.fromDateTime, 2000, 2, 21);
+      checkDate(range!.toDateTime, 2003, 2, 21);
+    })
   });
 });
 
