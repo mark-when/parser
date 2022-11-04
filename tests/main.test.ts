@@ -1308,9 +1308,51 @@ after !firstEvent 3 years 8 days 1 month: third event
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
     });
+
+    test("Viewers and editors 1", () => {
+      const markwhen = parse(`title: my timelines
+
+      view: me@example.com, someone@google.com b@g.i
+      edit: example@example.com, example2@example.com someoneelse@g.co
+
+      description: my description
+      now - 10 years: an event`);
+
+      const editors = markwhen.timelines[0].metadata.edit;
+      [
+        "example@example.com",
+        "example2@example.com",
+        "someoneelse@g.co",
+      ].forEach((e) => expect(editors).toContain(e));
+      const viewers = markwhen.timelines[0].metadata.view;
+      ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
+        expect(viewers).toContain(e)
+      );
+    });
+
+    test("Viewers and editors 2", () => {
+      const markwhen = parse(`title: my timelines
+
+      edit: example@example.com, example2@example.com someoneelse@g.co
+      view: me@example.com, someone@google.com b@g.i
+
+      description: my description
+      now - 10 years: an event`);
+
+      const editors = markwhen.timelines[0].metadata.edit;
+      [
+        "example@example.com",
+        "example2@example.com",
+        "someoneelse@g.co",
+      ].forEach((e) => expect(editors).toContain(e));
+      const viewers = markwhen.timelines[0].metadata.view;
+      ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
+        expect(viewers).toContain(e)
+      );
+    });
   });
 
-  describe.only("Date range parsing", () => {
+  describe("Date range parsing", () => {
     test("parse now", () => {
       const range = parseDateRange("now:");
       expect(range).toBeTruthy();
@@ -1336,7 +1378,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       expect(range).toBeTruthy();
       checkDate(range!.fromDateTime, 2000, 2, 21);
       checkDate(range!.toDateTime, 2003, 2, 21);
-    })
+    });
   });
 });
 

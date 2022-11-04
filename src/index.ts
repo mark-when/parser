@@ -151,7 +151,7 @@ export function parseDateRange(
       parsingContext
     );
   }
-  return dateRange
+  return dateRange;
 }
 
 export function parse(timelineString?: string): Timelines {
@@ -540,9 +540,9 @@ function checkEditors(
   });
 
   const editorRanges = [] as Range[];
-  for (let j = 0; j < context.viewers.length; j++) {
+  for (let j = 0; j < context.editors.length; j++) {
     const index = line.indexOf(
-      context.viewers[j],
+      context.editors[j],
       editorRanges.length
         ? editorRanges[editorRanges.length - 1].from - lengthAtIndex[i]
         : 0
@@ -550,14 +550,14 @@ function checkEditors(
     editorRanges.push({
       type: RangeType.Editor,
       from: lengthAtIndex[i] + index,
-      to: lengthAtIndex[i] + index + context.viewers[j].length,
+      to: lengthAtIndex[i] + index + context.editors[j].length,
       lineFrom: {
         line: i,
         index,
       },
       lineTo: {
         line: i,
-        index: index + context.viewers[j].length,
+        index: index + context.editors[j].length,
       },
     });
   }
