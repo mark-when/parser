@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { Event, Events, EventSubGroup } from "./Types";
+import { Event, Events, EventGroup } from "./Types";
 
 export type Sort = "none" | "down" | "up";
 
@@ -105,7 +105,7 @@ export default function sortEvents(
   return events
 }
 
-function addRangeToEventGroup(events: EventSubGroup) {
+function addRangeToEventGroup(events: EventGroup) {
   if (!events || !events.length) {
     return;
   }
@@ -121,7 +121,7 @@ function addRangeToEventGroup(events: EventSubGroup) {
   events.range = { min, max, latest };
 }
 
-function sortGroup(events: EventSubGroup, sort: Sort) {
+function sortGroup(events: EventGroup, sort: Sort) {
   const sortDown = function(event1: Event, event2: Event) {
     return +event1.ranges.date.fromDateTime - +event2.ranges.date.fromDateTime;
   };

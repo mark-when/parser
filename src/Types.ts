@@ -1,5 +1,10 @@
 import { DateTime, Duration } from "luxon";
-import { AMOUNT_REGEX, COMMENT_REGEX, EVENT_ID_REGEX, TAG_REGEX } from "./regex";
+import {
+  AMOUNT_REGEX,
+  COMMENT_REGEX,
+  EVENT_ID_REGEX,
+  TAG_REGEX,
+} from "./regex";
 
 export type DateTimeGranularity =
   | "instant"
@@ -318,7 +323,7 @@ export enum RangeType {
   DateRange = "dateRange",
   Event = "event",
   Edit = "edit",
-  Editor = "editor"
+  Editor = "editor",
 }
 
 export interface Line {
@@ -391,7 +396,7 @@ export function emptyTimeline(): Timeline {
       endStringIndex: 0,
       preferredInterpolationFormat: undefined,
       view: [],
-      edit: []
+      edit: [],
     },
   };
 }
