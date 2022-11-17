@@ -46,7 +46,8 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex";
-import { GranularDateTime, EventSubGroup, Event, Range } from "../Types";
+import { Node } from "../Node";
+import { GranularDateTime, Event, Range, EventGroup } from "../Types";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -308,8 +309,8 @@ export function parseGroupFromStartTag(
   s: string,
   regexMatch: RegExpMatchArray,
   range: Range
-): EventSubGroup {
-  const group: EventSubGroup = [];
+): Node {
+  const group: Node = new Node([]);
   group.tags = [];
   group.style = "group";
   group.rangeInText = range;
@@ -333,17 +334,23 @@ export function parseGroupFromStartTag(
 }
 
 export function getPriorEvent(context: ParsingContext): Event | undefined {
-  if (context.eventSubgroup && context.eventSubgroup.length) {
-    return context.eventSubgroup[context.eventSubgroup.length - 1];
-  }
-  if (context.events && context.events.length) {
-    const previous = context.events[context.events.length - 1];
-    if (previous instanceof Event) {
-      return previous;
-    } else {
-      return previous[previous.length - 1];
-    }
-  }
+  // const currentGroup = context.getCurrentGroup()
+  // if (currentGroup.length) {
+  //   return currentGroup[currentGroup.length - 1]
+  // }
+  // if (context.eventSubgroup && context.eventSubgroup.length) {
+  //   return context.eventSubgroup[context.eventSubgroup.length - 1];
+  // }
+  // if (context.events && context.events.length) {
+  //   const previous = context.events[context.events.length - 1];
+  //   if (previous instanceof Event) {
+  //     return previous;
+  //   } else {
+  //     return previous[previous.length - 1];
+  //   }
+  // }
+
+  return context.tail?.value as Event;
 }
 
 export function getPriorEventToDateTime(

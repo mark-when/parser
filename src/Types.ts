@@ -1,4 +1,5 @@
 import { DateTime, Duration } from "luxon";
+import { Node } from "./Node";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -371,7 +372,9 @@ export type IdedEvents = { [id: string]: Event };
 export interface Timeline {
   ranges: Range[];
   foldables: {};
-  events: Events;
+  events: Node;
+  head?: Node
+  tail?: Node
   tags: Tags;
   ids: IdedEvents;
   metadata: TimelineMetadata;
@@ -380,7 +383,7 @@ export interface Timeline {
 export function emptyTimeline(): Timeline {
   const now = DateTime.now();
   return {
-    events: [],
+    events: new Node([]),
     ranges: [],
     foldables: [],
     tags: {},
@@ -405,9 +408,7 @@ export interface Timelines {
   timelines: Timeline[];
 }
 
-export type Events = (Event | EventSubGroup)[];
-
-export interface EventSubGroup extends Array<Event> {
+export interface EventGroup extends Array<Event | EventGroup> {
   tags?: string[];
   title?: string;
   range?: {
@@ -437,3 +438,9 @@ export interface TimelineMetadata {
 }
 
 export type GroupStyle = "section" | "group";
+
+export class Path extends Array<number> {
+  static root(): Path {
+    return Path.from([0]);
+  }
+}

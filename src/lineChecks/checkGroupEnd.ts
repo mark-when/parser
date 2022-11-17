@@ -8,10 +8,10 @@ export function checkGroupEnd(
   lengthAtIndex: number[],
   context: ParsingContext
 ): boolean {
-  if (context.eventSubgroup && line.match(GROUP_END_REGEX)) {
+  if (context.currentPath.length > 1 && line.match(GROUP_END_REGEX)) {
     // We are ending our subgroup
-    context.events.push(context.eventSubgroup);
-    context.eventSubgroup = undefined;
+    // context.events.push(context.eventSubgroup);
+    // context.eventSubgroup = undefined;
     context.ranges.push({
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + line.length,
@@ -25,7 +25,8 @@ export function checkGroupEnd(
         index: line.length,
       },
     });
-    context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
+    context.endCurrentGroup()
+    // context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
     return true;
   }
   return false;

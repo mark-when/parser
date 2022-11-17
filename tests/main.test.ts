@@ -1,10 +1,21 @@
 import { parse, parseDateRange } from "../src/index";
-import { Timelines, Event, DateRange } from "../src/Types";
+import { Timelines, Event, DateRange, DateRangePart } from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
+import { Node } from "../src/Node";
 
-const firstEvent = (markwhen: Timelines) =>
-  markwhen.timelines[0].events[0] as Event;
+const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
+
+const nthEvent = (markwhen: Timelines, n: number) =>
+  nthNode(markwhen, n).value as Event;
+
+const nthNode = (markwhen: Timelines, n: number) => {
+  let node = markwhen.timelines[0].head;
+  for (let i = 0; i < n; i++) {
+    node = node?.nextEventNode;
+  }
+  return node as Node;
+};
 
 describe("parsing", () => {
   test("ISO dates", async () => {
@@ -386,7 +397,7 @@ describe("parsing", () => {
     expect(to.minute).toBe(0);
     expect(to.second).toBe(0);
 
-    const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date;
+    const secondRange = nthEvent(markwhen, 1).ranges.date;
 
     // Should start at the end of the last event
     from = secondRange.fromDateTime;
@@ -413,7 +424,7 @@ describe("parsing", () => {
     let to = dateRange.toDateTime;
     checkDate(to, 2009, 9, 6, 0, 0, 0);
 
-    const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date;
+    const secondRange = nthEvent(markwhen, 1).ranges.date;
 
     // Should start at the end of the last event
     from = secondRange.fromDateTime;
@@ -422,7 +433,7 @@ describe("parsing", () => {
     // to should be the beginning date plus a week
     checkDateTime(secondRange.toDateTime, from.plus({ months: 1, days: 1 }));
 
-    const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date;
+    const thirdRange = (nthEvent(markwhen, 2) as Event).ranges.date;
     to = secondRange.toDateTime;
     from = thirdRange.fromDateTime;
     // Should start when the last one ends
@@ -444,7 +455,7 @@ describe("parsing", () => {
     let to = dateRange.toDateTime;
     checkDate(to, 2009, 9, 6, 0, 0, 0);
 
-    const secondRange = (markwhen.timelines[0].events[1] as Event).ranges.date;
+    const secondRange = nthEvent(markwhen, 1).ranges.date;
 
     // Should start at the end of the last event
     from = secondRange.fromDateTime;
@@ -455,7 +466,7 @@ describe("parsing", () => {
       secondRange.toDateTime.equals(from.plus({ months: 1, days: 1 }))
     ).toBe(true);
 
-    const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date;
+    const thirdRange = (nthEvent(markwhen, 2) as Event).ranges.date;
     to = secondRange.toDateTime;
     from = thirdRange.fromDateTime;
     // Should start when the last one ends
@@ -491,9 +502,9 @@ after !firstEvent 3 years 8 days 1 month: third event
     );
     const first = firstEvent(markwhen);
     expect(first.event.eventDescription).toBe("event");
-    const second = markwhen.timelines[0].events[1] as Event;
+    const second = nthEvent(markwhen, 1);
     expect(second.event.eventDescription).toBe("next event");
-    const third = markwhen.timelines[0].events[2] as Event;
+    const third = nthEvent(markwhen, 2);
     expect(third.event.eventDescription).toBe("third event");
   });
 
@@ -501,7 +512,7 @@ after !firstEvent 3 years 8 days 1 month: third event
     const markwhen = parse(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\nmore text\neven more text"
     );
-    const third = markwhen.timelines[0].events[2] as Event;
+    const third = nthEvent(markwhen, 2);
     expect(third.event.eventDescription).toBe("third event");
     expect(third.event.supplemental[0].raw).toBe("more text");
     expect(third.event.supplemental[1].raw).toBe("even more text");
@@ -893,15 +904,14 @@ after !firstEvent 3 years 8 days 1 month: third event
         8 days 6 minutes/2023: event`
       );
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = nthEvent(markwhen, 1).ranges.date;
       let from = secondRange.fromDateTime;
       checkDate(from, 2022, 6, 1, 0, 0, 0);
 
       let to = secondRange.toDateTime;
       checkDateTime(to, from.plus({ weeks: 3 }));
 
-      const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date;
+      const thirdRange = nthEvent(markwhen, 2).ranges.date;
       checkDateTime(
         thirdRange.fromDateTime,
         secondRange.toDateTime.plus({ days: 8, minutes: 6 })
@@ -938,8 +948,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       5 work days: til friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       // Til the end of Friday
       checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
@@ -950,8 +959,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       5 week days: til friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       // Til the end of Friday
       checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
@@ -962,8 +970,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       10 work days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       // Til the end of Friday
       checkDate(secondRange.toDateTime, 2022, 7, 23, 0, 0, 0);
     });
@@ -973,7 +980,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       July 13, 2022 - 10 workdays: til next friday
       `);
 
-      const firstRange = (markwhen.timelines[0].events[0] as Event).ranges.date;
+      const firstRange = (nthEvent(markwhen, 0) as Event).ranges.date;
       // Til the end of Friday
       checkDate(firstRange.toDateTime, 2022, 7, 27, 0, 0, 0);
     });
@@ -986,8 +993,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       10 work days - 10 work days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
       checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
@@ -1000,8 +1006,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       10 week days - 10 week days: til next friday
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
       checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
@@ -1017,12 +1022,11 @@ after !firstEvent 3 years 8 days 1 month: third event
       4 week days - 1 week: third event
       `);
 
-      const secondRange = (markwhen.timelines[0].events[1] as Event).ranges
-        .date;
+      const secondRange = (nthEvent(markwhen, 1) as Event).ranges.date;
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
       checkDate(secondRange.toDateTime, 2022, 8, 9);
 
-      const thirdRange = (markwhen.timelines[0].events[2] as Event).ranges.date;
+      const thirdRange = (nthEvent(markwhen, 2) as Event).ranges.date;
       checkDate(thirdRange.fromDateTime, 2022, 8, 13);
       checkDate(thirdRange.toDateTime, 2022, 8, 20);
     });
@@ -1030,7 +1034,7 @@ after !firstEvent 3 years 8 days 1 month: third event
     test("Before 1", () => {
       const markwhen = parse(`
       July 11 2022: !monday Monday
-      
+
       by !monday 7 work days: event
       `);
 
@@ -1045,7 +1049,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       July 11 2022: !monday Monday
 
       August 18 2022: another event
-      
+
       by !monday 7 work days: event
       `);
 
@@ -1060,7 +1064,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       July 11 2022: !monday Monday
 
       August 18 2022: another event
-      
+
       by 7 work days: event
       `);
 
@@ -1075,7 +1079,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       July 11 2022: !monday Monday
 
       August 18 2022: another event
-      
+
       by !monday 7 work days: event
       `);
 
@@ -1106,7 +1110,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       const markwhen = parse(`dateFormat: d/M/y
       #announcements: red
       10/4/2023: ANNUAL CHURCH MEETING !ACM
-      
+
       10/2/2023: Event !event
       before !event 10 week days: revise voting eligibility list
       January 27 2023 - 10 week days: something`);
@@ -1382,22 +1386,114 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 });
 
-function getDateRanges(m: Timelines) {
-  return m.timelines[0].events.flatMap((e) => {
-    if (e instanceof Event) {
-      return [e.ranges.date];
+describe("nested groups", () => {
+  test("can nest groups", () => {
+    const mw = parse(`
+    
+    now: 1
+
+    group 1
+    now: 2
+
+    group 2
+    now: 3
+    now: 4
+    now: 5
+
+    endGroup
+
+    now: 6
+    now: 7
+
+    endGroup
+
+    now: 8
+    now: 9
+    
+    `);
+
+    let head = mw.timelines[0].events;
+    const flat = head.flat();
+    expect(flat).toHaveLength(9);
+
+    while (!!head.nextEventNode) {
+      const node = head.nextEventNode;
+      expect(flat).toContain(node);
+      head = node;
     }
-    return e.map((e) => e.ranges.date);
   });
+
+  test("nesting is independent of pages", () => {
+    const mw = parse(`
+
+    `);
+  });
+
+  test("entirely empty has no head", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    `);
+
+    expect(mw.timelines[0].head).toBeFalsy();
+  });
+
+  test("deeply nested has head", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    2021: an event
+    `);
+
+    expect((mw.timelines[0].head?.value as Event).event.eventDescription).toBe(
+      "an event"
+    );
+  });
+
+  test("deeply nested has proper head and tail", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    2021: an event
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+
+    2022: last event
+    `);
+
+    const first = nthNode(mw, 0);
+    expect((first.value as Event).event.eventDescription).toBe("an event");
+
+    const last = nthNode(mw, 1);
+    expect((last.value as Event).event.eventDescription).toBe("last event");
+    
+    expect(first.nextEventNode).toBe(last)
+    expect(last.prevEventNode).toBe(first)
+
+    expect(mw.timelines[0].events.flat()).toHaveLength(2)
+  });
+});
+
+function getDateRanges(m: Timelines): DateRangePart[] {
+  return m.timelines[0].events
+    .flat()
+    .map((n) => (n.value as Event).ranges.date);
 }
 
 function getEvents(m: Timelines) {
-  return m.timelines[0].events.flatMap((e) => {
-    if (e instanceof Event) {
-      return [e];
-    }
-    return e;
-  });
+  return m.timelines[0].events.flat().map(n => n.value as Event);
 }
 
 function checkDate(

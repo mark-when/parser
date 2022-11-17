@@ -1,5 +1,5 @@
 import { DateTime, Duration } from "luxon";
-import { Sort } from "./Sort";
+// import { Sort } from "./Sort";
 import {
   Timeline,
   Event,
@@ -13,7 +13,8 @@ import {
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,
   RangeType,
-  EventSubGroup,
+  Path,
+  EventGroup,
 } from "./Types";
 import {
   GROUP_START_REGEX,
@@ -35,8 +36,9 @@ import { checkTitle } from "./lineChecks/checkTitle";
 import { checkViewers } from "./lineChecks/checkViewers";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
+import { Node } from "./Node";
 
-export const sorts: Sort[] = ["none", "down", "up"];
+// export const sorts: Sort[] = ["none", "down", "up"];
 
 export interface Foldable {
   endIndex: number;
@@ -94,7 +96,11 @@ export function parse(timelineString?: string): Timelines {
 }
 
 export class ParsingContext {
-  events: (Event | EventSubGroup)[];
+  events: Node;
+  head?: Node;
+  tail?: Node;
+  currentPath: Path;
+
   tags: Tags;
   ids: IdedEvents;
   title: string | undefined;
@@ -104,7 +110,6 @@ export class ParsingContext {
   earliest: DateTime | undefined;
   latest: DateTime | undefined;
   maxDuration: Duration | undefined;
-  eventSubgroup: EventSubGroup | undefined;
   foldables: {
     [F in number | string]: Foldable;
   };
@@ -114,7 +119,7 @@ export class ParsingContext {
   editors: string[];
 
   constructor() {
-    this.events = [];
+    this.events = new Node([]);
     this.tags = {};
     this.ids = {};
     this.title = undefined;
@@ -124,7 +129,7 @@ export class ParsingContext {
     this.earliest = undefined;
     this.latest = undefined;
     this.maxDuration = undefined;
-    this.eventSubgroup = undefined;
+    this.currentPath = [];
     this.foldables = {};
     this.ranges = [];
     this.viewers = [];
@@ -170,6 +175,71 @@ export class ParsingContext {
     }
   }
 
+  push(node: Node) {
+    const { path, tail: newTail } = this.events.push(
+      node,
+      this.tail,
+      this.currentPath.slice(0, -1)
+    );
+    if (newTail) {
+      if (!this.head) {
+        this.head = newTail;
+      }
+      this.tail = newTail;
+    }
+    this.currentPath = path;
+  }
+
+  endCurrentGroup() {
+    this.currentPath.pop();
+  }
+
+  // getCurrentGroup(): EventGroup {
+  //   return this.get(this.currentPath);
+  // }
+
+  // get(path: Path): EventGroup {
+  //   return this._get(path, this.events);
+  // }
+
+  // _get(path: Path, events: EventGroup): EventGroup {
+  //   if (path.length === 0) {
+  //     return events;
+  //   }
+  //   return this._get(path.splice(1), events[path[0]] as EventGroup);
+  // }
+
+  // pushEventOrGroup(e: Event | EventGroup) {
+  //   const additionalNodeIndex = this._pushEventOrGroup(
+  //     e,
+  //     this.currentPath,
+  //     this.events
+  //   );
+  //   if (additionalNodeIndex !== -1) {
+  //     this.currentPath.push(additionalNodeIndex);
+  //   }
+  // }
+
+  // _pushEventOrGroup(
+  //   e: Event | EventGroup,
+  //   path: Path,
+  //   events: Node[]
+  // ): number {
+  //   if (path.length === 0) {
+  //     events.push(e);
+  //     if (Array.isArray(e)) {
+  //       return events.length - 1;
+  //     }
+  //     return -1;
+  //   } else {
+  //     return this._pushEventOrGroup(
+  //       e,
+  //       path.slice(1),
+  //       events[path[0]] as EventGroup
+  //     );
+  //   }
+  // }
+
   toTimeline(
     lengthAtIndex: number[],
     startLineIndex: number,
@@ -179,6 +249,8 @@ export class ParsingContext {
     const now = DateTime.now();
     return {
       events: this.events,
+      head: this.head,
+      tail: this.tail,
       tags: this.tags,
       ids: this.ids,
       ranges: this.ranges,
@@ -269,7 +341,7 @@ function checkEvent(
       nextLine.match(EVENT_START_REGEX) ||
       nextLine.match(GROUP_START_REGEX) ||
       nextLine.match(PAGE_BREAK_REGEX) ||
-      (context.eventSubgroup && nextLine.match(GROUP_END_REGEX))
+      (context.currentPath.length > 1 && nextLine.match(GROUP_END_REGEX))
     ) {
       break;
     }
@@ -313,11 +385,12 @@ function checkEvent(
   const event = new Event(line, eventRanges, eventDescription);
 
   if (event) {
-    if (context.eventSubgroup) {
-      context.eventSubgroup.push(event);
-    } else {
-      context.events.push(event);
-    }
+    context.push(new Node(event));
+    // if (context.eventSubgroup) {
+    //   context.eventSubgroup.push(event);
+    // } else {
+    //   context.events.push(event);
+    // }
 
     if (event.event.id && !context.ids[event.event.id]) {
       context.ids[event.event.id] = event;
@@ -341,10 +414,10 @@ function checkNewPage(
   context: ParsingContext
 ): Timeline | undefined {
   if (line.match(PAGE_BREAK_REGEX)) {
-    if (context.eventSubgroup) {
-      context.events.push(context.eventSubgroup);
-    }
-    context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
+    // if (context.eventSubgroup) {
+    //   context.events.push(context.eventSubgroup);
+    // }
+    // context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
     return context.toTimeline(
       lengthAtIndex,
       startLineIndex,
@@ -382,9 +455,9 @@ export function parseTimeline(
     i = checkEvent(line, lines, i, lengthAtIndex, context);
   }
 
-  if (context.eventSubgroup) {
-    context.events.push(context.eventSubgroup);
-  }
+  // if (context.eventSubgroup) {
+  //   context.events.push(context.eventSubgroup);
+  // }
   return context.toTimeline(
     lengthAtIndex,
     startLineIndex,
