@@ -1456,7 +1456,7 @@ describe("nested groups", () => {
     expect(i).toEqual(numEvents);
   });
 
-  test.only("can iterate nodes", () => {
+  test("can iterate nodes", () => {
     const mw = parse(`
 
     now: 1
@@ -1474,21 +1474,44 @@ describe("nested groups", () => {
     now: 6
     now: 7
 
+    group surprise
+    now: 8
     endGroup
 
-    now: 8
+    endGroup
+
+    group extra special
+    group
     now: 9
-    
+    endGroup
+    now: 10
+    endGroup
     `);
 
-    const numNodes = 12;
+    /**
+     * [0]
+     *     [1]
+     *     [1, 0]
+     *         [1, 1]
+     *         [1, 1, 0]
+     *             [1, 1, 1]
+     *                [1, 1, 2]
+     *                    [1, 2]
+     *                       [1, 3]
+     *                           [1, 4]
+     *                           [1, 4, 0]
+     *                                [2]
+     *                                [2, 0]
+     *                                [2, 0, 0]
+     *                                      [2, 1]
+     * [1, [2, [3, 4, 5], 6, 7, [8]], [[9], 10]]]
+     */
+
+    const numNodes = 16;
     let i = 0;
-    for (const n of mw.timelines[0].events) {
-      if (n.value instanceof Event) {
-        console.log(n.value.event.eventDescription);
-      } else {
-        console.log(n)
-      }
+    let s = ``;
+    // @ts-ignore
+    for (const { path, node } of mw.timelines[0].events) {
       i++;
     }
     expect(i).toEqual(numNodes);
@@ -1504,6 +1527,33 @@ describe("nested groups", () => {
     `);
 
     expect(mw.timelines[0].head).toBeFalsy();
+  });
+
+  test("deeply nested path", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    group 6
+    group 7
+    group 8
+    group 9
+    group 10
+    2021: an event
+    `);
+
+    for (const { path, node } of mw.timelines[0].events) {
+      if (node.eventValue() instanceof Event) {
+        // The path of the node with an actual event
+        expect(path).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      }
+    }
+
+    expect((mw.timelines[0].head?.value as Event).event.eventDescription).toBe(
+      "an event"
+    );
   });
 
   test("deeply nested has head", () => {

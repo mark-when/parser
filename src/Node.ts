@@ -3,7 +3,7 @@ import { Event, GroupStyle, Path, Range } from "./Types";
 
 type NodeValue = Array<Node> | Event;
 
-export class Node implements Iterable<Node> {
+export class Node implements Iterable<{ path: number[], node: Node }> {
   constructor(value: NodeValue) {
     this.value = value;
   }
@@ -51,23 +51,59 @@ export class Node implements Iterable<Node> {
    * it's a group or not
    * @returns
    */
-  [Symbol.iterator](): Iterator<Node> {
+  // [Symbol.iterator](): Iterator<Node> {
+  //   let stack = [this as Node];
+  //   return {
+  //     next() {
+  //       const value = stack.shift();
+  //       if (Array.isArray(value?.value)) {
+  //         stack = value!.value.concat(stack)
+  //       }
+  //       return {
+  //         // Don't ask me why
+  //         done: !value as true,
+  //         value,
+  //       };
+  //     },
+  //   };
+  // }
+
+  [Symbol.iterator](): Iterator<{ path: number[]; node: Node }> {
+    
     let stack = [this as Node];
+    let path = [] as number[];
+    let pathInverted = [] as number[]
+    
     return {
       next() {
+        const ourPath = [...pathInverted]
         const value = stack.shift();
         if (Array.isArray(value?.value)) {
-          stack = value!.value.concat(stack)
+          stack = value!.value.concat(stack);
+          path.push(value!.value.length)
+          pathInverted.push(0)
+        } else {
+          path[path.length - 1] -= 1
+          pathInverted[pathInverted.length - 1] += 1
+          while (path[path.length - 1] <= 0) {
+            path.pop()
+            path[path.length - 1] -= 1
+            pathInverted.pop()
+            pathInverted[pathInverted.length - 1] += 1
+          }
         }
         return {
           // Don't ask me why
           done: !value as true,
-          value,
+          value: {
+            path: ourPath,
+            node: value,
+          },
         };
       },
     };
   }
-  
+
   get(path: Path): NodeValue | undefined {
     if (!path.length) {
       return this.value;
