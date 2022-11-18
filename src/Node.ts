@@ -1,9 +1,16 @@
 import { DateTime } from "luxon";
-import { Event, GroupStyle, Path, Range } from "./Types";
+import {
+  DateRange,
+  DateRangePart,
+  Event,
+  GroupStyle,
+  Path,
+  Range,
+} from "./Types";
 
 type NodeValue = Array<Node> | Event;
-
-export class Node implements Iterable<{ path: number[], node: Node }> {
+export type GroupRange = (DateRange & { maxFrom: DateTime }) | undefined;
+export class Node implements Iterable<{ path: number[]; node: Node }> {
   constructor(value: NodeValue) {
     this.value = value;
   }
@@ -14,14 +21,17 @@ export class Node implements Iterable<{ path: number[], node: Node }> {
 
   tags?: string[];
   title?: string;
-  range?: {
-    min: DateTime;
-    max: DateTime;
-    latest: DateTime;
-  };
+  range?: GroupRange;
   startExpanded?: boolean;
   style?: GroupStyle;
   rangeInText?: Range;
+
+  blankClone(): Node {
+    if (this.isEventNode()) {
+      return new Node(this.value!);
+    }
+    return new Node([]);
+  }
 
   eventValue(): Event {
     return this.value as Event;
@@ -51,45 +61,27 @@ export class Node implements Iterable<{ path: number[], node: Node }> {
    * it's a group or not
    * @returns
    */
-  // [Symbol.iterator](): Iterator<Node> {
-  //   let stack = [this as Node];
-  //   return {
-  //     next() {
-  //       const value = stack.shift();
-  //       if (Array.isArray(value?.value)) {
-  //         stack = value!.value.concat(stack)
-  //       }
-  //       return {
-  //         // Don't ask me why
-  //         done: !value as true,
-  //         value,
-  //       };
-  //     },
-  //   };
-  // }
-
   [Symbol.iterator](): Iterator<{ path: number[]; node: Node }> {
-    
     let stack = [this as Node];
     let path = [] as number[];
-    let pathInverted = [] as number[]
-    
+    let pathInverted = [] as number[];
+
     return {
       next() {
-        const ourPath = [...pathInverted]
+        const ourPath = [...pathInverted];
         const value = stack.shift();
         if (Array.isArray(value?.value)) {
           stack = value!.value.concat(stack);
-          path.push(value!.value.length)
-          pathInverted.push(0)
+          path.push(value!.value.length);
+          pathInverted.push(0);
         } else {
-          path[path.length - 1] -= 1
-          pathInverted[pathInverted.length - 1] += 1
+          path[path.length - 1] -= 1;
+          pathInverted[pathInverted.length - 1] += 1;
           while (path[path.length - 1] <= 0) {
-            path.pop()
-            path[path.length - 1] -= 1
-            pathInverted.pop()
-            pathInverted[pathInverted.length - 1] += 1
+            path.pop();
+            path[path.length - 1] -= 1;
+            pathInverted.pop();
+            pathInverted[pathInverted.length - 1] += 1;
           }
         }
         return {
@@ -104,6 +96,10 @@ export class Node implements Iterable<{ path: number[], node: Node }> {
     };
   }
 
+  isEventNode(): boolean {
+    return this.value instanceof Event;
+  }
+
   get(path: Path): NodeValue | undefined {
     if (!path.length) {
       return this.value;
@@ -115,6 +111,7 @@ export class Node implements Iterable<{ path: number[], node: Node }> {
     if (!path || !path.length) {
       if (Array.isArray(this.value)) {
         this.value.push(node);
+
         if (Array.isArray(node.value)) {
           return {
             path: [this.value.length - 1, node.value.length],
@@ -153,6 +150,57 @@ export class Node implements Iterable<{ path: number[], node: Node }> {
       return this.value.flatMap((node) => node.flatMap(mapper));
     }
     return [mapper(this)];
+  }
+
+  /**
+   * This should only be called once per tree, because it will cache the result
+   * and return it on subsequent calls.
+   */
+  ranges(): GroupRange {
+    if (!this.value) {
+      return undefined;
+    }
+
+    if (this.isEventNode()) {
+      return {
+        ...this.eventValue().ranges.date,
+        maxFrom: this.eventValue().ranges.date.fromDateTime,
+      };
+    }
+
+    if (this.range) {
+      return this.range;
+    }
+
+    const childRanges = (this.value as Array<Node>).reduce((prev, curr) => {
+      const currRange: GroupRange = curr.ranges();
+      if (!prev) {
+        return currRange;
+      }
+      if (!currRange) {
+        return currRange;
+      }
+
+      const min =
+        +currRange.fromDateTime < +prev.fromDateTime
+          ? currRange.fromDateTime
+          : prev.fromDateTime;
+      const max =
+        +currRange.toDateTime > +prev.toDateTime
+          ? currRange.toDateTime
+          : prev.toDateTime;
+      const maxFrom =
+        +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
+
+      this.range = {
+        fromDateTime: min,
+        toDateTime: max,
+        maxFrom,
+      };
+      return this.range;
+    }, undefined as GroupRange);
+
+    return childRanges;
   }
 }
 
