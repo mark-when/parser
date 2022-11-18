@@ -1423,10 +1423,75 @@ describe("nested groups", () => {
     }
   });
 
-  test("nesting is independent of pages", () => {
+  test("can iterate events", () => {
     const mw = parse(`
 
+    now: 1
+
+    group 1
+    now: 2
+
+    group 2
+    now: 3
+    now: 4
+    now: 5
+
+    endGroup
+
+    now: 6
+    now: 7
+
+    endGroup
+
+    now: 8
+    now: 9
+    
     `);
+
+    let numEvents = mw.timelines[0].events.flat().length;
+    let i = 0;
+    for (const n of mw.timelines[0].head!.iterEvents()) {
+      i++;
+    }
+    expect(i).toEqual(numEvents);
+  });
+
+  test.only("can iterate nodes", () => {
+    const mw = parse(`
+
+    now: 1
+
+    group 1
+    now: 2
+
+    group 2
+    now: 3
+    now: 4
+    now: 5
+
+    endGroup
+
+    now: 6
+    now: 7
+
+    endGroup
+
+    now: 8
+    now: 9
+    
+    `);
+
+    const numNodes = 12;
+    let i = 0;
+    for (const n of mw.timelines[0].events) {
+      if (n.value instanceof Event) {
+        console.log(n.value.event.eventDescription);
+      } else {
+        console.log(n)
+      }
+      i++;
+    }
+    expect(i).toEqual(numNodes);
   });
 
   test("entirely empty has no head", () => {
@@ -1478,11 +1543,11 @@ describe("nested groups", () => {
 
     const last = nthNode(mw, 1);
     expect((last.value as Event).event.eventDescription).toBe("last event");
-    
-    expect(first.nextEventNode).toBe(last)
-    expect(last.prevEventNode).toBe(first)
 
-    expect(mw.timelines[0].events.flat()).toHaveLength(2)
+    expect(first.nextEventNode).toBe(last);
+    expect(last.prevEventNode).toBe(first);
+
+    expect(mw.timelines[0].events.flat()).toHaveLength(2);
   });
 });
 
@@ -1493,7 +1558,7 @@ function getDateRanges(m: Timelines): DateRangePart[] {
 }
 
 function getEvents(m: Timelines) {
-  return m.timelines[0].events.flat().map(n => n.value as Event);
+  return m.timelines[0].events.flat().map((n) => n.value as Event);
 }
 
 function checkDate(

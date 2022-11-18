@@ -3,7 +3,7 @@ import { Event, GroupStyle, Path, Range } from "./Types";
 
 type NodeValue = Array<Node> | Event;
 
-export class Node {
+export class Node implements Iterable<Node> {
   constructor(value: NodeValue) {
     this.value = value;
   }
@@ -23,6 +23,51 @@ export class Node {
   style?: GroupStyle;
   rangeInText?: Range;
 
+  eventValue(): Event {
+    return this.value as Event;
+  }
+
+  iterEvents(): Iterable<Node> {
+    return {
+      [Symbol.iterator]: () => {
+        let current = new Node([]) as Node | undefined;
+        current!.nextEventNode = this;
+        return {
+          next() {
+            current = current?.nextEventNode;
+            return {
+              // Don't ask me why
+              done: !current as true,
+              value: current,
+            };
+          },
+        };
+      },
+    };
+  }
+
+  /**
+   * In order traversal of nodes regardless of whether
+   * it's a group or not
+   * @returns
+   */
+  [Symbol.iterator](): Iterator<Node> {
+    let stack = [this as Node];
+    return {
+      next() {
+        const value = stack.shift();
+        if (Array.isArray(value?.value)) {
+          stack = value!.value.concat(stack)
+        }
+        return {
+          // Don't ask me why
+          done: !value as true,
+          value,
+        };
+      },
+    };
+  }
+  
   get(path: Path): NodeValue | undefined {
     if (!path.length) {
       return this.value;
@@ -41,8 +86,8 @@ export class Node {
           };
         } else {
           if (tail) {
-            tail.nextEventNode = node
-            node.prevEventNode = tail
+            tail.nextEventNode = node;
+            node.prevEventNode = tail;
           }
           return {
             path: [this.value.length - 1],
@@ -63,11 +108,15 @@ export class Node {
     }
   }
 
-  flat(): Array<Node> {
+  flat() {
+    return this.flatMap((n) => n);
+  }
+
+  flatMap<T>(mapper: (n: Node) => T): Array<T> {
     if (Array.isArray(this.value)) {
-      return this.value.flatMap((node) => node.flat());
+      return this.value.flatMap((node) => node.flatMap(mapper));
     }
-    return [this];
+    return [mapper(this)];
   }
 }
 
