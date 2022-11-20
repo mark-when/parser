@@ -30,7 +30,13 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
     if (this.isEventNode()) {
       return new Node(this.value!);
     }
-    return new Node([]);
+    const clone = new Node([]);
+    clone.startExpanded = this.startExpanded
+    clone.tags = this.tags
+    clone.title = this.title
+    clone.style = this.style
+    clone.rangeInText = this.rangeInText
+    return clone
   }
 
   eventValue(): Event {
