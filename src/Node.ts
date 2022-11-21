@@ -86,11 +86,17 @@ export class Node<T extends NodeValue>
     return this.value instanceof Event;
   }
 
-  get(path: Path): SomeNode {
+  get(path: Path): SomeNode | undefined {
     if (!path.length) {
       return this;
     }
-    return (this.value as NodeArray)[path[0]].get(path.slice(1));
+    // If it wasn't us and we don't have any nodes to offer,
+    // return undefined
+    const arr = this.value as NodeArray;
+    if (!arr.length || arr.length - 1 < path[0]) {
+      return undefined;
+    }
+    return arr[path[0]].get(path.slice(1));
   }
 
   push(
