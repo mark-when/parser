@@ -31,12 +31,12 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
       return new Node(this.value!);
     }
     const clone = new Node([]);
-    clone.startExpanded = this.startExpanded
-    clone.tags = this.tags
-    clone.title = this.title
-    clone.style = this.style
-    clone.rangeInText = this.rangeInText
-    return clone
+    clone.startExpanded = this.startExpanded;
+    clone.tags = this.tags;
+    clone.title = this.title;
+    clone.style = this.style;
+    clone.rangeInText = this.rangeInText;
+    return clone;
   }
 
   eventValue(): Event {
@@ -198,14 +198,14 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
       const maxFrom =
         +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
 
-      this.range = {
+      const range = {
         fromDateTime: min,
         toDateTime: max,
         maxFrom,
       };
-      return this.range;
+      return range;
     }, undefined as GroupRange);
-
+    this.range = childRanges;
     return childRanges;
   }
 }
