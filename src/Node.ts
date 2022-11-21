@@ -104,9 +104,9 @@ export class Node<T extends NodeValue>
     return this.value instanceof Event;
   }
 
-  get(path: Path): NodeValue | undefined {
+  get(path: Path): Node<NodeValue> {
     if (!path.length) {
-      return this.value;
+      return this
     }
     return (this.value as NodeArray)[path[0]].get(path.slice(1));
   }
@@ -139,9 +139,9 @@ export class Node<T extends NodeValue>
         throw new Error("Can't push onto event node");
       }
     } else {
-      const { tail: newTail, path: newPath } = (
-        this.value as NodeArray
-      )[path[0]].push(node, tail, path.slice(1));
+      const { tail: newTail, path: newPath } = (this.value as NodeArray)[
+        path[0]
+      ].push(node, tail, path.slice(1));
       return {
         path: [path[0], ...newPath],
         tail: newTail,
@@ -180,36 +180,33 @@ export class Node<T extends NodeValue>
       return this.range;
     }
 
-    const childRanges = (this.value as NodeArray).reduce(
-      (prev, curr) => {
-        const currRange: GroupRange = curr.ranges();
-        if (!prev) {
-          return currRange;
-        }
-        if (!currRange) {
-          return currRange;
-        }
+    const childRanges = (this.value as NodeArray).reduce((prev, curr) => {
+      const currRange: GroupRange = curr.ranges();
+      if (!prev) {
+        return currRange;
+      }
+      if (!currRange) {
+        return currRange;
+      }
 
-        const min =
-          +currRange.fromDateTime < +prev.fromDateTime
-            ? currRange.fromDateTime
-            : prev.fromDateTime;
-        const max =
-          +currRange.toDateTime > +prev.toDateTime
-            ? currRange.toDateTime
-            : prev.toDateTime;
-        const maxFrom =
-          +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
+      const min =
+        +currRange.fromDateTime < +prev.fromDateTime
+          ? currRange.fromDateTime
+          : prev.fromDateTime;
+      const max =
+        +currRange.toDateTime > +prev.toDateTime
+          ? currRange.toDateTime
+          : prev.toDateTime;
+      const maxFrom =
+        +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
 
-        const range = {
-          fromDateTime: min,
-          toDateTime: max,
-          maxFrom,
-        };
-        return range;
-      },
-      undefined as GroupRange
-    );
+      const range = {
+        fromDateTime: min,
+        toDateTime: max,
+        maxFrom,
+      };
+      return range;
+    }, undefined as GroupRange);
     this.range = childRanges;
     return childRanges;
   }
