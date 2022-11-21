@@ -1,23 +1,20 @@
 import { DateTime } from "luxon";
-import {
-  DateRange,
-  DateRangePart,
-  Event,
-  GroupStyle,
-  Path,
-  Range,
-} from "./Types";
+import { DateRange, Event, GroupStyle, Path, Range } from "./Types";
 
-type NodeValue = Array<Node> | Event;
+export type NodeArray = Array<Node<NodeValue>>;
+export type NodeValue = NodeArray | Event;
 export type GroupRange = (DateRange & { maxFrom: DateTime }) | undefined;
-export class Node implements Iterable<{ path: number[]; node: Node }> {
-  constructor(value: NodeValue) {
+
+export class Node<T extends NodeValue>
+  implements Iterable<{ path: number[]; node: Node<NodeValue> }>
+{
+  constructor(value: T) {
     this.value = value;
   }
 
-  value?: NodeValue;
-  prevEventNode?: Node;
-  nextEventNode?: Node;
+  value: T;
+  prevEventNode?: Node<NodeValue>;
+  nextEventNode?: Node<NodeValue>;
 
   tags?: string[];
   title?: string;
@@ -26,27 +23,28 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
   style?: GroupStyle;
   rangeInText?: Range;
 
-  blankClone(): Node {
+  blankClone(): Node<T> {
     if (this.isEventNode()) {
       return new Node(this.value!);
     }
-    const clone = new Node([]);
+    const clone = new Node([] as NodeArray);
     clone.startExpanded = this.startExpanded;
     clone.tags = this.tags;
     clone.title = this.title;
     clone.style = this.style;
     clone.rangeInText = this.rangeInText;
+    // @ts-ignore
     return clone;
   }
 
-  eventValue(): Event {
+  eventValue() {
     return this.value as Event;
   }
 
-  iterEvents(): Iterable<Node> {
+  iterEvents(): Iterable<Node<NodeValue>> {
     return {
       [Symbol.iterator]: () => {
-        let current = new Node([]) as Node | undefined;
+        let current = new Node([]) as Node<NodeValue> | undefined;
         current!.nextEventNode = this;
         return {
           next() {
@@ -67,8 +65,8 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
    * it's a group or not
    * @returns
    */
-  [Symbol.iterator](): Iterator<{ path: number[]; node: Node }> {
-    let stack = [this as Node];
+  [Symbol.iterator](): Iterator<{ path: number[]; node: Node<NodeValue> }> {
+    let stack = [this as Node<NodeValue>];
     let path = [] as number[];
     let pathInverted = [] as number[];
 
@@ -102,7 +100,7 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
     };
   }
 
-  isEventNode(): boolean {
+  isEventNode() {
     return this.value instanceof Event;
   }
 
@@ -110,10 +108,14 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
     if (!path.length) {
       return this.value;
     }
-    return (this.value as Array<Node>)[path[0]].get(path.slice(1));
+    return (this.value as NodeArray)[path[0]].get(path.slice(1));
   }
 
-  push(node: Node, tail?: Node, path?: Path): { path: number[]; tail?: Node } {
+  push(
+    node: Node<NodeValue>,
+    tail?: Node<NodeValue>,
+    path?: Path
+  ): { path: number[]; tail?: Node<NodeValue> } {
     if (!path || !path.length) {
       if (Array.isArray(this.value)) {
         this.value.push(node);
@@ -137,9 +139,9 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
         throw new Error("Can't push onto event node");
       }
     } else {
-      const { tail: newTail, path: newPath } = (this.value as Array<Node>)[
-        path[0]
-      ].push(node, tail, path.slice(1));
+      const { tail: newTail, path: newPath } = (
+        this.value as NodeArray
+      )[path[0]].push(node, tail, path.slice(1));
       return {
         path: [path[0], ...newPath],
         tail: newTail,
@@ -151,7 +153,7 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
     return this.flatMap((n) => n);
   }
 
-  flatMap<T>(mapper: (n: Node) => T): Array<T> {
+  flatMap<T>(mapper: (n: Node<NodeValue>) => T): Array<T> {
     if (Array.isArray(this.value)) {
       return this.value.flatMap((node) => node.flatMap(mapper));
     }
@@ -178,33 +180,36 @@ export class Node implements Iterable<{ path: number[]; node: Node }> {
       return this.range;
     }
 
-    const childRanges = (this.value as Array<Node>).reduce((prev, curr) => {
-      const currRange: GroupRange = curr.ranges();
-      if (!prev) {
-        return currRange;
-      }
-      if (!currRange) {
-        return currRange;
-      }
+    const childRanges = (this.value as NodeArray).reduce(
+      (prev, curr) => {
+        const currRange: GroupRange = curr.ranges();
+        if (!prev) {
+          return currRange;
+        }
+        if (!currRange) {
+          return currRange;
+        }
 
-      const min =
-        +currRange.fromDateTime < +prev.fromDateTime
-          ? currRange.fromDateTime
-          : prev.fromDateTime;
-      const max =
-        +currRange.toDateTime > +prev.toDateTime
-          ? currRange.toDateTime
-          : prev.toDateTime;
-      const maxFrom =
-        +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
+        const min =
+          +currRange.fromDateTime < +prev.fromDateTime
+            ? currRange.fromDateTime
+            : prev.fromDateTime;
+        const max =
+          +currRange.toDateTime > +prev.toDateTime
+            ? currRange.toDateTime
+            : prev.toDateTime;
+        const maxFrom =
+          +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
 
-      const range = {
-        fromDateTime: min,
-        toDateTime: max,
-        maxFrom,
-      };
-      return range;
-    }, undefined as GroupRange);
+        const range = {
+          fromDateTime: min,
+          toDateTime: max,
+          maxFrom,
+        };
+        return range;
+      },
+      undefined as GroupRange
+    );
     this.range = childRanges;
     return childRanges;
   }

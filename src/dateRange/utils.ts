@@ -46,7 +46,7 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex";
-import { Node } from "../Node";
+import { Node, NodeArray, NodeValue } from "../Node";
 import { GranularDateTime, Event, Range, EventGroup } from "../Types";
 
 export function getTimeFromRegExpMatch(
@@ -309,8 +309,8 @@ export function parseGroupFromStartTag(
   s: string,
   regexMatch: RegExpMatchArray,
   range: Range
-): Node {
-  const group: Node = new Node([]);
+): Node<NodeArray> {
+  const group: Node<NodeArray> = new Node([]);
   group.tags = [];
   group.style = "group";
   group.rangeInText = range;

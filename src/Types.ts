@@ -1,5 +1,5 @@
 import { DateTime, Duration } from "luxon";
-import { Node } from "./Node";
+import { Node, NodeArray, NodeValue } from "./Node";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -372,9 +372,9 @@ export type IdedEvents = { [id: string]: Event };
 export interface Timeline {
   ranges: Range[];
   foldables: {};
-  events: Node;
-  head?: Node
-  tail?: Node
+  events: Node<NodeArray>;
+  head?: Node<NodeValue>;
+  tail?: Node<NodeValue>;
   tags: Tags;
   ids: IdedEvents;
   metadata: TimelineMetadata;
