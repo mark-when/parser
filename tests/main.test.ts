@@ -2,7 +2,7 @@ import { parse, parseDateRange } from "../src/index";
 import { Timelines, Event, DateRange, DateRangePart } from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
-import { Node } from "../src/Node";
+import { Node, SomeNode } from "../src/Node";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
@@ -1412,48 +1412,15 @@ describe("nested groups", () => {
     
     `);
 
-    let head = mw.timelines[0].events;
+    let head: SomeNode = mw.timelines[0].events;
     const flat = head.flat();
     expect(flat).toHaveLength(9);
 
-    while (!!head.nextEventNode) {
-      const node = head.nextEventNode;
+    while (!!head.next) {
+      const node = head.next;
       expect(flat).toContain(node);
       head = node;
     }
-  });
-
-  test("can iterate events", () => {
-    const mw = parse(`
-
-    now: 1
-
-    group 1
-    now: 2
-
-    group 2
-    now: 3
-    now: 4
-    now: 5
-
-    endGroup
-
-    now: 6
-    now: 7
-
-    endGroup
-
-    now: 8
-    now: 9
-    
-    `);
-
-    let numEvents = mw.timelines[0].events.flat().length;
-    let i = 0;
-    for (const n of mw.timelines[0].head!.iterEvents()) {
-      i++;
-    }
-    expect(i).toEqual(numEvents);
   });
 
   test("can iterate nodes", () => {

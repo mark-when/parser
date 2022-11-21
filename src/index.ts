@@ -36,7 +36,7 @@ import { checkTitle } from "./lineChecks/checkTitle";
 import { checkViewers } from "./lineChecks/checkViewers";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
-import { Node, NodeArray, NodeValue } from "./Node";
+import { Node, NodeArray, NodeValue, SomeNode } from "./Node";
 
 // export const sorts: Sort[] = ["none", "down", "up"];
 
@@ -97,8 +97,8 @@ export function parse(timelineString?: string): Timelines {
 
 export class ParsingContext {
   events: Node<NodeArray>;
-  head?: Node<NodeValue>;
-  tail?: Node<NodeValue>;
+  head?: SomeNode;
+  tail?: SomeNode;
   currentPath: Path;
 
   tags: Tags;
@@ -175,7 +175,7 @@ export class ParsingContext {
     }
   }
 
-  push(node: Node<NodeValue>) {
+  push(node: SomeNode) {
     const { path, tail: newTail } = this.events.push(
       node,
       this.tail,

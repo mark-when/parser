@@ -1,20 +1,21 @@
 import { DateTime } from "luxon";
 import { DateRange, Event, GroupStyle, Path, Range } from "./Types";
 
-export type NodeArray = Array<Node<NodeValue>>;
+export type SomeNode = Node<NodeValue>;
+export type NodeArray = Array<SomeNode>;
 export type NodeValue = NodeArray | Event;
 export type GroupRange = (DateRange & { maxFrom: DateTime }) | undefined;
 
 export class Node<T extends NodeValue>
-  implements Iterable<{ path: number[]; node: Node<NodeValue> }>
+  implements Iterable<{ path: number[]; node: SomeNode }>
 {
   constructor(value: T) {
     this.value = value;
   }
 
   value: T;
-  prevEventNode?: Node<NodeValue>;
-  nextEventNode?: Node<NodeValue>;
+  prev?: SomeNode;
+  next?: SomeNode;
 
   tags?: string[];
   title?: string;
@@ -41,32 +42,13 @@ export class Node<T extends NodeValue>
     return this.value as Event;
   }
 
-  iterEvents(): Iterable<Node<NodeValue>> {
-    return {
-      [Symbol.iterator]: () => {
-        let current = new Node([]) as Node<NodeValue> | undefined;
-        current!.nextEventNode = this;
-        return {
-          next() {
-            current = current?.nextEventNode;
-            return {
-              // Don't ask me why
-              done: !current as true,
-              value: current,
-            };
-          },
-        };
-      },
-    };
-  }
-
   /**
    * In order traversal of nodes regardless of whether
    * it's a group or not
    * @returns
    */
-  [Symbol.iterator](): Iterator<{ path: number[]; node: Node<NodeValue> }> {
-    let stack = [this as Node<NodeValue>];
+  [Symbol.iterator](): Iterator<{ path: number[]; node: SomeNode }> {
+    let stack = [this as SomeNode];
     let path = [] as number[];
     let pathInverted = [] as number[];
 
@@ -104,18 +86,18 @@ export class Node<T extends NodeValue>
     return this.value instanceof Event;
   }
 
-  get(path: Path): Node<NodeValue> {
+  get(path: Path): SomeNode {
     if (!path.length) {
-      return this
+      return this;
     }
     return (this.value as NodeArray)[path[0]].get(path.slice(1));
   }
 
   push(
-    node: Node<NodeValue>,
-    tail?: Node<NodeValue>,
+    node: SomeNode,
+    tail?: SomeNode,
     path?: Path
-  ): { path: number[]; tail?: Node<NodeValue> } {
+  ): { path: number[]; tail?: SomeNode } {
     if (!path || !path.length) {
       if (Array.isArray(this.value)) {
         this.value.push(node);
@@ -127,8 +109,8 @@ export class Node<T extends NodeValue>
           };
         } else {
           if (tail) {
-            tail.nextEventNode = node;
-            node.prevEventNode = tail;
+            tail.next = node;
+            node.prev = tail;
           }
           return {
             path: [this.value.length - 1],
@@ -153,7 +135,7 @@ export class Node<T extends NodeValue>
     return this.flatMap((n) => n);
   }
 
-  flatMap<T>(mapper: (n: Node<NodeValue>) => T): Array<T> {
+  flatMap<T>(mapper: (n: SomeNode) => T): Array<T> {
     if (Array.isArray(this.value)) {
       return this.value.flatMap((node) => node.flatMap(mapper));
     }
