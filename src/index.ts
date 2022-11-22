@@ -114,6 +114,7 @@ export class ParsingContext {
   foldables: {
     [F in number | string]: Foldable;
   };
+  foldableSections: Foldable[];
   ranges: Range[];
   preferredInterpolationFormat: string | undefined;
   viewers: string[];
@@ -132,17 +133,22 @@ export class ParsingContext {
     this.maxDuration = undefined;
     this.currentPath = [];
     this.foldables = {};
+    this.foldableSections = [];
     this.ranges = [];
     this.viewers = [];
     this.editors = [];
   }
 
   currentFoldableSection() {
-    return this.foldables["section"];
+    return this.foldableSections[this.foldableSections.length - 1];
   }
 
   currentFoldableComment() {
     return this.foldables["comment"];
+  }
+
+  startFoldableSection(f: Foldable) {
+    this.foldableSections.push(f);
   }
 
   startFoldable(f: Foldable) {
@@ -150,7 +156,7 @@ export class ParsingContext {
   }
 
   finishFoldableSection(line: number, endIndex: number) {
-    const currentFoldableSection = this.currentFoldableSection();
+    const currentFoldableSection = this.foldableSections.pop();
     if (currentFoldableSection) {
       if (currentFoldableSection.startLine < line - 1) {
         this.foldables[currentFoldableSection.startIndex!] = {
@@ -158,7 +164,6 @@ export class ParsingContext {
           endIndex,
         };
       }
-      delete this.foldables["section"];
     }
   }
 
@@ -197,6 +202,7 @@ export class ParsingContext {
     const group = this.events.get(this.currentPath) as Node<NodeArray>;
     group.rangeInText!.lineTo = lineTo;
     group.rangeInText!.to = to;
+    this.finishFoldableSection(lineTo.line, to);
   }
 
   toTimeline(
@@ -373,10 +379,9 @@ function checkNewPage(
   context: ParsingContext
 ): Timeline | undefined {
   if (line.match(PAGE_BREAK_REGEX)) {
-    // if (context.eventSubgroup) {
-    //   context.events.push(context.eventSubgroup);
-    // }
-    // context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
+    while (context.foldableSections.length) {
+      context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
+    }
     return context.toTimeline(
       lengthAtIndex,
       startLineIndex,

@@ -1594,6 +1594,27 @@ describe("nested groups", () => {
     expect(fifthGroup.rangeInText?.lineTo.line).toBe(7);
     expect(fifthGroup.rangeInText?.to).toBe(92);
   });
+
+  test("group foldables", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    2021: an event
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+
+    2022: last event
+    `);
+
+    const foldables = mw.timelines[0].foldables
+    expect(Object.keys(foldables).length).toBe(5)
+  });
 });
 
 function getDateRanges(m: Timelines): DateRangePart[] {

@@ -1,4 +1,5 @@
 import { DateTime, Duration } from "luxon";
+import { Foldable } from ".";
 import { Node, NodeArray, NodeValue, SomeNode } from "./Node";
 import {
   AMOUNT_REGEX,
@@ -371,7 +372,7 @@ export type Tags = { [tagName: string]: string };
 export type IdedEvents = { [id: string]: Event };
 export interface Timeline {
   ranges: Range[];
-  foldables: {};
+  foldables: { [index: number]: Foldable };
   events: Node<NodeArray>;
   head?: SomeNode;
   tail?: SomeNode;
