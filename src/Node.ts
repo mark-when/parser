@@ -103,14 +103,19 @@ export class Node<T extends NodeValue>
     return arr[path[0]].get(path.slice(1));
   }
 
-  getLast(): SomeNode {
+  getLast(): { node: SomeNode; path: Path } {
     if (this.isEventNode()) {
-      return this;
+      return { node: this, path: [] };
     }
     if (!this.arrayValue().length) {
-      return this;
+      return { node: this, path: [] };
     }
-    return this.arrayValue().slice(-1)[0].getLast();
+    const indexOfLast = this.arrayValue().length - 1;
+    const result = this.arrayValue()[indexOfLast].getLast();
+    return {
+      node: result.node,
+      path: [indexOfLast, ...result.path],
+    };
   }
 
   push(
