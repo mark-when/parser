@@ -199,9 +199,9 @@ export class ParsingContext {
   endCurrentGroup(to: number, lineTo: Line) {
     this.currentPath.pop();
     // Assign text range
-    const group = this.events.get(this.currentPath) as Node<NodeArray>;
-    group.rangeInText!.lineTo = lineTo;
-    group.rangeInText!.to = to;
+    // const group = this.events.get(this.currentPath) as Node<NodeArray>;
+    // group.rangeInText!.lineTo = lineTo;
+    // group.rangeInText!.to = to;
     this.finishFoldableSection(lineTo.line, to);
   }
 
