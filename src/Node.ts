@@ -42,6 +42,10 @@ export class Node<T extends NodeValue>
     return this.value as Event;
   }
 
+  arrayValue() {
+    return this.value as NodeArray;
+  }
+
   /**
    * In order traversal of nodes regardless of whether
    * it's a group or not
@@ -97,6 +101,16 @@ export class Node<T extends NodeValue>
       return undefined;
     }
     return arr[path[0]].get(path.slice(1));
+  }
+
+  getLast(): SomeNode {
+    if (this.isEventNode()) {
+      return this;
+    }
+    if (!this.arrayValue().length) {
+      return this;
+    }
+    return this.arrayValue().slice(-1)[0].getLast();
   }
 
   push(
