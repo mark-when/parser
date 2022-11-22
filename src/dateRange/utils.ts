@@ -334,22 +334,6 @@ export function parseGroupFromStartTag(
 }
 
 export function getPriorEvent(context: ParsingContext): Event | undefined {
-  // const currentGroup = context.getCurrentGroup()
-  // if (currentGroup.length) {
-  //   return currentGroup[currentGroup.length - 1]
-  // }
-  // if (context.eventSubgroup && context.eventSubgroup.length) {
-  //   return context.eventSubgroup[context.eventSubgroup.length - 1];
-  // }
-  // if (context.events && context.events.length) {
-  //   const previous = context.events[context.events.length - 1];
-  //   if (previous instanceof Event) {
-  //     return previous;
-  //   } else {
-  //     return previous[previous.length - 1];
-  //   }
-  // }
-
   return context.tail?.value as Event;
 }
 

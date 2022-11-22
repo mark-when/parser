@@ -15,6 +15,7 @@ import {
   RangeType,
   Path,
   EventGroup,
+  Line,
 } from "./Types";
 import {
   GROUP_START_REGEX,
@@ -190,55 +191,13 @@ export class ParsingContext {
     this.currentPath = path;
   }
 
-  endCurrentGroup() {
+  endCurrentGroup(to: number, lineTo: Line) {
     this.currentPath.pop();
+    // Assign text range
+    const group = this.events.get(this.currentPath) as Node<NodeArray>;
+    group.rangeInText!.lineTo = lineTo;
+    group.rangeInText!.to = to;
   }
-
-  // getCurrentGroup(): EventGroup {
-  //   return this.get(this.currentPath);
-  // }
-
-  // get(path: Path): EventGroup {
-  //   return this._get(path, this.events);
-  // }
-
-  // _get(path: Path, events: EventGroup): EventGroup {
-  //   if (path.length === 0) {
-  //     return events;
-  //   }
-  //   return this._get(path.splice(1), events[path[0]] as EventGroup);
-  // }
-
-  // pushEventOrGroup(e: Event | EventGroup) {
-  //   const additionalNodeIndex = this._pushEventOrGroup(
-  //     e,
-  //     this.currentPath,
-  //     this.events
-  //   );
-  //   if (additionalNodeIndex !== -1) {
-  //     this.currentPath.push(additionalNodeIndex);
-  //   }
-  // }
-
-  // _pushEventOrGroup(
-  //   e: Event | EventGroup,
-  //   path: Path,
-  //   events: Node[]
-  // ): number {
-  //   if (path.length === 0) {
-  //     events.push(e);
-  //     if (Array.isArray(e)) {
-  //       return events.length - 1;
-  //     }
-  //     return -1;
-  //   } else {
-  //     return this._pushEventOrGroup(
-  //       e,
-  //       path.slice(1),
-  //       events[path[0]] as EventGroup
-  //     );
-  //   }
-  // }
 
   toTimeline(
     lengthAtIndex: number[],

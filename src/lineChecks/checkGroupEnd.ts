@@ -25,8 +25,10 @@ export function checkGroupEnd(
         index: line.length,
       },
     });
-    context.endCurrentGroup()
-    // context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
+    context.endCurrentGroup(lengthAtIndex[i] + line.length, {
+      line: i,
+      index: line.length,
+    });
     return true;
   }
   return false;

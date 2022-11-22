@@ -2,7 +2,7 @@ import { parse, parseDateRange } from "../src/index";
 import { Timelines, Event, DateRange, DateRangePart } from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
-import { Node, SomeNode } from "../src/Node";
+import { Node, NodeArray, SomeNode } from "../src/Node";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
@@ -12,9 +12,9 @@ const nthEvent = (markwhen: Timelines, n: number) =>
 const nthNode = (markwhen: Timelines, n: number) => {
   let node = markwhen.timelines[0].head;
   for (let i = 0; i < n; i++) {
-    node = node?.nextEventNode;
+    node = node?.next;
   }
-  return node as Node;
+  return node as SomeNode;
 };
 
 describe("parsing", () => {
@@ -1561,10 +1561,38 @@ describe("nested groups", () => {
     const last = nthNode(mw, 1);
     expect((last.value as Event).event.eventDescription).toBe("last event");
 
-    expect(first.nextEventNode).toBe(last);
-    expect(last.prevEventNode).toBe(first);
+    expect(first.next).toBe(last);
+    expect(last.prev).toBe(first);
 
     expect(mw.timelines[0].events.flat()).toHaveLength(2);
+  });
+
+  test("group text range", () => {
+    const mw = parse(`
+    group 1
+    group 2
+    group 3
+    group 4
+    group 5
+    2021: an event
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+    endGroup
+
+    2022: last event
+    `);
+
+    const firstGroup = mw.timelines[0].events.get([0]) as Node<NodeArray>;
+    expect(firstGroup.rangeInText?.lineTo.line).toBe(11);
+    expect(firstGroup.rangeInText?.to).toBe(144);
+
+    const fifthGroup = mw.timelines[0].events.get([
+      0, 0, 0, 0, 0,
+    ]) as Node<NodeArray>;
+    expect(fifthGroup.rangeInText?.lineTo.line).toBe(7);
+    expect(fifthGroup.rangeInText?.to).toBe(92);
   });
 });
 
