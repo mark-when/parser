@@ -181,9 +181,11 @@ export class DateRangePart implements DateRange {
   }
 }
 
-export const LINK_REGEX = /\[([^\]]+)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/g;
+export const LINK_REGEX =
+  /\[([^\]\<\>]+)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/g;
 export const LOCATION_REGEX = /\[([^\]]+)\]\((location|map)\)/g;
-export const GOOGLE_PHOTOS_REGEX = /(?:https:\/\/)?photos.app.goo.gl\/\w+/g;
+export const IMAGE_REGEX =
+  /!\[([^\]\<\>]*)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/;
 export const AT_REGEX = /@([\w\d\/]+)/g;
 const PERCENT_REGEX = /(?:\s|^)(\d{1,3})%(?:\s|$)/;
 
@@ -191,8 +193,14 @@ export enum BlockType {
   TEXT = "text",
   LIST_ITEM = "listItem",
   CHECKBOX = "checkbox",
+  IMAGE = "image",
 }
-export class Block {
+
+interface MarkdownBlock {
+  type: BlockType;
+}
+
+export class Block implements MarkdownBlock {
   type: BlockType;
   value?: any;
   raw: string;
@@ -220,12 +228,23 @@ export class Block {
   }
 }
 
+export class Image implements MarkdownBlock {
+  type = "image" as BlockType;
+
+  altText: string;
+  link: string;
+
+  constructor(altText: string, link: string) {
+    this.altText = altText;
+    this.link = link;
+  }
+}
+
 export class EventDescription {
   eventDescription: string;
   tags: string[] = [];
-  supplemental: Block[];
+  supplemental = [] as MarkdownBlock[];
   matchedListItems: Range[];
-  googlePhotosLink?: string;
   locations: string[] = [];
   id?: string;
   percent?: number;
@@ -237,12 +256,15 @@ export class EventDescription {
       if (line.match(COMMENT_REGEX)) {
         continue;
       }
-      line = line.replace(GOOGLE_PHOTOS_REGEX, (match) => {
-        if (!this.googlePhotosLink) {
-          this.googlePhotosLink = match;
+      line = line.replace(
+        IMAGE_REGEX,
+        (match, altText: string, link: string) => {
+          this.supplemental.push(
+            new Image(altText, EventDescription.addHttpIfNeeded(link))
+          );
+          return "";
         }
-        return "";
-      });
+      );
       line = line.replace(LOCATION_REGEX, (match, locationString) => {
         this.locations.push(locationString);
         return "";
@@ -269,10 +291,19 @@ export class EventDescription {
       lines[i] = line;
     }
     this.eventDescription = lines[0];
-    this.supplemental = lines
-      .slice(1)
-      .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim())
-      .map((raw) => new Block(raw.trim()));
+    this.supplemental = this.supplemental.concat(
+      lines
+        .slice(1)
+        .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim())
+        .map((raw) => {
+          const image = raw.match(IMAGE_REGEX);
+          if (image) {
+            return new Image(image[1], image[2]);
+          } else {
+            return new Block(raw.trim());
+          }
+        })
+    );
   }
 
   getInnerHtml() {

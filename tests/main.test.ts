@@ -1,5 +1,12 @@
 import { parse, parseDateRange } from "../src/index";
-import { Timelines, Event, DateRange, DateRangePart } from "../src/Types";
+import {
+  Timelines,
+  Event,
+  DateRange,
+  DateRangePart,
+  Block,
+  Image
+} from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
 import { Node, NodeArray, SomeNode } from "../src/Node";
@@ -514,8 +521,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     );
     const third = nthEvent(markwhen, 2);
     expect(third.event.eventDescription).toBe("third event");
-    expect(third.event.supplemental[0].raw).toBe("more text");
-    expect(third.event.supplemental[1].raw).toBe("even more text");
+    expect((third.event.supplemental[0] as Block).raw).toBe("more text");
+    expect((third.event.supplemental[1] as Block).raw).toBe("even more text");
   });
 
   test("list items", () => {
@@ -536,15 +543,15 @@ after !firstEvent 3 years 8 days 1 month: third event
     const [first, second, third] = getEvents(markwhen);
     expect(second.event.supplemental.length).toBe(2);
     expect(second.event.supplemental[0].type).toBe("listItem");
-    expect(second.event.supplemental[0].raw).toBe("item 1");
+    expect((second.event.supplemental[0] as Block).raw).toBe("item 1");
     expect(second.event.supplemental[1].type).toBe("listItem");
-    expect(second.event.supplemental[1].raw).toBe("item 2");
+    expect((second.event.supplemental[1] as Block).raw).toBe("item 2");
 
     expect(third.event.supplemental.length).toBe(2);
     expect(third.event.supplemental[0].type).toBe("listItem");
-    expect(third.event.supplemental[0].raw).toBe("item 3");
+    expect((third.event.supplemental[0] as Block).raw).toBe("item 3");
     expect(third.event.supplemental[1].type).toBe("listItem");
-    expect(third.event.supplemental[1].raw).toBe("item 4");
+    expect((third.event.supplemental[1] as Block).raw).toBe("item 4");
   });
 
   test("checkbox items", () => {
@@ -565,19 +572,19 @@ after !firstEvent 3 years 8 days 1 month: third event
     const [first, second, third] = getEvents(markwhen);
     expect(second.event.supplemental.length).toBe(2);
     expect(second.event.supplemental[0].type).toBe("checkbox");
-    expect(second.event.supplemental[0].raw).toBe("item 1");
-    expect(second.event.supplemental[0].value).toBe(false);
+    expect((second.event.supplemental[0] as Block).raw).toBe("item 1");
+    expect((second.event.supplemental[0] as Block).value).toBe(false);
     expect(second.event.supplemental[1].type).toBe("checkbox");
-    expect(second.event.supplemental[1].raw).toBe("item 2");
-    expect(second.event.supplemental[1].value).toBe(false);
+    expect((second.event.supplemental[1] as Block).raw).toBe("item 2");
+    expect((second.event.supplemental[1] as Block).value).toBe(false);
 
     expect(third.event.supplemental.length).toBe(2);
     expect(third.event.supplemental[0].type).toBe("checkbox");
-    expect(third.event.supplemental[0].raw).toBe("item 3");
-    expect(third.event.supplemental[0].value).toBe(true);
+    expect((third.event.supplemental[0] as Block).raw).toBe("item 3");
+    expect((third.event.supplemental[0] as Block).value).toBe(true);
     expect(third.event.supplemental[1].type).toBe("checkbox");
-    expect(third.event.supplemental[1].raw).toBe("item 4");
-    expect(third.event.supplemental[1].value).toBe(true);
+    expect((third.event.supplemental[1] as Block).raw).toBe("item 4");
+    expect((third.event.supplemental[1] as Block).value).toBe(true);
   });
 
   test("to now", () => {
@@ -1567,34 +1574,6 @@ describe("nested groups", () => {
     expect(mw.timelines[0].events.flat()).toHaveLength(2);
   });
 
-  test("group text range", () => {
-    const mw = parse(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    2021: an event
-    endGroup
-    endGroup
-    endGroup
-    endGroup
-    endGroup
-
-    2022: last event
-    `);
-
-    const firstGroup = mw.timelines[0].events.get([0]) as Node<NodeArray>;
-    expect(firstGroup.rangeInText?.lineTo.line).toBe(11);
-    expect(firstGroup.rangeInText?.to).toBe(144);
-
-    const fifthGroup = mw.timelines[0].events.get([
-      0, 0, 0, 0, 0,
-    ]) as Node<NodeArray>;
-    expect(fifthGroup.rangeInText?.lineTo.line).toBe(7);
-    expect(fifthGroup.rangeInText?.to).toBe(92);
-  });
-
   test("group foldables", () => {
     const mw = parse(`
     group 1
@@ -1612,8 +1591,36 @@ describe("nested groups", () => {
     2022: last event
     `);
 
-    const foldables = mw.timelines[0].foldables
-    expect(Object.keys(foldables).length).toBe(5)
+    const foldables = mw.timelines[0].foldables;
+    expect(Object.keys(foldables).length).toBe(5);
+  });
+});
+
+describe("mrakdown style image", () => {
+  test("images are parsed", () => {
+    const mw = parse(`
+now: hello ![](example.com/image)
+![](https://example.com/image2.jpg)
+
+    `);
+
+    const supplemental = mw.timelines[0].events.get([0])?.eventValue()
+      .event.supplemental;
+    expect(supplemental).toBeTruthy();
+    expect(supplemental).toHaveLength(2);
+    expect(supplemental?.[0].type).toBe('image')
+    expect((supplemental?.[0] as Image).link).toBe('http://example.com/image')
+  });
+
+  test("image text is removed from first line", () => {
+    const mw = parse(`
+now: hello ![](example.com/image)
+![](https://example.com/image2.jpg)
+
+    `);
+
+    const firstEvent = mw.timelines[0].events.get([0])?.eventValue()
+    expect(firstEvent?.event.eventDescription).toBe('hello ')
   });
 });
 
