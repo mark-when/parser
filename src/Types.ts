@@ -182,10 +182,10 @@ export class DateRangePart implements DateRange {
 }
 
 export const LINK_REGEX =
-  /\[([^\]\<\>]+)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/g;
+  /\[([^\]\<\>]+)\]\(((https?:\/\/)?[\w\d./\&\?=\-#:,_]+)\)/g;
 export const LOCATION_REGEX = /\[([^\]]+)\]\((location|map)\)/g;
 export const IMAGE_REGEX =
-  /!\[([^\]\<\>]*)\]\(((https?:\/\/)?[\w\d./\&\?=\-#]+)\)/;
+  /!\[([^\]\<\>]*)\]\(((https?:\/\/)?[\w\d./\&\?=\-#:,_]+)\)/;
 export const AT_REGEX = /@([\w\d\/]+)/g;
 const PERCENT_REGEX = /(?:\s|^)(\d{1,3})%(?:\s|$)/;
 

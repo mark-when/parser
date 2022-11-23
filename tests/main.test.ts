@@ -5,7 +5,7 @@ import {
   DateRange,
   DateRangePart,
   Block,
-  Image
+  Image,
 } from "../src/Types";
 import { DateTime } from "luxon";
 import { DAY_AMOUNT_REGEX } from "../src/regex";
@@ -1608,8 +1608,8 @@ now: hello ![](example.com/image)
       .event.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
-    expect(supplemental?.[0].type).toBe('image')
-    expect((supplemental?.[0] as Image).link).toBe('http://example.com/image')
+    expect(supplemental?.[0].type).toBe("image");
+    expect((supplemental?.[0] as Image).link).toBe("http://example.com/image");
   });
 
   test("image text is removed from first line", () => {
@@ -1619,8 +1619,15 @@ now: hello ![](example.com/image)
 
     `);
 
-    const firstEvent = mw.timelines[0].events.get([0])?.eventValue()
-    expect(firstEvent?.event.eventDescription).toBe('hello ')
+    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    expect(firstEvent?.event.eventDescription).toBe("hello ");
+  });
+
+  test("images 3", () => {
+    const mw = parse(`10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`)
+    
+    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    expect(firstEvent?.event.eventDescription).toBe("Barn built across the street ");
   });
 });
 
