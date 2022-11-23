@@ -196,7 +196,7 @@ export enum BlockType {
   IMAGE = "image",
 }
 
-interface MarkdownBlock {
+export interface MarkdownBlock {
   type: BlockType;
 }
 
