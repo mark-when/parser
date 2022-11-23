@@ -1624,10 +1624,41 @@ now: hello ![](example.com/image)
   });
 
   test("images 3", () => {
-    const mw = parse(`10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`)
-    
+    const mw = parse(
+      `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
+    );
+
     const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
-    expect(firstEvent?.event.eventDescription).toBe("Barn built across the street ");
+    expect(firstEvent?.event.eventDescription).toBe(
+      "Barn built across the street "
+    );
+  });
+
+  test.only("supplemental items appear in order", () => {
+    const mw =
+      parse(`10/2010: Barn built across the street ![](https://user-images.githubusercontent.com/10823320/199108323-99529603-fab1-485c-ae7f-23c8cbab6918.png)
+    some text in the middle
+    
+    ![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
+    
+    other middle text
+    
+    ![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
+    
+    - [] checkbox
+    some text after`);
+
+    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    const supplemental = firstEvent?.event.supplemental;
+    expect(supplemental).toBeTruthy();
+    expect(supplemental).toHaveLength(7);
+    expect(supplemental![0].type).toBe("image");
+    expect(supplemental![1].type).toBe('text')
+    expect(supplemental![2].type).toBe("image");
+    expect(supplemental![3].type).toBe('text')
+    expect(supplemental![4].type).toBe("image");
+    expect(supplemental![5].type).toBe('checkbox')
+    expect(supplemental![6].type).toBe('text')
   });
 });
 

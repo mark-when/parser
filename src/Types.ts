@@ -256,15 +256,18 @@ export class EventDescription {
       if (line.match(COMMENT_REGEX)) {
         continue;
       }
-      line = line.replace(
-        IMAGE_REGEX,
-        (match, altText: string, link: string) => {
-          this.supplemental.push(
-            new Image(altText, EventDescription.addHttpIfNeeded(link))
-          );
-          return "";
-        }
-      );
+      // only get the image if it's on the first line, others will be scooped up by supplemental
+      if (i === 0) {
+        line = line.replace(
+          IMAGE_REGEX,
+          (match, altText: string, link: string) => {
+            this.supplemental.push(
+              new Image(altText, EventDescription.addHttpIfNeeded(link))
+            );
+            return "";
+          }
+        );
+      }
       line = line.replace(LOCATION_REGEX, (match, locationString) => {
         this.locations.push(locationString);
         return "";
@@ -298,7 +301,10 @@ export class EventDescription {
         .map((raw) => {
           const image = raw.match(IMAGE_REGEX);
           if (image) {
-            return new Image(image[1], image[2]);
+            return new Image(
+              image[1],
+              EventDescription.addHttpIfNeeded(image[2])
+            );
           } else {
             return new Block(raw.trim());
           }
