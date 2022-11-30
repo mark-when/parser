@@ -221,9 +221,11 @@ export class ParsingContext {
       ranges: this.ranges,
       foldables: this.foldables,
       metadata: {
-        earliestTime: this.earliest || now.minus({ years: 5 }),
-        latestTime: this.latest || now.plus({ years: 5 }),
-        maxDuration: this.maxDuration || now.diff(now.minus({ years: 1 })),
+        earliestTime: (this.earliest || now.minus({ years: 5 })).toISO(),
+        latestTime: (this.latest || now.plus({ years: 5 })).toISO(),
+        maxDurationDays: (
+          this.maxDuration || now.diff(now.minus({ years: 1 }))
+        ).as("days"),
         dateFormat: this.dateFormat,
         startLineIndex,
         startStringIndex: lengthAtIndex[startLineIndex],

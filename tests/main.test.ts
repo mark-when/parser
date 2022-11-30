@@ -1662,7 +1662,7 @@ now: hello ![](example.com/image)
     );
   });
 
-  test.only("supplemental items appear in order", () => {
+  test("supplemental items appear in order", () => {
     const mw =
       parse(`10/2010: Barn built across the street ![](https://user-images.githubusercontent.com/10823320/199108323-99529603-fab1-485c-ae7f-23c8cbab6918.png)
     some text in the middle
