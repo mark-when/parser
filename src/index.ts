@@ -334,11 +334,6 @@ function checkEvent(
     },
   };
 
-  const eventRanges = {
-    date: dateRange,
-    event: eventRange,
-  };
-
   // Remove the date part from the first line
   const datePartOfLine = dateRange.originalString!;
   const indexOfDateRange = line.indexOf(datePartOfLine);
@@ -347,7 +342,14 @@ function checkEvent(
     .trim();
 
   const eventDescription = new EventDescription(eventGroup, matchedListItems);
-  const event = new Event(line, eventRanges, eventDescription);
+  const event = new Event(
+    line,
+    dateRange,
+    eventRange,
+    dateRange.dateRangeInText,
+    eventDescription,
+    dateRange.originalString
+  );
 
   if (event) {
     context.push(new Node(event));
@@ -357,8 +359,8 @@ function checkEvent(
     //   context.events.push(event);
     // }
 
-    if (event.event.id && !context.ids[event.event.id]) {
-      context.ids[event.event.id] = event;
+    if (event.eventDescription.id && !context.ids[event.eventDescription.id]) {
+      context.ids[event.eventDescription.id] = event;
     }
 
     if (!context.earliest || dateRange.fromDateTime < context.earliest) {

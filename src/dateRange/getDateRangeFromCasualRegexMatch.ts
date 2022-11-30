@@ -35,7 +35,7 @@ import {
   DateTimeGranularity,
   RelativeDate,
   RangeType,
-  Range
+  Range,
 } from "../Types";
 import {
   fromCasualDateFrom,
@@ -45,6 +45,8 @@ import {
   getTimeFromSlashDateTo,
   getPriorEventToDateTime,
   getPriorEvent,
+  parseSlashDate,
+  roundDateUp,
 } from "./utils";
 
 export function getDateRangeFromCasualRegexMatch(
@@ -101,8 +103,8 @@ export function getDateRangeFromCasualRegexMatch(
     let relativeTo =
       relativeToEventId &&
       (fromBeforeOrAfter === "after"
-        ? context.ids[relativeToEventId]?.ranges.date.toDateTime
-        : context.ids[relativeToEventId]?.ranges.date.fromDateTime);
+        ? context.ids[relativeToEventId]?.dateRange().toDateTime
+        : context.ids[relativeToEventId]?.dateRange().fromDateTime);
 
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
@@ -111,8 +113,8 @@ export function getDateRangeFromCasualRegexMatch(
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
-            ? priorEvent.ranges.date.toDateTime
-            : priorEvent.ranges.date.fromDateTime;
+            ? priorEvent.dateRange().toDateTime
+            : priorEvent.dateRange().fromDateTime;
       }
     }
 
@@ -154,7 +156,7 @@ export function getDateRangeFromCasualRegexMatch(
         .trim();
     }
 
-    const parsed = DateRangePart.parseSlashDate(slashPart, context.dateFormat);
+    const parsed = parseSlashDate(slashPart, context.dateFormat);
     if (parsed) {
       if (timeComponent) {
         const timePart = getTimeFromSlashDateFrom(eventStartLineRegexMatch);
@@ -214,14 +216,14 @@ export function getDateRangeFromCasualRegexMatch(
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
       let relativeTo =
         relativeToEventId &&
-        context.ids[relativeToEventId]?.ranges.date.toDateTime;
+        context.ids[relativeToEventId]?.dateRange().toDateTime;
       if (!relativeTo) {
         // We do not have an event to refer to by id, use the start of this event
         relativeTo = fromDateTime;
       }
       endDateTime = RelativeDate.from(eventEndDate, relativeTo);
     } else if (toCasual) {
-      endDateTime = DateRangePart.roundDateUp(toCasual);
+      endDateTime = roundDateUp(toCasual);
     } else if (slashDateTo) {
       const timeComponent =
         eventStartLineRegexMatch[to_slashDateTimeMatchIndex];
@@ -230,10 +232,7 @@ export function getDateRangeFromCasualRegexMatch(
         slashPart = slashPart.substring(0, slashPart.indexOf(timeComponent));
       }
 
-      const parsed = DateRangePart.parseSlashDate(
-        slashPart,
-        context.dateFormat
-      );
+      const parsed = parseSlashDate(slashPart, context.dateFormat);
       if (parsed) {
         if (timeComponent) {
           const timePart = getTimeFromSlashDateTo(eventStartLineRegexMatch);
@@ -241,12 +240,12 @@ export function getDateRangeFromCasualRegexMatch(
             hour: timePart.dateTime.hour,
             minute: timePart.dateTime.minute,
           });
-          endDateTime = DateRangePart.roundDateUp({
+          endDateTime = roundDateUp({
             dateTime: endDateTime,
             granularity: timePart.granularity,
           });
         } else {
-          endDateTime = DateRangePart.roundDateUp(parsed);
+          endDateTime = roundDateUp(parsed);
         }
 
         // Something non-ISO has come up, assume they want that
@@ -276,14 +275,14 @@ export function getDateRangeFromCasualRegexMatch(
       endDateTime = DateTime.now();
       granularity = "instant";
     } else {
-      endDateTime = DateRangePart.roundDateUp({
+      endDateTime = roundDateUp({
         dateTime: DateTime.fromISO(eventEndDate),
         granularity: "instant",
       });
     }
   }
   if (!endDateTime || !endDateTime.isValid) {
-    endDateTime = DateRangePart.roundDateUp({
+    endDateTime = roundDateUp({
       dateTime: fromDateTime,
       granularity,
     });

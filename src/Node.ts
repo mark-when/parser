@@ -178,8 +178,8 @@ export class Node<T extends NodeValue>
 
     if (this.isEventNode()) {
       return {
-        ...this.eventValue().ranges.date,
-        maxFrom: this.eventValue().ranges.date.fromDateTime,
+        ...this.eventValue().dateRange(),
+        maxFrom: this.eventValue().dateRange().fromDateTime,
       };
     }
 

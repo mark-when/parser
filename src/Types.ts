@@ -1,6 +1,6 @@
 import { DateTime, Duration } from "luxon";
 import { Foldable } from ".";
-import { Node, NodeArray, NodeValue, SomeNode } from "./Node";
+import { Node, NodeArray, SomeNode } from "./Node";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -128,6 +128,8 @@ export interface DateRange {
   toDateTime: DateTime;
 }
 
+export type DateTimeIso = string;
+
 export class DateRangePart implements DateRange {
   fromDateTime: DateTime;
   toDateTime: DateTime;
@@ -144,40 +146,6 @@ export class DateRangePart implements DateRange {
     this.toDateTime = toDateTime;
     this.originalString = originalString;
     this.dateRangeInText = dateRangeInText;
-  }
-
-  static parseSlashDate(
-    s: string,
-    fullFormat: string
-  ): GranularDateTime | undefined {
-    let dateTime = DateTime.fromFormat(s, fullFormat);
-    if (dateTime.isValid) {
-      return { dateTime, granularity: "day" };
-    }
-    dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_MONTH_YEAR);
-    if (dateTime.isValid) {
-      return { dateTime, granularity: "month" };
-    }
-    dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_YEAR);
-    if (dateTime.isValid) {
-      return { dateTime, granularity: "year" };
-    }
-  }
-
-  static roundDateUp(granularDateTime: GranularDateTime): DateTime {
-    if (!granularDateTime.dateTime.isValid) {
-      return granularDateTime.dateTime;
-    }
-    if (
-      ["instant", "hour", "minute", "second"].includes(
-        granularDateTime.granularity
-      )
-    ) {
-      return granularDateTime.dateTime;
-    }
-    return granularDateTime.dateTime.plus({
-      [granularDateTime.granularity]: 1,
-    });
   }
 }
 
@@ -379,29 +347,55 @@ export type Range = {
   lineTo: Line;
 };
 
-export type EventRanges = { event: Range; date: DateRangePart };
+export interface DateRangeIso {
+  fromDateTimeIso: DateTimeIso;
+  toDateTimeIso: DateTimeIso;
+}
+
+export const toDateRangeIso = (dr: DateRange) => ({
+  fromDateTimeIso: dr.fromDateTime.toISO(),
+  toDateTimeIso: dr.toDateTime.toISO(),
+});
+
+export const toDateRange = (dr: DateRangeIso) => ({
+  fromDateTime: DateTime.fromISO(dr.fromDateTimeIso),
+  toDateTime: DateTime.fromISO(dr.toDateTimeIso),
+});
 
 export class Event {
   eventString: string;
-  ranges: EventRanges;
-  event: EventDescription;
+  dateRangeIso: DateRangeIso;
+  rangeInText: Range;
+  eventDescription: EventDescription;
+  dateText?: string;
+  dateRangeInText: Range;
 
   constructor(
     eventString: string,
-    ranges: EventRanges,
-    event: EventDescription
+    dateRange: DateRange,
+    rangeInText: Range,
+    dateRangeInText: Range,
+    event: EventDescription,
+    dateText?: string
   ) {
     this.eventString = eventString;
-    this.ranges = ranges;
-    this.event = event;
+    this.dateRangeIso = toDateRangeIso(dateRange);
+    this.rangeInText = rangeInText;
+    this.eventDescription = event;
+    this.dateText = dateText;
+    this.dateRangeInText = dateRangeInText;
   }
 
   getInnerHtml(): string {
-    return this.event.getInnerHtml();
+    return this.eventDescription.getInnerHtml();
   }
 
   getDateHtml(): string {
-    return this.ranges.date.originalString || "";
+    return this.dateText || "";
+  }
+
+  dateRange() {
+    return toDateRange(this.dateRangeIso);
   }
 }
 

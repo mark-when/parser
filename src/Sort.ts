@@ -29,15 +29,15 @@
 
 //   const sortDown = function(event1: Event, event2: Event) {
 //     return sortDownDateTime(
-//       event1.ranges.date.fromDateTime,
-//       event2.ranges.date.fromDateTime
+//       event1.dateRange.fromDateTime,
+//       event2.dateRange.fromDateTime
 //     );
 //   };
 
 //   const sortUp = function(event1: Event, event2: Event) {
 //     return sortUpDateTime(
-//       event1.ranges.date.fromDateTime,
-//       event2.ranges.date.fromDateTime
+//       event1.dateRange.fromDateTime,
+//       event2.dateRange.fromDateTime
 //     );
 //   };
 
@@ -61,11 +61,11 @@
 //         }
 //         return sortingDown
 //           ? sortDownDateTime(
-//               eventOrEvents1.ranges.date.fromDateTime,
+//               eventOrEvents1.dateRange.fromDateTime,
 //               eventOrEvents2.range?.min ?? now
 //             )
 //           : sortUpDateTime(
-//               eventOrEvents1.ranges.date.fromDateTime,
+//               eventOrEvents1.dateRange.fromDateTime,
 //               eventOrEvents2.range?.min ?? now
 //             );
 //       }
@@ -80,11 +80,11 @@
 //       return sortingDown
 //         ? sortDownDateTime(
 //             eventOrEvents1.range?.min ?? now,
-//             eventOrEvents2.ranges.date.fromDateTime
+//             eventOrEvents2.dateRange.fromDateTime
 //           )
 //         : sortUpDateTime(
 //             eventOrEvents1.range?.min ?? now,
-//             eventOrEvents2.ranges.date.fromDateTime
+//             eventOrEvents2.dateRange.fromDateTime
 //           );
 //     }
 
@@ -109,24 +109,24 @@
 //   if (!events || !events.length) {
 //     return;
 //   }
-//   let min: DateTime = events[0].ranges.date.fromDateTime,
-//     max: DateTime = events[0].ranges.date.fromDateTime,
-//     latest = events[0].ranges.date.toDateTime;
+//   let min: DateTime = events[0].dateRange.fromDateTime,
+//     max: DateTime = events[0].dateRange.fromDateTime,
+//     latest = events[0].dateRange.toDateTime;
 //   for (const e of events) {
-//     min = e.ranges.date.fromDateTime < min ? e.ranges.date.fromDateTime : min;
-//     max = e.ranges.date.fromDateTime > max ? e.ranges.date.fromDateTime : max;
+//     min = e.dateRange.fromDateTime < min ? e.dateRange.fromDateTime : min;
+//     max = e.dateRange.fromDateTime > max ? e.dateRange.fromDateTime : max;
 //     latest =
-//       e.ranges.date.toDateTime > latest ? e.ranges.date.toDateTime : latest;
+//       e.dateRange.toDateTime > latest ? e.dateRange.toDateTime : latest;
 //   }
 //   events.range = { min, max, latest };
 // }
 
 // function sortGroup(events: EventGroup, sort: Sort) {
 //   const sortDown = function(event1: Event, event2: Event) {
-//     return +event1.ranges.date.fromDateTime - +event2.ranges.date.fromDateTime;
+//     return +event1.dateRange.fromDateTime - +event2.dateRange.fromDateTime;
 //   };
 //   const sortUp = function(event1: Event, event2: Event) {
-//     return +event2.ranges.date.fromDateTime - +event1.ranges.date.fromDateTime;
+//     return +event2.dateRange.fromDateTime - +event1.dateRange.fromDateTime;
 //   };
 //   events.sort(sort === "down" ? sortDown : sortUp);
 // }

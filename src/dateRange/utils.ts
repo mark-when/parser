@@ -47,7 +47,14 @@ import {
   TAG_REGEX,
 } from "../regex";
 import { Node, NodeArray, NodeValue } from "../Node";
-import { GranularDateTime, Event, Range, EventGroup } from "../Types";
+import {
+  GranularDateTime,
+  Event,
+  Range,
+  EventGroup,
+  DATE_TIME_FORMAT_MONTH_YEAR,
+  DATE_TIME_FORMAT_YEAR,
+} from "../Types";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -344,7 +351,7 @@ export function getPriorEventToDateTime(
   if (!priorEvent) {
     return;
   }
-  return priorEvent.ranges.date.toDateTime;
+  return priorEvent.dateRange().toDateTime;
 }
 
 export function getPriorEventFromDateTime(context: ParsingContext) {
@@ -353,5 +360,39 @@ export function getPriorEventFromDateTime(context: ParsingContext) {
   if (!priorEvent) {
     return;
   }
-  return priorEvent.ranges.date.fromDateTime;
+  return priorEvent.dateRange().fromDateTime;
+}
+
+export function parseSlashDate(
+  s: string,
+  fullFormat: string
+): GranularDateTime | undefined {
+  let dateTime = DateTime.fromFormat(s, fullFormat);
+  if (dateTime.isValid) {
+    return { dateTime, granularity: "day" };
+  }
+  dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_MONTH_YEAR);
+  if (dateTime.isValid) {
+    return { dateTime, granularity: "month" };
+  }
+  dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_YEAR);
+  if (dateTime.isValid) {
+    return { dateTime, granularity: "year" };
+  }
+}
+
+export function roundDateUp(granularDateTime: GranularDateTime): DateTime {
+  if (!granularDateTime.dateTime.isValid) {
+    return granularDateTime.dateTime;
+  }
+  if (
+    ["instant", "hour", "minute", "second"].includes(
+      granularDateTime.granularity
+    )
+  ) {
+    return granularDateTime.dateTime;
+  }
+  return granularDateTime.dateTime.plus({
+    [granularDateTime.granularity]: 1,
+  });
 }

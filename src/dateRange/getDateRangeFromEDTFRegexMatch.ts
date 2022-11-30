@@ -26,7 +26,7 @@ import {
   RangeType,
   Range,
 } from "../Types";
-import { getPriorEvent } from "./utils";
+import { getPriorEvent, roundDateUp } from "./utils";
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,
@@ -83,8 +83,8 @@ export function getDateRangeFromEDTFRegexMatch(
     let relativeTo =
       relativeToEventId &&
       (fromBeforeOrAfter === "after"
-        ? context.ids[relativeToEventId]?.ranges.date.toDateTime
-        : context.ids[relativeToEventId]?.ranges.date.fromDateTime);
+        ? context.ids[relativeToEventId]?.dateRange().toDateTime
+        : context.ids[relativeToEventId]?.dateRange().fromDateTime);
 
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
@@ -93,8 +93,8 @@ export function getDateRangeFromEDTFRegexMatch(
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
-            ? priorEvent.ranges.date.toDateTime
-            : priorEvent.ranges.date.fromDateTime;
+            ? priorEvent.dateRange().toDateTime
+            : priorEvent.dateRange().fromDateTime;
       }
     }
 
@@ -147,7 +147,7 @@ export function getDateRangeFromEDTFRegexMatch(
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
       let relativeTo =
         relativeToEventId &&
-        context.ids[relativeToEventId]?.ranges.date.toDateTime;
+        context.ids[relativeToEventId]?.dateRange().toDateTime;
       if (!relativeTo) {
         // We do not have an event to refer to by id, use the start of this event
         relativeTo = fromDateTime;
@@ -157,7 +157,7 @@ export function getDateRangeFromEDTFRegexMatch(
       endDateTime = DateTime.now();
       granularity = "instant";
     } else if (edtfTo) {
-      endDateTime = DateRangePart.roundDateUp({
+      endDateTime = roundDateUp({
         dateTime: DateTime.fromISO(edtfTo),
         granularity: edtfToHasDay ? "day" : edtfToHasMonth ? "month" : "year",
       });
@@ -165,7 +165,7 @@ export function getDateRangeFromEDTFRegexMatch(
   }
 
   if (!endDateTime || !endDateTime.isValid) {
-    endDateTime = DateRangePart.roundDateUp({
+    endDateTime = roundDateUp({
       dateTime: fromDateTime,
       granularity,
     });
