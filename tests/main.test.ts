@@ -3,13 +3,11 @@ import {
   Timelines,
   Event,
   DateRange,
-  DateRangePart,
   Block,
   Image,
 } from "../src/Types";
 import { DateTime } from "luxon";
-import { DAY_AMOUNT_REGEX } from "../src/regex";
-import { Node, NodeArray, SomeNode } from "../src/Node";
+import {  SomeNode } from "../src/Node";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
@@ -17,11 +15,16 @@ const nthEvent = (markwhen: Timelines, n: number) =>
   nthNode(markwhen, n).value as Event;
 
 const nthNode = (markwhen: Timelines, n: number) => {
-  let node = markwhen.timelines[0].head;
-  for (let i = 0; i < n; i++) {
-    node = node?.next;
+  let i = 0
+  for (const { path, node } of markwhen.timelines[0].events) {
+    if (node.isEventNode()) {
+      if (i === n) {
+        return node
+      }
+      i++
+    }
   }
-  return node as SomeNode;
+  throw new Error()
 };
 
 describe("parsing", () => {
@@ -1446,12 +1449,6 @@ describe("nested groups", () => {
     let head: SomeNode = mw.timelines[0].events;
     const flat = head.flat();
     expect(flat).toHaveLength(9);
-
-    while (!!head.next) {
-      const node = head.next;
-      expect(flat).toContain(node);
-      head = node;
-    }
   });
 
   test("can iterate nodes", () => {
@@ -1567,39 +1564,6 @@ describe("nested groups", () => {
     expect(
       (mw.timelines[0].head?.value as Event).eventDescription.eventDescription
     ).toBe("an event");
-  });
-
-  test("deeply nested has proper head and tail", () => {
-    const mw = parse(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    2021: an event
-    endGroup
-    endGroup
-    endGroup
-    endGroup
-    endGroup
-
-    2022: last event
-    `);
-
-    const first = nthNode(mw, 0);
-    expect((first.value as Event).eventDescription.eventDescription).toBe(
-      "an event"
-    );
-
-    const last = nthNode(mw, 1);
-    expect((last.value as Event).eventDescription.eventDescription).toBe(
-      "last event"
-    );
-
-    expect(first.next).toBe(last);
-    expect(last.prev).toBe(first);
-
-    expect(mw.timelines[0].events.flat()).toHaveLength(2);
   });
 
   test("group foldables", () => {

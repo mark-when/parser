@@ -38,6 +38,7 @@ import { checkViewers } from "./lineChecks/checkViewers";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
 import { Node, NodeArray, NodeValue, SomeNode } from "./Node";
+import { push } from "./Noder";
 
 // export const sorts: Sort[] = ["none", "down", "up"];
 
@@ -182,10 +183,11 @@ export class ParsingContext {
   }
 
   push(node: SomeNode) {
-    const { path, tail: newTail } = this.events.push(
+    const { path, tail: newTail } = push(
       node,
-      this.tail,
-      this.currentPath.slice(0, -1)
+      this.events,
+      this.currentPath.slice(0, -1),
+      this.tail
     );
     if (newTail) {
       if (!this.head) {
