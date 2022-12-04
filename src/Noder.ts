@@ -162,7 +162,7 @@ export const ranges = (root: SomeNode): GroupRange => {
   return childRanges;
 };
 
-export const blankClone = (node: SomeNode): SomeNode => {
+export const blankClone = <T extends NodeValue>(node: Node<T>): Node<T> => {
   if (!Array.isArray(node.value)) {
     return new Node(node.value!);
   }
@@ -172,6 +172,7 @@ export const blankClone = (node: SomeNode): SomeNode => {
   clone.title = node.title;
   clone.style = node.style;
   clone.rangeInText = node.rangeInText;
+  // @ts-ignore
   return clone;
 };
 
