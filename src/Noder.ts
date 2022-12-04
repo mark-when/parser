@@ -1,36 +1,38 @@
 import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node";
 import { Event, Path, toDateRange } from "./Types";
 
-export const iterate = (
-  node: SomeNode
-): Iterator<{ path: number[]; node: SomeNode }> => {
-  let stack = [node];
-  let path = [] as number[];
-  let pathInverted = [] as number[];
-
+export const iterate = (node: SomeNode) => {
   return {
-    next() {
-      const ourPath = [...pathInverted];
-      const value = stack.shift();
-      if (Array.isArray(value?.value)) {
-        stack = value!.value.concat(stack);
-        path.push(value!.value.length);
-        pathInverted.push(0);
-      } else {
-        path[path.length - 1] -= 1;
-        pathInverted[pathInverted.length - 1] += 1;
-        while (path[path.length - 1] <= 0) {
-          path.pop();
-          path[path.length - 1] -= 1;
-          pathInverted.pop();
-          pathInverted[pathInverted.length - 1] += 1;
-        }
-      }
+    [Symbol.iterator](): Iterator<{ path: number[]; node: SomeNode }> {
+      let stack = [node];
+      let path = [] as number[];
+      let pathInverted = [] as number[];
+
       return {
-        done: !value as true,
-        value: {
-          path: ourPath,
-          node: value,
+        next() {
+          const ourPath = [...pathInverted];
+          const value = stack.shift();
+          if (Array.isArray(value?.value)) {
+            stack = value!.value.concat(stack);
+            path.push(value!.value.length);
+            pathInverted.push(0);
+          } else {
+            path[path.length - 1] -= 1;
+            pathInverted[pathInverted.length - 1] += 1;
+            while (path[path.length - 1] <= 0) {
+              path.pop();
+              path[path.length - 1] -= 1;
+              pathInverted.pop();
+              pathInverted[pathInverted.length - 1] += 1;
+            }
+          }
+          return {
+            done: !value as true,
+            value: {
+              path: ourPath,
+              node: value,
+            },
+          };
         },
       };
     },
@@ -103,7 +105,7 @@ export const getLast = (node: SomeNode): { node: SomeNode; path: Path } => {
   };
 };
 
-export const flat = (node: SomeNode) => {};
+export const flat = (node: SomeNode) => flatMap(node, (n) => n);
 
 export const flatMap = <T>(
   node: SomeNode,
@@ -173,12 +175,12 @@ export const blankClone = (node: SomeNode): SomeNode => {
   return clone;
 };
 
-export const eventValue = (node: Node<Event>) => {
-  return node.value as Event;
+export const eventValue = (node: Node<Event> | undefined) => {
+  return node?.value as Event;
 };
 
-export const arrayValue = (node: Node<NodeArray>) => {
-  return node.value as NodeArray;
+export const arrayValue = (node: Node<NodeArray> | undefined) => {
+  return node?.value as NodeArray;
 };
 
 export const isEventNode = <T extends NodeValue>(

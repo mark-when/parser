@@ -1,13 +1,15 @@
 import { parse, parseDateRange } from "../src/index";
-import {
-  Timelines,
-  Event,
-  DateRange,
-  Block,
-  Image,
-} from "../src/Types";
+import { Timelines, Event, DateRange, Block, Image } from "../src/Types";
 import { DateTime } from "luxon";
-import {  SomeNode } from "../src/Node";
+import { SomeNode, Node } from "../src/Node";
+import {
+  eventValue,
+  flat,
+  flatMap,
+  get,
+  isEventNode,
+  iterate,
+} from "../src/Noder";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
@@ -15,16 +17,16 @@ const nthEvent = (markwhen: Timelines, n: number) =>
   nthNode(markwhen, n).value as Event;
 
 const nthNode = (markwhen: Timelines, n: number) => {
-  let i = 0
-  for (const { path, node } of markwhen.timelines[0].events) {
-    if (node.isEventNode()) {
+  let i = 0;
+  for (const { path, node } of iterate(markwhen.timelines[0].events)) {
+    if (isEventNode(node)) {
       if (i === n) {
-        return node
+        return node;
       }
-      i++
+      i++;
     }
   }
-  throw new Error()
+  throw new Error();
 };
 
 describe("parsing", () => {
@@ -1447,8 +1449,8 @@ describe("nested groups", () => {
     `);
 
     let head: SomeNode = mw.timelines[0].events;
-    const flat = head.flat();
-    expect(flat).toHaveLength(9);
+    const flt = flat(head);
+    expect(flt).toHaveLength(9);
   });
 
   test("can iterate nodes", () => {
@@ -1505,8 +1507,7 @@ describe("nested groups", () => {
     const numNodes = 16;
     let i = 0;
     let s = ``;
-    // @ts-ignore
-    for (const { path, node } of mw.timelines[0].events) {
+    for (const { path, node } of iterate(mw.timelines[0].events)) {
       i++;
     }
     expect(i).toEqual(numNodes);
@@ -1539,8 +1540,8 @@ describe("nested groups", () => {
     2021: an event
     `);
 
-    for (const { path, node } of mw.timelines[0].events) {
-      if (node.eventValue() instanceof Event) {
+    for (const { path, node } of iterate(mw.timelines[0].events)) {
+      if (isEventNode(node)) {
         // The path of the node with an actual event
         expect(path).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
@@ -1596,8 +1597,9 @@ now: hello ![](example.com/image)
 
     `);
 
-    const supplemental = mw.timelines[0].events.get([0])?.eventValue()
-      .eventDescription.supplemental;
+    const supplemental = eventValue(
+      get(mw.timelines[0].events, [0]) as Node<Event>
+    ).eventDescription.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
     expect(supplemental?.[0].type).toBe("image");
@@ -1611,7 +1613,9 @@ now: hello ![](example.com/image)
 
     `);
 
-    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    const firstEvent = eventValue(
+      get(mw.timelines[0].events, [0]) as Node<Event>
+    );
     expect(firstEvent?.eventDescription.eventDescription).toBe("hello ");
   });
 
@@ -1620,7 +1624,9 @@ now: hello ![](example.com/image)
       `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
     );
 
-    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    const firstEvent = eventValue(
+      get(mw.timelines[0].events, [0]) as Node<Event>
+    );
     expect(firstEvent?.eventDescription.eventDescription).toBe(
       "Barn built across the street "
     );
@@ -1640,7 +1646,9 @@ now: hello ![](example.com/image)
     - [] checkbox
     some text after`);
 
-    const firstEvent = mw.timelines[0].events.get([0])?.eventValue();
+    const firstEvent = eventValue(
+      get(mw.timelines[0].events, [0]) as Node<Event>
+    );
     const supplemental = firstEvent?.eventDescription.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(7);
@@ -1655,13 +1663,11 @@ now: hello ![](example.com/image)
 });
 
 function getDateRanges(m: Timelines): DateRange[] {
-  return m.timelines[0].events
-    .flat()
-    .map((n) => (n.value as Event).dateRange());
+  return flat(m.timelines[0].events).map((n) => (n.value as Event).dateRange());
 }
 
 function getEvents(m: Timelines) {
-  return m.timelines[0].events.flat().map((n) => n.value as Event);
+  return flatMap(m.timelines[0].events, (n) => n.value as Event);
 }
 
 function checkDate(
