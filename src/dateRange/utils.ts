@@ -54,6 +54,7 @@ import {
   EventGroup,
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
+  toDateRange,
 } from "../Types";
 
 export function getTimeFromRegExpMatch(
@@ -351,7 +352,7 @@ export function getPriorEventToDateTime(
   if (!priorEvent) {
     return;
   }
-  return priorEvent.dateRange().toDateTime;
+  return toDateRange(priorEvent.dateRangeIso).toDateTime;
 }
 
 export function getPriorEventFromDateTime(context: ParsingContext) {
@@ -360,7 +361,7 @@ export function getPriorEventFromDateTime(context: ParsingContext) {
   if (!priorEvent) {
     return;
   }
-  return priorEvent.dateRange().fromDateTime;
+  return toDateRange(priorEvent.dateRangeIso).fromDateTime;
 }
 
 export function parseSlashDate(

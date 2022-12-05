@@ -36,6 +36,7 @@ import {
   RelativeDate,
   RangeType,
   Range,
+  toDateRange,
 } from "../Types";
 import {
   fromCasualDateFrom,
@@ -103,8 +104,12 @@ export function getDateRangeFromCasualRegexMatch(
     let relativeTo =
       relativeToEventId &&
       (fromBeforeOrAfter === "after"
-        ? context.ids[relativeToEventId]?.dateRange().toDateTime
-        : context.ids[relativeToEventId]?.dateRange().fromDateTime);
+        ? context.ids[relativeToEventId]
+          ? toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime
+          : undefined
+        : context.ids[relativeToEventId]
+        ? toDateRange(context.ids[relativeToEventId].dateRangeIso).fromDateTime
+        : undefined);
 
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
@@ -113,8 +118,8 @@ export function getDateRangeFromCasualRegexMatch(
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
-            ? priorEvent.dateRange().toDateTime
-            : priorEvent.dateRange().fromDateTime;
+            ? toDateRange(priorEvent.dateRangeIso).toDateTime
+            : toDateRange(priorEvent.dateRangeIso).fromDateTime;
       }
     }
 
@@ -216,7 +221,8 @@ export function getDateRangeFromCasualRegexMatch(
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
       let relativeTo =
         relativeToEventId &&
-        context.ids[relativeToEventId]?.dateRange().toDateTime;
+        context.ids[relativeToEventId] &&
+        toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime;
       if (!relativeTo) {
         // We do not have an event to refer to by id, use the start of this event
         relativeTo = fromDateTime;

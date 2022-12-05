@@ -7,6 +7,7 @@ import {
   EVENT_ID_REGEX,
   TAG_REGEX,
 } from "./regex";
+import { addHttpIfNeeded } from "./utilities/html";
 
 export type DateTimeGranularity =
   | "instant"
@@ -230,7 +231,7 @@ export class EventDescription {
           IMAGE_REGEX,
           (match, altText: string, link: string) => {
             this.supplemental.push(
-              new Image(altText, EventDescription.addHttpIfNeeded(link))
+              new Image(altText, addHttpIfNeeded(link))
             );
             return "";
           }
@@ -271,47 +272,13 @@ export class EventDescription {
           if (image) {
             return new Image(
               image[1],
-              EventDescription.addHttpIfNeeded(image[2])
+              addHttpIfNeeded(image[2])
             );
           } else {
             return new Block(raw.trim());
           }
         })
     );
-  }
-
-  getInnerHtml() {
-    return EventDescription.toInnerHtml(this.eventDescription);
-  }
-
-  static toInnerHtml(s: string): string {
-    return s
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(LINK_REGEX, (substring, linkText, link) => {
-        return `<a class="underline" href="${EventDescription.addHttpIfNeeded(
-          link
-        )}">${linkText}</a>`;
-      })
-      .replace(/&/g, "&amp;")
-      .replace(AT_REGEX, (substring, at) => {
-        return `<a class="underline" href="/${at}">@${at}</a>`;
-      });
-  }
-
-  static addHttpIfNeeded(s: string): string {
-    if (
-      s.startsWith("http://") ||
-      s.startsWith("https://") ||
-      s.startsWith("/")
-    ) {
-      return s;
-    }
-    return `http://${s}`;
-  }
-
-  static reverseString(s: string): string {
-    return s.split("").reverse().join("");
   }
 }
 
@@ -384,18 +351,6 @@ export class Event {
     this.eventDescription = event;
     this.dateText = dateText;
     this.dateRangeInText = dateRangeInText;
-  }
-
-  getInnerHtml(): string {
-    return this.eventDescription.getInnerHtml();
-  }
-
-  getDateHtml(): string {
-    return this.dateText || "";
-  }
-
-  dateRange() {
-    return toDateRange(this.dateRangeIso);
   }
 }
 

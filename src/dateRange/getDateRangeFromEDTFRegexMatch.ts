@@ -25,6 +25,7 @@ import {
   RelativeDate,
   RangeType,
   Range,
+  toDateRange,
 } from "../Types";
 import { getPriorEvent, roundDateUp } from "./utils";
 
@@ -83,8 +84,12 @@ export function getDateRangeFromEDTFRegexMatch(
     let relativeTo =
       relativeToEventId &&
       (fromBeforeOrAfter === "after"
-        ? context.ids[relativeToEventId]?.dateRange().toDateTime
-        : context.ids[relativeToEventId]?.dateRange().fromDateTime);
+        ? context.ids[relativeToEventId]
+          ? toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime
+          : undefined
+        : context.ids[relativeToEventId]
+        ? toDateRange(context.ids[relativeToEventId].dateRangeIso).fromDateTime
+        : undefined);
 
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
@@ -93,8 +98,8 @@ export function getDateRangeFromEDTFRegexMatch(
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
-            ? priorEvent.dateRange().toDateTime
-            : priorEvent.dateRange().fromDateTime;
+            ? toDateRange(priorEvent.dateRangeIso).toDateTime
+            : toDateRange(priorEvent.dateRangeIso).fromDateTime;
       }
     }
 
@@ -147,7 +152,8 @@ export function getDateRangeFromEDTFRegexMatch(
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
       let relativeTo =
         relativeToEventId &&
-        context.ids[relativeToEventId]?.dateRange().toDateTime;
+        context.ids[relativeToEventId] &&
+        toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime;
       if (!relativeTo) {
         // We do not have an event to refer to by id, use the start of this event
         relativeTo = fromDateTime;
