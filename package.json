@@ -1,6 +1,6 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Markwhen parser",
   "main": "lib/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
     "timeline"
   ],
   "author": "Rob Koch",
-  "license": "AGPL",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/mark-when/parser/issues"
   },
