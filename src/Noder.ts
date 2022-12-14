@@ -109,12 +109,12 @@ export const flat = (node: SomeNode) => flatMap(node, (n) => n);
 
 export const flatMap = <T>(
   node: SomeNode,
-  mapper: (n: SomeNode) => T
+  mapper: (n: Node<Event>) => T
 ): Array<T> => {
-  if (Array.isArray(node.value)) {
-    return node.value.flatMap((n) => flatMap(n, mapper));
+  if (isEventNode(node)) {
+    return [mapper(node)];
   }
-  return [mapper(node)];
+  return (node.value as NodeArray).flatMap((n) => flatMap(n, mapper));
 };
 
 export const eventRange = (e: Event) => toDateRange(e.dateRangeIso);

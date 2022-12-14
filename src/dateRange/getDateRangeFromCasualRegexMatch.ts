@@ -158,7 +158,8 @@ export function getDateRangeFromCasualRegexMatch(
     if (timeComponent) {
       slashPart = slashPart
         .substring(0, slashPart.indexOf(timeComponent))
-        .trim();
+        .trim()
+        .replace(/,/g, "");
     }
 
     const parsed = parseSlashDate(slashPart, context.dateFormat);
@@ -235,7 +236,10 @@ export function getDateRangeFromCasualRegexMatch(
         eventStartLineRegexMatch[to_slashDateTimeMatchIndex];
       let slashPart = slashDateTo;
       if (timeComponent) {
-        slashPart = slashPart.substring(0, slashPart.indexOf(timeComponent));
+        slashPart = slashPart
+          .substring(0, slashPart.indexOf(timeComponent))
+          .trim()
+          .replace(/,/g, "");
       }
 
       const parsed = parseSlashDate(slashPart, context.dateFormat);

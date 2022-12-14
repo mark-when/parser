@@ -851,6 +851,17 @@ after !firstEvent 3 years 8 days 1 month: third event
       const to = dateRange.toDateTime;
       checkDate(to, 2022, 8, 8, 12, 34, 0);
     });
+
+    test("casual times with comma", () => {
+      const markwhen = parse("4 Jun 2020, 8:39 - 8 aug 2022, 12:34: event");
+
+      const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
+      const from = dateRange.fromDateTime;
+      checkDate(from, 2020, 6, 4, 8, 39, 0);
+
+      const to = dateRange.toDateTime;
+      checkDate(to, 2022, 8, 8, 12, 34, 0);
+    });
   });
 
   describe("slash dates and times", () => {
@@ -878,6 +889,34 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       let to = dateRange.toDateTime;
       checkDate(to, 2011, 5, 12, 18, 0, 0);
+    });
+
+    test.only("with commas", () => {
+      const markwhen = parse(`
+dateFormat: d/M/y
+5/9/2009, 18:00 - May 12 2011, 6pm: event
+May 12 2011, 6pm - 5/9/2099, 18:00: event
+5/12/2011, 6pm - 5/9/2099, 18:00: event
+1 month 1 day: next event
+3 years 8 days 1 month: third event`);
+
+      let dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
+      let from = dateRange.fromDateTime;
+      checkDate(from, 2009, 9, 5, 18, 0, 0);
+
+      let to = dateRange.toDateTime;
+      checkDate(to, 2011, 5, 12, 18, 0, 0);
+
+      let { fromDateTime, toDateTime } = toDateRange(
+        nthEvent(markwhen, 1).dateRangeIso
+      );
+      checkDate(fromDateTime, 2011, 5, 12, 18, 0, 0);
+      checkDate(toDateTime, 2099, 9, 5, 18, 0, 0);
+
+      let { fromDateTime: fromDateTime1, toDateTime: toDateTime1 } =
+        toDateRange(nthEvent(markwhen, 2).dateRangeIso);
+      checkDate(fromDateTime1, 2011, 12, 5, 18, 0, 0);
+      checkDate(toDateTime1, 2099, 9, 5, 18, 0, 0);
     });
   });
 

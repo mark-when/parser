@@ -44,7 +44,7 @@ export const CASUAL_MONTH_REGEX = new RegExp(
 export const ISO8601_REGEX = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2,}(?:\.\d*)?Z/;
 export const NOW_REGEX = /now/;
 export const DATE_REGEX = new RegExp(
-  `(\\d{1,5}(\\/\\d{1,5}(\\/\\d{1,5}(?:\\s+${TIME_REGEX.source})?)?)?)`
+  `(\\d{1,5}(\\/\\d{1,5}(\\/\\d{1,5}(?:(?:,|\\s)+${TIME_REGEX.source})?)?)?)`
 );
 
 export const START_OR_END_TIME_REGEX = new RegExp(
