@@ -891,7 +891,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2011, 5, 12, 18, 0, 0);
     });
 
-    test.only("with commas", () => {
+    test("with commas", () => {
       const markwhen = parse(`
 dateFormat: d/M/y
 5/9/2009, 18:00 - May 12 2011, 6pm: event
@@ -917,6 +917,18 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
         toDateRange(nthEvent(markwhen, 2).dateRangeIso);
       checkDate(fromDateTime1, 2011, 12, 5, 18, 0, 0);
       checkDate(toDateTime1, 2099, 9, 5, 18, 0, 0);
+    });
+
+    test("commas 2", () => {
+      const markwhen = parse(`
+12/15/2022, 8:00AM - 12/15/2022, 9:30AM: Event`);
+
+      let dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
+      let from = dateRange.fromDateTime;
+      checkDate(from, 2022, 12, 15, 8, 0, 0);
+
+      let to = dateRange.toDateTime;
+      checkDate(to, 2022, 12, 15, 9, 30, 0);
     });
   });
 
