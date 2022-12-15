@@ -1,6 +1,14 @@
 import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node";
 import { Event, Path, toDateRange } from "./Types";
 
+export const toArray = (node: SomeNode) => {
+  const array = [] as { path: Path, node: SomeNode}[]
+  for (const pathAndNode of iterate(node)) {
+    array.push(pathAndNode)
+  }
+  return array
+}
+
 export const iterate = (node: SomeNode) => {
   return {
     [Symbol.iterator](): Iterator<{ path: number[]; node: SomeNode }> {

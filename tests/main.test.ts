@@ -16,6 +16,7 @@ import {
   get,
   isEventNode,
   iterate,
+  toArray,
 } from "../src/Noder";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
@@ -1599,7 +1600,10 @@ describe("nested groups", () => {
     const numNodes = 16;
     let i = 0;
     let s = ``;
+    const asArray = toArray(mw.timelines[0].events);
     for (const { path, node } of iterate(mw.timelines[0].events)) {
+      expect(JSON.stringify(asArray[i].path)).toEqual(JSON.stringify(path));
+      expect(JSON.stringify(asArray[i].node.value)).toEqual(JSON.stringify(node.value));
       i++;
     }
     expect(i).toEqual(numNodes);
