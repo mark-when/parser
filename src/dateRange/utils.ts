@@ -55,7 +55,9 @@ import {
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
   toDateRange,
+  DateTimeIso,
 } from "../Types";
+import { Cache } from "../Cache";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -71,10 +73,10 @@ export function getTimeFromRegExpMatch(
 
   if (timeMeridiemHour) {
     return {
-      dateTime: DateTime.fromFormat(
+      dateTimeIso: DateTime.fromFormat(
         `${timeMeridiemHour}${timeMeridiemMinute}${timeMeridiem}`,
         "h:mma"
-      ),
+      ).toISO(),
       granularity: timeMeridiemMinute === ":00" ? "hour" : "minute",
     };
   }
@@ -82,12 +84,12 @@ export function getTimeFromRegExpMatch(
   const time24HourHour = eventStartMatches[time24HourHourIndex];
   const time24HourMinute = eventStartMatches[time24HourMinuteIndex];
   return {
-    dateTime: DateTime.fromFormat(
+    dateTimeIso: DateTime.fromFormat(
       `${time24HourHour}${time24HourMinute}`,
       `${
         time24HourHour.length === 2 && time24HourHour[0] === "0" ? "HH" : "H"
       }:mm`
-    ),
+    ).toISO(),
     granularity: time24HourMinute === ":00" ? "hour" : "minute",
   };
 }
@@ -200,10 +202,14 @@ export function fromCasualDateFrom(
 
   if (date) {
     if (timeMatch) {
-      date.dateTime = date.dateTime.set({
-        hour: timeMatch.dateTime.hour,
-        minute: timeMatch.dateTime.minute,
-      });
+      const dt = DateTime.fromISO(date.dateTimeIso);
+      const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso);
+      date.dateTimeIso = dt
+        .set({
+          hour: timeMatchIso.hour,
+          minute: timeMatchIso.minute,
+        })
+        .toISO();
       date.granularity = timeMatch.granularity;
     }
     return date;
@@ -215,14 +221,14 @@ export function fromCasualDateFrom(
   month = eventStartMatches[from_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
-      dateTime: DateTime.fromFormat(`${year} ${month}`, "y MMMM"),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM").toISO(),
       granularity: "month",
     };
   }
   month = eventStartMatches[from_casualMonthMonthAbbrMatchIndex];
   if (month) {
     return {
-      dateTime: DateTime.fromFormat(`${year} ${month}`, "y MMM"),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM").toISO(),
       granularity: "month",
     };
   }
@@ -271,10 +277,14 @@ export function fromCasualDateTo(
   if (date) {
     if (timeMatch) {
       if (timeMatch) {
-        date.dateTime = date.dateTime.set({
-          hour: timeMatch.dateTime.hour,
-          minute: timeMatch.dateTime.minute,
-        });
+        const dt = DateTime.fromISO(date.dateTimeIso);
+        const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso);
+        date.dateTimeIso = dt
+          .set({
+            hour: timeMatchIso.hour,
+            minute: timeMatchIso.minute,
+          })
+          .toISO();
         date.granularity = timeMatch.granularity;
       }
     }
@@ -286,14 +296,14 @@ export function fromCasualDateTo(
   month = eventStartMatches[to_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
-      dateTime: DateTime.fromFormat(`${year} ${month}`, "y MMMM"),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM").toISO(),
       granularity: "month",
     };
   }
   month = eventStartMatches[to_casualMonthMonthAbbrMatchIndex];
   if (month) {
     return {
-      dateTime: DateTime.fromFormat(`${year} ${month}`, "y MMM"),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM").toISO(),
       granularity: "month",
     };
   }
@@ -301,14 +311,14 @@ export function fromCasualDateTo(
 
 export function parseAsCasualDayFullMonth(s: string): GranularDateTime {
   return {
-    dateTime: DateTime.fromFormat(s, "y MMMM d"),
+    dateTimeIso: DateTime.fromFormat(s, "y MMMM d").toISO(),
     granularity: "day",
   };
 }
 
 export function parseAsCasualDayAbbrMonth(s: string): GranularDateTime {
   return {
-    dateTime: DateTime.fromFormat(s, "y MMM d"),
+    dateTimeIso: DateTime.fromFormat(s, "y MMM d").toISO(),
     granularity: "day",
   };
 }
@@ -356,7 +366,6 @@ export function getPriorEventToDateTime(
 }
 
 export function getPriorEventFromDateTime(context: ParsingContext) {
-  debugger;
   const priorEvent = getPriorEvent(context);
   if (!priorEvent) {
     return;
@@ -366,34 +375,74 @@ export function getPriorEventFromDateTime(context: ParsingContext) {
 
 export function parseSlashDate(
   s: string,
-  fullFormat: string
+  fullFormat: string,
+  cache?: Cache
 ): GranularDateTime | undefined {
+  const cacheKey = JSON.stringify({ s, fullFormat });
+  const cached = cache?.slashDate.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const cacheAndReturn = (gdt: GranularDateTime) => {
+    cache?.slashDate.set(cacheKey, gdt);
+    return gdt;
+  };
+
   let dateTime = DateTime.fromFormat(s, fullFormat);
   if (dateTime.isValid) {
-    return { dateTime, granularity: "day" };
+    return cacheAndReturn({
+      dateTimeIso: dateTime.toISO(),
+      granularity: "day",
+    });
   }
   dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_MONTH_YEAR);
   if (dateTime.isValid) {
-    return { dateTime, granularity: "month" };
+    return cacheAndReturn({
+      dateTimeIso: dateTime.toISO(),
+      granularity: "month",
+    });
   }
   dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_YEAR);
   if (dateTime.isValid) {
-    return { dateTime, granularity: "year" };
+    return cacheAndReturn({
+      dateTimeIso: dateTime.toISO(),
+      granularity: "year",
+    });
   }
 }
 
-export function roundDateUp(granularDateTime: GranularDateTime): DateTime {
-  if (!granularDateTime.dateTime.isValid) {
-    return granularDateTime.dateTime;
+export function roundDateUp(
+  granularDateTime: GranularDateTime,
+  cache?: Cache
+): DateTimeIso {
+  const cacheKey = JSON.stringify(granularDateTime);
+  const cached = cache?.roundDateUp.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const cacheAndReturn = (s: DateTimeIso) => {
+    cache?.roundDateUp.set(cacheKey, s);
+    return s;
+  };
+
+  const dt = DateTime.fromISO(granularDateTime.dateTimeIso);
+  if (!dt.isValid) {
+    return cacheAndReturn(granularDateTime.dateTimeIso);
   }
   if (
     ["instant", "hour", "minute", "second"].includes(
       granularDateTime.granularity
     )
   ) {
-    return granularDateTime.dateTime;
+    return cacheAndReturn(granularDateTime.dateTimeIso);
   }
-  return granularDateTime.dateTime.plus({
-    [granularDateTime.granularity]: 1,
-  });
+  return cacheAndReturn(
+    dt
+      .plus({
+        [granularDateTime.granularity]: 1,
+      })
+      .toISO()
+  );
 }

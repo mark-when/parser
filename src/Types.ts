@@ -1,5 +1,6 @@
 import { DateTime, Duration } from "luxon";
 import { Foldable } from ".";
+import { Cache } from "./Cache";
 import { Node, NodeArray, SomeNode } from "./Node";
 import {
   AMOUNT_REGEX,
@@ -18,7 +19,7 @@ export type DateTimeGranularity =
   | "minute";
 
 export type GranularDateTime = {
-  dateTime: DateTime;
+  dateTimeIso: DateTimeIso;
   granularity: DateTimeGranularity;
 };
 
@@ -230,9 +231,7 @@ export class EventDescription {
         line = line.replace(
           IMAGE_REGEX,
           (match, altText: string, link: string) => {
-            this.supplemental.push(
-              new Image(altText, addHttpIfNeeded(link))
-            );
+            this.supplemental.push(new Image(altText, addHttpIfNeeded(link)));
             return "";
           }
         );
@@ -270,10 +269,7 @@ export class EventDescription {
         .map((raw) => {
           const image = raw.match(IMAGE_REGEX);
           if (image) {
-            return new Image(
-              image[1],
-              addHttpIfNeeded(image[2])
-            );
+            return new Image(image[1], addHttpIfNeeded(image[2]));
           } else {
             return new Block(raw.trim());
           }
@@ -393,6 +389,7 @@ export function emptyTimeline(): Timeline {
 
 export interface Timelines {
   timelines: Timeline[];
+  cache?: Cache;
 }
 
 export interface EventGroup extends Array<Event | EventGroup> {

@@ -18,6 +18,7 @@ import {
   iterate,
   toArray,
 } from "../src/Noder";
+import { Cache } from "../src/Cache";
 
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
@@ -37,19 +38,71 @@ const nthNode = (markwhen: Timelines, n: number) => {
   throw new Error();
 };
 
+const timers = {
+  normal: [] as number[],
+  cacheInit: [] as number[],
+  withCache: [] as number[],
+};
+
+// afterAll(() => {
+//   logTimingData();
+// });
+
+const logTimingData = () => {
+  for (const key of Object.keys(timers)) {
+    const k = key as keyof typeof timers;
+    console.log(
+      `Average ${k} parse`,
+      timers[k].reduce((p, c) => p + c, 0) / timers[k].length
+    );
+  }
+};
+
+const time = <T>(fn: () => T, timeKey: keyof typeof timers) => {
+  const start = performance.now();
+  const result = fn();
+  timers[timeKey].push(performance.now() - start);
+  return result;
+};
+
+const p = () => {
+  let cache: Cache;
+  return [
+    (s: string) => {
+      const result = time(() => parse(s, true), "cacheInit");
+      cache = result.cache!;
+      return result;
+    },
+    (s: string) => time(() => parse(s, cache), "withCache"),
+    (s: string) => time(() => parse(s), "normal"),
+  ];
+};
+
+const sameParse = <T>(expected: T) =>
+  p().map((parse) => [parse, expected] as [(s: string) => Timelines, T]);
+
+const sp = () => sameParse([]);
+
 describe("parsing", () => {
-  test("ISO dates", async () => {
-    const markwhen = parse("2022-05-01T12:13:14.00Z: some event");
+  test.each(sameParse(DateTime.fromISO("2022-05-01T12:13:14.00Z")))(
+    "ISO dates",
+    async (p, expected) => {
+      const markwhen = p("2022-05-01T12:13:14.00Z: some event");
 
-    const { fromDateTime } = toDateRange(
-      firstEvent(markwhen).dateRangeIso
-    ) as DateRange;
-    const asIso = DateTime.fromISO("2022-05-01T12:13:14.00Z");
-    expect(fromDateTime.equals(asIso)).toBe(true);
-  });
+      const { fromDateTime } = toDateRange(
+        firstEvent(markwhen).dateRangeIso
+      ) as DateRange;
+      expect(fromDateTime.equals(expected)).toBe(true);
+    }
+  );
 
-  test("ISO date range", async () => {
-    const markwhen = parse(
+  test.each(
+    sameParse([
+      DateTime.fromISO("2022-05-01T12:13:14.00Z"),
+      DateTime.fromISO("2024-01-27T18:13:59.00Z"),
+    ])
+  )("ISO date range", async (p, [fromDateTime, toDateTime]) => {
+    const markwhen = p(
       "2022-05-01T12:13:14.00Z-2024-01-27T18:13:59.00Z: some event"
     );
 
@@ -57,16 +110,17 @@ describe("parsing", () => {
       firstEvent(markwhen).dateRangeIso
     ) as DateRange;
 
-    expect(
-      dateRange.fromDateTime.equals(DateTime.fromISO("2022-05-01T12:13:14.00Z"))
-    ).toBe(true);
-    expect(
-      dateRange.toDateTime.equals(DateTime.fromISO("2024-01-27T18:13:59.00Z"))
-    ).toBe(true);
+    expect(dateRange.fromDateTime.equals(fromDateTime)).toBe(true);
+    expect(dateRange.toDateTime.equals(toDateTime)).toBe(true);
   });
 
-  test("ISO date range with space", async () => {
-    const markwhen = parse(
+  test.each(
+    sameParse([
+      DateTime.fromISO("2022-05-01T12:13:14.00Z"),
+      DateTime.fromISO("2024-01-27T18:13:59.00Z"),
+    ])
+  )("ISO date range with space", async (p, [fromDateTime, toDateTime]) => {
+    const markwhen = p(
       "2022-05-01T12:13:14.00Z - 2024-01-27T18:13:59.00Z: some event"
     );
 
@@ -74,16 +128,12 @@ describe("parsing", () => {
       firstEvent(markwhen).dateRangeIso
     ) as DateRange;
 
-    expect(
-      dateRange.fromDateTime.equals(DateTime.fromISO("2022-05-01T12:13:14.00Z"))
-    ).toBe(true);
-    expect(
-      dateRange.toDateTime.equals(DateTime.fromISO("2024-01-27T18:13:59.00Z"))
-    ).toBe(true);
+    expect(dateRange.fromDateTime.equals(fromDateTime)).toBe(true);
+    expect(dateRange.toDateTime.equals(toDateTime)).toBe(true);
   });
 
-  test("year by itself", async () => {
-    const markwhen = parse("1999: event");
+  test.each(sameParse([]))("year by itself", async (p) => {
+    const markwhen = p("1999: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -104,8 +154,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("year to year", async () => {
-    const markwhen = parse("1999 - 2099: event");
+  test.each(sameParse([]))("year to year", async (p) => {
+    const markwhen = p("1999 - 2099: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -126,8 +176,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("slash month 1", async () => {
-    const markwhen = parse("04/2010: event");
+  test.each(sameParse([]))("slash month 1", async (p) => {
+    const markwhen = p("04/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -148,8 +198,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("slash month 2", async () => {
-    const markwhen = parse("04/2010 - 2010: event");
+  test.each(sameParse([]))("slash month 2", async (p) => {
+    const markwhen = p("04/2010 - 2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -170,8 +220,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("slash month 3", async () => {
-    const markwhen = parse("04/2010 - 08/2012: event");
+  test.each(sameParse([]))("slash month 3", async (p) => {
+    const markwhen = p("04/2010 - 08/2012: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -192,8 +242,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("slash month 4", async () => {
-    const markwhen = parse("1945- 7/2010: event");
+  test.each(sameParse([]))("slash month 4", async (p) => {
+    const markwhen = p("1945- 7/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -214,8 +264,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("american slash day 1", async () => {
-    const markwhen = parse("04/25/1945- 7/2010: event");
+  test.each(sameParse([]))("american slash day 1", async (p) => {
+    const markwhen = p("04/25/1945- 7/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -236,8 +286,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("american slash day 2", async () => {
-    const markwhen = parse("12/3/1945 -04/7/2010: event");
+  test.each(sameParse([]))("american slash day 2", async (p) => {
+    const markwhen = p("12/3/1945 -04/7/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -258,8 +308,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("american slash day 3", async () => {
-    const markwhen = parse("2000 - 09/22/2010: event");
+  test.each(sameParse([]))("american slash day 3", async (p) => {
+    const markwhen = p("2000 - 09/22/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -280,8 +330,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("european slash day 1", async () => {
-    const markwhen = parse("dateFormat: d/M/y\n2000 - 09/12/2010: event");
+  test.each(sameParse([]))("european slash day 1", async (p) => {
+    const markwhen = p("dateFormat: d/M/y\n2000 - 09/12/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -302,8 +352,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("european slash day 2", async () => {
-    const markwhen = parse("dateFormat: d/M/y\n5/9/2009 - 09/2010: event");
+  test.each(sameParse([]))("european slash day 2", async (p) => {
+    const markwhen = p("dateFormat: d/M/y\n5/9/2009 - 09/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -324,8 +374,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("european slash day 3", async () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("european slash day 3", async (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009 - 2024-01-27T18:13:59.00Z: event"
     );
 
@@ -351,8 +401,8 @@ describe("parsing", () => {
     expect(to.second).toBe(59);
   });
 
-  test("european slash day 4", async () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("european slash day 4", async (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n2024-01-27T18:13:59.00Z - 5/9/2009: event"
     );
 
@@ -378,8 +428,8 @@ describe("parsing", () => {
     expect(from.second).toBe(59);
   });
 
-  test("european slash day 5", async () => {
-    const markwhen = parse("dateFormat: d/M/y\n5/9/2009: event");
+  test.each(sameParse([]))("european slash day 5", async (p) => {
+    const markwhen = p("dateFormat: d/M/y\n5/9/2009: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -400,8 +450,8 @@ describe("parsing", () => {
     expect(to.second).toBe(0);
   });
 
-  test("relative dates 1", async () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("relative dates 1", async (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009: event\n1 week: next event"
     );
 
@@ -438,8 +488,8 @@ describe("parsing", () => {
     expect(secondRange.toDateTime.equals(from.plus({ weeks: 1 }))).toBe(true);
   });
 
-  test("relative dates 2", async () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("relative dates 2", async (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
     );
 
@@ -469,8 +519,8 @@ describe("parsing", () => {
     checkDateTime(to, from.plus({ years: 3, months: 1, days: 8 }));
   });
 
-  test("relative dates 3", async () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("relative dates 3", async (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
     );
 
@@ -502,8 +552,8 @@ describe("parsing", () => {
     expect(to.equals(from.plus({ years: 3, months: 1, days: 8 }))).toBe(true);
   });
 
-  test("relative by id", () => {
-    const markwhen = parse(`
+  test.each(sameParse([]))("relative by id", (p) => {
+    const markwhen = p(`
 5/9/2009: event !firstEvent
 after !firstEvent 1 month 1 day: next event
 after !firstEvent 3 years 8 days 1 month: third event
@@ -522,8 +572,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     checkDateTime(sixth.fromDateTime, fourth.toDateTime);
   });
 
-  test("event title", () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("event title", (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
     );
     const first = firstEvent(markwhen);
@@ -534,8 +584,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect(third.eventDescription.eventDescription).toBe("third event");
   });
 
-  test("supplemental descriptions", () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("supplemental descriptions", (p) => {
+    const markwhen = p(
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\nmore text\neven more text"
     );
     const third = nthEvent(markwhen, 2);
@@ -548,8 +598,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     );
   });
 
-  test("list items", () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("list items", (p) => {
+    const markwhen = p(
       `dateFormat: d/M/y
       5/9/2009: event
       1 month 1 day: next event
@@ -585,8 +635,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     );
   });
 
-  test("checkbox items", () => {
-    const markwhen = parse(
+  test.each(sameParse([]))("checkbox items", (p) => {
+    const markwhen = p(
       `dateFormat: d/M/y
       5/9/2009: event
       1 month 1 day: next event
@@ -630,8 +680,8 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect((third.eventDescription.supplemental[1] as Block).value).toBe(true);
   });
 
-  test("to now", () => {
-    const markwhen = parse("June 4 1999 - now: event");
+  test.each(sp())("to now", (p) => {
+    const markwhen = p("June 4 1999 - now: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -643,8 +693,8 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   describe("casual dates", () => {
-    test("casual dates via month words 1", () => {
-      const markwhen = parse("dateFormat: d/M/y\n5 June 2009: event");
+    test.each(sp())("casual dates via month words 1", (p) => {
+      const markwhen = p("dateFormat: d/M/y\n5 June 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(
@@ -657,8 +707,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 2", () => {
-      const markwhen = parse("dateFormat: d/M/y\nJune 5 2009: event");
+    test.each(sp())("casual dates via month words 2", (p) => {
+      const markwhen = p("dateFormat: d/M/y\nJune 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(
@@ -671,8 +721,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 3", () => {
-      const markwhen = parse("dateFormat: d/M/y\nJun 5 2009: event");
+    test.each(sp())("casual dates via month words 3", (p) => {
+      const markwhen = p("dateFormat: d/M/y\nJun 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(
@@ -685,8 +735,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 4", () => {
-      const markwhen = parse("  5 Jun 2009: event");
+    test.each(sp())("casual dates via month words 4", (p) => {
+      const markwhen = p("  5 Jun 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(
@@ -699,8 +749,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 5", () => {
-      const markwhen = parse("June   2009: event");
+    test.each(sp())("casual dates via month words 5", (p) => {
+      const markwhen = p("June   2009: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO("2009-06-01");
       expect(
@@ -713,8 +763,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 6", () => {
-      const markwhen = parse(" Feb  2009: event");
+    test.each(sp())("casual dates via month words 6", (p) => {
+      const markwhen = p(" Feb  2009: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO("2009-02-01");
       expect(
@@ -727,8 +777,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       ).toBe(true);
     });
 
-    test("casual dates via month words 7", () => {
-      const markwhen = parse("Feb: event");
+    test.each(sp())("casual dates via month words 7", (p) => {
+      const markwhen = p("Feb: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO("2022-02-01");
       expect(
@@ -743,8 +793,8 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   describe("casual times", () => {
-    test("casual times 1", () => {
-      const markwhen = parse("June 4 8am: event");
+    test.each(sp())("casual times 1", (p) => {
+      const markwhen = p("June 4 8am: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -754,8 +804,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 8, 0, 0);
     });
 
-    test("casual times 2", () => {
-      const markwhen = parse("June 4 8:00: event");
+    test.each(sp())("casual times 2", (p) => {
+      const markwhen = p("June 4 8:00: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -765,8 +815,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 8, 0, 0);
     });
 
-    test("casual times 3", () => {
-      const markwhen = parse("June 4 8:00 - 9:30: event");
+    test.each(sp())("casual times 3", (p) => {
+      const markwhen = p("June 4 8:00 - 9:30: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -776,8 +826,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 9, 30, 0);
     });
 
-    test("casual times 4", () => {
-      const markwhen = parse("June 4 8:00 - 19:30: event");
+    test.each(sp())("casual times 4", (p) => {
+      const markwhen = p("June 4 8:00 - 19:30: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -787,8 +837,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 19, 30, 0);
     });
 
-    test("casual times 5", () => {
-      const markwhen = parse("June 4 1990 8am - 9:30pm: event");
+    test.each(sp())("casual times 5", (p) => {
+      const markwhen = p("June 4 1990 8am - 9:30pm: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -798,8 +848,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 1990, 6, 4, 21, 30, 0);
     });
 
-    test("casual times 6", () => {
-      const markwhen = parse("June 4 08:00: event");
+    test.each(sp())("casual times 6", (p) => {
+      const markwhen = p("June 4 08:00: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -809,8 +859,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 8, 0, 0);
     });
 
-    test("casual times 7", () => {
-      const markwhen = parse("June 4 8:39: event");
+    test.each(sp())("casual times 7", (p) => {
+      const markwhen = p("June 4 8:39: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -820,8 +870,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 6, 4, 8, 39, 0);
     });
 
-    test("casual times 8", () => {
-      const markwhen = parse("June 4 8:39 - August 8 12:34: event");
+    test.each(sp())("casual times 8", (p) => {
+      const markwhen = p("June 4 8:39 - August 8 12:34: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -831,8 +881,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 8, 8, 12, 34, 0);
     });
 
-    test("casual times 9", () => {
-      const markwhen = parse("June 4 2020 8:39 - 8 August 12:34: event");
+    test.each(sp())("casual times 9", (p) => {
+      const markwhen = p("June 4 2020 8:39 - 8 August 12:34: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -842,8 +892,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 8, 8, 12, 34, 0);
     });
 
-    test("casual times 10", () => {
-      const markwhen = parse("4 Jun 2020 8:39 - 8 aug 2022 12:34: event");
+    test.each(sp())("casual times 10", (p) => {
+      const markwhen = p("4 Jun 2020 8:39 - 8 aug 2022 12:34: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -853,8 +903,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2022, 8, 8, 12, 34, 0);
     });
 
-    test("casual times with comma", () => {
-      const markwhen = parse("4 Jun 2020, 8:39 - 8 aug 2022, 12:34: event");
+    test.each(sp())("casual times with comma", (p) => {
+      const markwhen = p("4 Jun 2020, 8:39 - 8 aug 2022, 12:34: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
@@ -866,8 +916,8 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   describe("slash dates and times", () => {
-    test("1", () => {
-      const markwhen = parse(
+    test.each(sp())("1", (p) => {
+      const markwhen = p(
         "dateFormat: d/M/y\n5/9/2009 18:00: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
       );
 
@@ -879,8 +929,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2009, 9, 5, 18, 0, 0);
     });
 
-    test("2", () => {
-      const markwhen = parse(
+    test.each(sp())("2", (p) => {
+      const markwhen = p(
         "dateFormat: d/M/y\n5/9/2009 18:00 - May 12 2011 6pm: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
       );
 
@@ -892,8 +942,8 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(to, 2011, 5, 12, 18, 0, 0);
     });
 
-    test("with commas", () => {
-      const markwhen = parse(`
+    test.each(sp())("with commas", (p) => {
+      const markwhen = p(`
 dateFormat: d/M/y
 5/9/2009, 18:00 - May 12 2011, 6pm: event
 May 12 2011, 6pm - 5/9/2099, 18:00: event
@@ -920,8 +970,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(toDateTime1, 2099, 9, 5, 18, 0, 0);
     });
 
-    test("commas 2", () => {
-      const markwhen = parse(`
+    test.each(sp())("commas 2", (p) => {
+      const markwhen = p(`
 12/15/2022, 8:00AM - 12/15/2022, 9:30AM: Event`);
 
       let dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -934,8 +984,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   });
 
   describe("etdf dates", () => {
-    test("yyyy", () => {
-      const markwhen = parse("2022: event");
+    test.each(sp())("yyyy", (p) => {
+      const markwhen = p("2022: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -945,8 +995,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2023, 1, 1, 0, 0, 0);
     });
 
-    test("yyyy-mm", () => {
-      const markwhen = parse("2022-06: event");
+    test.each(sp())("yyyy-mm", (p) => {
+      const markwhen = p("2022-06: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -956,8 +1006,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2022, 7, 1, 0, 0, 0);
     });
 
-    test("yyyy-mm-dd", () => {
-      const markwhen = parse("2022-06-07: event");
+    test.each(sp())("yyyy-mm-dd", (p) => {
+      const markwhen = p("2022-06-07: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -967,8 +1017,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2022, 6, 8, 0, 0, 0);
     });
 
-    test("yyyy-mm-dd/yyyy", () => {
-      const markwhen = parse("2022-06-07/2023: event");
+    test.each(sp())("yyyy-mm-dd/yyyy", (p) => {
+      const markwhen = p("2022-06-07/2023: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -979,8 +1029,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2024, 1, 1, 0, 0, 0);
     });
 
-    test("yyyy-mm-dd/yyyy-mm", () => {
-      const markwhen = parse("2022-06-07/2023-11: event");
+    test.each(sp())("yyyy-mm-dd/yyyy-mm", (p) => {
+      const markwhen = p("2022-06-07/2023-11: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -991,8 +1041,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2023, 12, 1, 0, 0, 0);
     });
 
-    test("yyyy-mm-dd/yyyy-mm-dd", () => {
-      const markwhen = parse("2022-06-07/2023-02-21: event");
+    test.each(sp())("yyyy-mm-dd/yyyy-mm-dd", (p) => {
+      const markwhen = p("2022-06-07/2023-02-21: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -1003,8 +1053,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2023, 2, 22, 0, 0, 0);
     });
 
-    test("yyyy-mm/yyyy-mm-dd", () => {
-      const markwhen = parse("2022-06/2023-09-09: event");
+    test.each(sp())("yyyy-mm/yyyy-mm-dd", (p) => {
+      const markwhen = p("2022-06/2023-09-09: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -1015,8 +1065,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2023, 9, 10, 0, 0, 0);
     });
 
-    test("yyyy-mm/relative", () => {
-      const markwhen = parse("2022-06/3 weeks: event");
+    test.each(sp())("yyyy-mm/relative", (p) => {
+      const markwhen = p("2022-06/3 weeks: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -1026,8 +1076,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(to, from.plus({ weeks: 3 }));
     });
 
-    test("yyyy-mm/relative", () => {
-      const markwhen = parse(
+    test.each(sp())("yyyy-mm/relative", (p) => {
+      const markwhen = p(
         `2021: a thing
         2022-06/3 weeks: am i stupid or what
         8 days 6 minutes/2023: event`
@@ -1047,8 +1097,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       );
     });
 
-    test("yyyy-mm/relative", () => {
-      const markwhen = parse("2022-09/3 weeks: event");
+    test.each(sp())("yyyy-mm/relative", (p) => {
+      const markwhen = p("2022-09/3 weeks: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -1058,8 +1108,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(to, 2022, 9, 22);
     });
 
-    test("yyyy-mm/week day", () => {
-      const markwhen = parse("2022-09/3 weekdays: event");
+    test.each(sp())("yyyy-mm/week day", (p) => {
+      const markwhen = p("2022-09/3 weekdays: event");
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       let from = dateRange.fromDateTime;
@@ -1071,8 +1121,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   });
 
   describe("work/week days", () => {
-    test("Less than a week", () => {
-      const markwhen = parse(`
+    test.each(sp())("Less than a week", (p) => {
+      const markwhen = p(`
       July 10, 2022: Sunday
       5 work days: til friday
       `);
@@ -1082,8 +1132,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
 
-    test("Less than a week (week)", () => {
-      const markwhen = parse(`
+    test.each(sp())("Less than a week (week)", (p) => {
+      const markwhen = p(`
       July 10, 2022: Sunday
       5 week days: til friday
       `);
@@ -1093,8 +1143,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(secondRange.toDateTime, 2022, 7, 16, 0, 0, 0);
     });
 
-    test("Span over a weekend", () => {
-      const markwhen = parse(`
+    test.each(sp())("Span over a weekend", (p) => {
+      const markwhen = p(`
       July 10, 2022: Sunday
       10 work days: til next friday
       `);
@@ -1104,8 +1154,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(secondRange.toDateTime, 2022, 7, 23, 0, 0, 0);
     });
 
-    test("From middle of week", () => {
-      const markwhen = parse(`
+    test.each(sp())("From middle of week", (p) => {
+      const markwhen = p(`
       July 13, 2022 - 10 workdays: til next friday
       `);
 
@@ -1114,8 +1164,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(firstRange.toDateTime, 2022, 7, 27, 0, 0, 0);
     });
 
-    test("As from and to times", () => {
-      const markwhen = parse(`
+    test.each(sp())("As from and to times", (p) => {
+      const markwhen = p(`
       July 11, 2022: Monday
 
       // This is 10 work days after July 10, lasting for 10 work days
@@ -1127,8 +1177,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
 
-    test("As from and to times (week)", () => {
-      const markwhen = parse(`
+    test.each(sp())("As from and to times (week)", (p) => {
+      const markwhen = p(`
       July 11, 2022: Monday
 
       // This is 10 work days after July 10, lasting for 10 work days
@@ -1140,8 +1190,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(secondRange.toDateTime, 2022, 8, 9);
     });
 
-    test("Business/week/work days", () => {
-      const markwhen = parse(`
+    test.each(sp())("Business/week/work days", (p) => {
+      const markwhen = p(`
       July 11, 2022: Monday
 
       // This is 10 work days after July 10, lasting for 10 work days
@@ -1160,8 +1210,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(thirdRange.toDateTime, 2022, 8, 20);
     });
 
-    test("Before 1", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before 1", (p) => {
+      const markwhen = p(`
       July 11 2022: !monday Monday
 
       by !monday 7 work days: event
@@ -1173,8 +1223,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(second.toDateTime, first.fromDateTime);
     });
 
-    test("Before 2", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before 2", (p) => {
+      const markwhen = p(`
       July 11 2022: !monday Monday
 
       August 18 2022: another event
@@ -1188,8 +1238,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(third.toDateTime, first.fromDateTime);
     });
 
-    test("Before 3", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before 3", (p) => {
+      const markwhen = p(`
       July 11 2022: !monday Monday
 
       August 18 2022: another event
@@ -1203,8 +1253,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(third.toDateTime, second.fromDateTime);
     });
 
-    test("Before 4", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before 4", (p) => {
+      const markwhen = p(`
       July 11 2022: !monday Monday
 
       August 18 2022: another event
@@ -1218,8 +1268,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(third.toDateTime, first.fromDateTime);
     });
 
-    test("Before 5", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before 5", (p) => {
+      const markwhen = p(`
       group
       July 11 2022: !monday Monday
       endGroup
@@ -1235,8 +1285,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(third.toDateTime, first.fromDateTime);
     });
 
-    test("Before 6", () => {
-      const markwhen = parse(`dateFormat: d/M/y
+    test.each(sp())("Before 6", (p) => {
+      const markwhen = p(`dateFormat: d/M/y
       #announcements: red
       10/4/2023: ANNUAL CHURCH MEETING !ACM
 
@@ -1250,8 +1300,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDateTime(fourth.toDateTime, third.toDateTime);
     });
 
-    test("Before with buffer", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before with buffer", (p) => {
+      const markwhen = p(`
       group
       July 11 2022: !monday Monday
       endGroup
@@ -1269,8 +1319,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(third.toDateTime, 2022, 7, 6);
     });
 
-    test("Before with buffer", () => {
-      const markwhen = parse(`
+    test.each(sp())("Before with buffer", (p) => {
+      const markwhen = p(`
       group
       July 11 2022: !monday Monday
       endGroup
@@ -1290,8 +1340,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   });
 
   describe("tags", () => {
-    test("skips number only", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("skips number only", (p) => {
+      const markwhen = p(`title: my timelines
       description: my description
       now - 10 years: an event #1
       1 year: event #2
@@ -1302,8 +1352,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       expect(tagLiterals).toContainEqual("third");
     });
 
-    test("skips number only 2", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("skips number only 2", (p) => {
+      const markwhen = p(`title: my timelines
       description: my description
       now - 10 years: an event #1 #3342 #098
       1 year: event #2 #another #tag
@@ -1318,8 +1368,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   });
 
   describe.skip("due dates & relative dates", () => {
-    test("to event 1", () => {
-      const markwhen = parse(`
+    test.each(sp())("to event 1", (p) => {
+      const markwhen = p(`
       2024: !event1 event
       2022/!event1: from 2022 to !event1
       `);
@@ -1330,8 +1380,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(second.toDateTime, 2024, 1, 1);
     });
 
-    test("to event 2", () => {
-      const markwhen = parse(`
+    test.each(sp())("to event 2", (p) => {
+      const markwhen = p(`
       2024: !event1 event
       2022 - !event1: from 2022 to !event1
       `);
@@ -1342,8 +1392,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(second.toDateTime, 2024, 1, 1);
     });
 
-    test("to event 3", () => {
-      const markwhen = parse(`
+    test.each(sp())("to event 3", (p) => {
+      const markwhen = p(`
       2024: !event1 event
       !event1/2025: from 2024 to 2025
       `);
@@ -1354,8 +1404,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       checkDate(second.toDateTime, 2024, 1, 1);
     });
 
-    test("to event 4", () => {
-      const markwhen = parse(`
+    test.each(sp())("to event 4", (p) => {
+      const markwhen = p(`
       2024: !event1 event
       !event1 - 2025: from 2024 to 2025
       `);
@@ -1368,16 +1418,16 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   });
 
   describe("viewers and editors", () => {
-    test("no viewers specified, none parsed", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("no viewers specified, none parsed", (p) => {
+      const markwhen = p(`title: my timelines
       description: my description
       now - 10 years: an event`);
 
       expect(markwhen.timelines[0].metadata.view.length).toBe(0);
     });
 
-    test("Single viewer", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Single viewer", (p) => {
+      const markwhen = p(`title: my timelines
 
       view: example@example.com
 
@@ -1389,8 +1439,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       expect(viewers).toContain("example@example.com");
     });
 
-    test("Multiple viewers", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Multiple viewers", (p) => {
+      const markwhen = p(`title: my timelines
 
       view: example@example.com, example2@example.com someoneelse@g.co
 
@@ -1405,16 +1455,16 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       ].forEach((e) => expect(viewers).toContain(e));
     });
 
-    test("no editors specified, none parsed", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("no editors specified, none parsed", (p) => {
+      const markwhen = p(`title: my timelines
       description: my description
       now - 10 years: an event`);
 
       expect(markwhen.timelines[0].metadata.edit.length).toBe(0);
     });
 
-    test("Single editor", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Single editor", (p) => {
+      const markwhen = p(`title: my timelines
 
       edit: example@example.com
 
@@ -1426,8 +1476,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       expect(editors).toContain("example@example.com");
     });
 
-    test("Multiple editors", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Multiple editors", (p) => {
+      const markwhen = p(`title: my timelines
 
       edit: example@example.com, example2@example.com someoneelse@g.co
 
@@ -1442,8 +1492,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       ].forEach((e) => expect(editors).toContain(e));
     });
 
-    test("Viewers and editors 1", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Viewers and editors 1", (p) => {
+      const markwhen = p(`title: my timelines
 
       view: me@example.com, someone@google.com b@g.i
       edit: example@example.com, example2@example.com someoneelse@g.co
@@ -1463,8 +1513,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       );
     });
 
-    test("Viewers and editors 2", () => {
-      const markwhen = parse(`title: my timelines
+    test.each(sp())("Viewers and editors 2", (p) => {
+      const markwhen = p(`title: my timelines
 
       edit: example@example.com, example2@example.com someoneelse@g.co
       view: me@example.com, someone@google.com b@g.i
@@ -1516,8 +1566,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 });
 
 describe("nested groups", () => {
-  test("can nest groups", () => {
-    const mw = parse(`
+  test.each(sp())("can nest groups", (p) => {
+    const mw = p(`
     
     now: 1
 
@@ -1546,8 +1596,8 @@ describe("nested groups", () => {
     expect(flt).toHaveLength(9);
   });
 
-  test("can iterate nodes", () => {
-    const mw = parse(`
+  test.each(sp())("can iterate nodes", (p) => {
+    const mw = p(`
 
     now: 1
 
@@ -1603,14 +1653,16 @@ describe("nested groups", () => {
     const asArray = toArray(mw.timelines[0].events);
     for (const { path, node } of iterate(mw.timelines[0].events)) {
       expect(JSON.stringify(asArray[i].path)).toEqual(JSON.stringify(path));
-      expect(JSON.stringify(asArray[i].node.value)).toEqual(JSON.stringify(node.value));
+      expect(JSON.stringify(asArray[i].node.value)).toEqual(
+        JSON.stringify(node.value)
+      );
       i++;
     }
     expect(i).toEqual(numNodes);
   });
 
-  test("entirely empty has no head", () => {
-    const mw = parse(`
+  test.each(sp())("entirely empty has no head", (p) => {
+    const mw = p(`
     group 1
     group 2
     group 3
@@ -1621,8 +1673,8 @@ describe("nested groups", () => {
     expect(mw.timelines[0].head).toBeFalsy();
   });
 
-  test("deeply nested path", () => {
-    const mw = parse(`
+  test.each(sp())("deeply nested path", (p) => {
+    const mw = p(`
     group 1
     group 2
     group 3
@@ -1648,8 +1700,8 @@ describe("nested groups", () => {
     ).toBe("an event");
   });
 
-  test("deeply nested has head", () => {
-    const mw = parse(`
+  test.each(sp())("deeply nested has head", (p) => {
+    const mw = p(`
     group 1
     group 2
     group 3
@@ -1663,8 +1715,8 @@ describe("nested groups", () => {
     ).toBe("an event");
   });
 
-  test("group foldables", () => {
-    const mw = parse(`
+  test.each(sp())("group foldables", (p) => {
+    const mw = p(`
     group 1
     group 2
     group 3
@@ -1686,8 +1738,8 @@ describe("nested groups", () => {
 });
 
 describe("mrakdown style image", () => {
-  test("images are parsed", () => {
-    const mw = parse(`
+  test.each(sp())("images are parsed", (p) => {
+    const mw = p(`
 now: hello ![](example.com/image)
 ![](https://example.com/image2.jpg)
 
@@ -1702,8 +1754,8 @@ now: hello ![](example.com/image)
     expect((supplemental?.[0] as Image).link).toBe("http://example.com/image");
   });
 
-  test("image text is removed from first line", () => {
-    const mw = parse(`
+  test.each(sp())("image text is removed from first line", (p) => {
+    const mw = p(`
 now: hello ![](example.com/image)
 ![](https://example.com/image2.jpg)
 
@@ -1715,8 +1767,8 @@ now: hello ![](example.com/image)
     expect(firstEvent?.eventDescription.eventDescription).toBe("hello ");
   });
 
-  test("images 3", () => {
-    const mw = parse(
+  test.each(sp())("images 3", (p) => {
+    const mw = p(
       `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
     );
 
@@ -1728,9 +1780,9 @@ now: hello ![](example.com/image)
     );
   });
 
-  test("supplemental items appear in order", () => {
+  test.each(sp())("supplemental items appear in order", (p) => {
     const mw =
-      parse(`10/2010: Barn built across the street ![](https://user-images.githubusercontent.com/10823320/199108323-99529603-fab1-485c-ae7f-23c8cbab6918.png)
+      p(`10/2010: Barn built across the street ![](https://user-images.githubusercontent.com/10823320/199108323-99529603-fab1-485c-ae7f-23c8cbab6918.png)
     some text in the middle
     
     ![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)

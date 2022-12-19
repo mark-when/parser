@@ -39,6 +39,7 @@ import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCa
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
 import { Node, NodeArray, NodeValue, SomeNode } from "./Node";
 import { push } from "./Noder";
+import { Cache } from "./Cache";
 
 // export const sorts: Sort[] = ["none", "down", "up"];
 
@@ -71,7 +72,10 @@ export function parseDateRange(
   return dateRange;
 }
 
-export function parse(timelineString?: string): Timelines {
+export function parse(
+  timelineString?: string,
+  cache?: Cache | true
+): Timelines {
   if (!timelineString) {
     return { timelines: [emptyTimeline()] };
   }
@@ -88,13 +92,16 @@ export function parse(timelineString?: string): Timelines {
   }
   const timelines = [];
   let index = 0;
+  if (cache === true) {
+    cache = new Cache();
+  }
   do {
-    const timeline = parseTimeline(lines, lengthAtIndex, index);
+    const timeline = parseTimeline(lines, lengthAtIndex, index, cache);
     index = timeline.metadata.endLineIndex + 1;
     timelines.push(timeline);
   } while (index < lines.length);
 
-  return { timelines: timelines };
+  return { timelines: timelines, cache };
 }
 
 export class ParsingContext {
@@ -270,20 +277,23 @@ function checkEvent(
   lines: string[],
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext
+  context: ParsingContext,
+  cache?: Cache
 ): number {
   let dateRange = getDateRangeFromEDTFRegexMatch(
     line,
     i,
     lengthAtIndex,
-    context
+    context,
+    cache
   );
   if (!dateRange) {
     dateRange = getDateRangeFromCasualRegexMatch(
       line,
       i,
       lengthAtIndex,
-      context
+      context,
+      cache
     );
   }
   if (!dateRange) {
@@ -357,11 +367,6 @@ function checkEvent(
 
   if (event) {
     context.push(new Node(event));
-    // if (context.eventSubgroup) {
-    //   context.eventSubgroup.push(event);
-    // } else {
-    //   context.events.push(event);
-    // }
 
     if (event.eventDescription.id && !context.ids[event.eventDescription.id]) {
       context.ids[event.eventDescription.id] = event;
@@ -400,7 +405,8 @@ function checkNewPage(
 export function parseTimeline(
   lines: string[],
   lengthAtIndex: number[],
-  startLineIndex: number = 0
+  startLineIndex: number = 0,
+  cache?: Cache
 ): Timeline {
   const context = new ParsingContext();
   for (let i = startLineIndex; i < lines.length; i++) {
@@ -422,7 +428,7 @@ export function parseTimeline(
 
     // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
     // but also breaks folding of comments under events
-    i = checkEvent(line, lines, i, lengthAtIndex, context);
+    i = checkEvent(line, lines, i, lengthAtIndex, context, cache);
   }
 
   // if (context.eventSubgroup) {

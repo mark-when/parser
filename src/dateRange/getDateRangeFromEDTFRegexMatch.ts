@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { ParsingContext } from "..";
+import { Cache } from "../Cache";
 import {
   EDTF_START_REGEX,
   edtfDatePartMatchIndex,
@@ -33,7 +34,8 @@ export function getDateRangeFromEDTFRegexMatch(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext
+  context: ParsingContext,
+  cache?: Cache
 ): DateRangePart | undefined {
   const eventStartLineRegexMatch = line.match(EDTF_START_REGEX);
   if (!eventStartLineRegexMatch) {
@@ -163,18 +165,22 @@ export function getDateRangeFromEDTFRegexMatch(
       endDateTime = DateTime.now();
       granularity = "instant";
     } else if (edtfTo) {
-      endDateTime = roundDateUp({
-        dateTime: DateTime.fromISO(edtfTo),
-        granularity: edtfToHasDay ? "day" : edtfToHasMonth ? "month" : "year",
-      });
+      endDateTime = DateTime.fromISO(
+        roundDateUp({
+          dateTimeIso: edtfTo,
+          granularity: edtfToHasDay ? "day" : edtfToHasMonth ? "month" : "year",
+        })
+      );
     }
   }
 
   if (!endDateTime || !endDateTime.isValid) {
-    endDateTime = roundDateUp({
-      dateTime: fromDateTime,
-      granularity,
-    });
+    endDateTime = DateTime.fromISO(
+      roundDateUp({
+        dateTimeIso: fromDateTime.toISO(),
+        granularity,
+      })
+    );
   }
 
   const indexOfDateRange = line.indexOf(datePart);
