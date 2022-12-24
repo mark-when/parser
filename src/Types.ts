@@ -35,7 +35,7 @@ export const DATE_TIME_FORMAT_YEAR = "y";
 export class RelativeDate {
   static from(
     raw: string,
-    priorDate: DateTime = DateTime.now(),
+    priorDate: DateTime,
     before: boolean = false
   ): DateTime {
     const matches = raw.matchAll(AMOUNT_REGEX);

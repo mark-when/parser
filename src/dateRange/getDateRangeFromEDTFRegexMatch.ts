@@ -73,13 +73,46 @@ export function getDateRangeFromEDTFRegexMatch(
   const nowFrom = eventStartLineRegexMatch[from_edtfNowMatchIndex];
   const nowTo = eventStartLineRegexMatch[to_edtfNowMatchIndex];
 
+  const indexOfDateRange = line.indexOf(datePart);
+  const dateRangeInText: Range = {
+    type: RangeType.DateRange,
+    from: lengthAtIndex[i] + indexOfDateRange,
+    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    lineFrom: {
+      line: i,
+      index: indexOfDateRange,
+    },
+    lineTo: {
+      line: i,
+      index: indexOfDateRange + datePart.length + 1,
+    },
+  };
+  context.ranges.push(dateRangeInText);
+
+  const cached = cache?.ranges.get(datePart);
+  if (cached) {
+    const dateRange = new DateRangePart(
+      DateTime.fromISO(cached.fromDateTimeIso),
+      DateTime.fromISO(cached.toDateTimeIso),
+      datePart,
+      dateRangeInText
+    );
+    return dateRange;
+  }
+
   let fromDateTime: DateTime | undefined;
   let endDateTime: DateTime | undefined;
   let granularity: DateTimeGranularity = "instant";
+
+  let canCacheRange = true;
+
   if (edtfFrom) {
     fromDateTime = DateTime.fromISO(edtfFrom);
     granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
   } else if (relativeFromDate) {
+    // Dependent on other event
+    canCacheRange = false;
+
     const relativeToEventId =
       eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
 
@@ -96,7 +129,7 @@ export function getDateRangeFromEDTFRegexMatch(
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
       if (!priorEvent) {
-        relativeTo = DateTime.now();
+        relativeTo = context.now;
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
@@ -136,7 +169,7 @@ export function getDateRangeFromEDTFRegexMatch(
     }
     granularity = "instant";
   } else if (nowFrom) {
-    fromDateTime = DateTime.now();
+    fromDateTime = context.now;
     granularity = "instant";
   } else {
     fromDateTime = DateTime.fromISO(edtfFrom);
@@ -144,12 +177,15 @@ export function getDateRangeFromEDTFRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime?.isValid) {
-    fromDateTime = DateTime.now();
+    fromDateTime = context.now;
     granularity = "instant";
   }
 
   if (!endDateTime) {
     if (relativeToDate) {
+      // Dependent on other event
+      canCacheRange = false;
+
       const relativeToEventId =
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
       let relativeTo =
@@ -162,42 +198,36 @@ export function getDateRangeFromEDTFRegexMatch(
       }
       endDateTime = RelativeDate.from(relativeToDate, relativeTo);
     } else if (nowTo) {
-      endDateTime = DateTime.now();
+      endDateTime = context.now;
       granularity = "instant";
     } else if (edtfTo) {
       endDateTime = DateTime.fromISO(
-        roundDateUp({
-          dateTimeIso: edtfTo,
-          granularity: edtfToHasDay ? "day" : edtfToHasMonth ? "month" : "year",
-        })
+        roundDateUp(
+          {
+            dateTimeIso: edtfTo,
+            granularity: edtfToHasDay
+              ? "day"
+              : edtfToHasMonth
+              ? "month"
+              : "year",
+          },
+          cache
+        )
       );
     }
   }
 
   if (!endDateTime || !endDateTime.isValid) {
     endDateTime = DateTime.fromISO(
-      roundDateUp({
-        dateTimeIso: fromDateTime.toISO(),
-        granularity,
-      })
+      roundDateUp(
+        {
+          dateTimeIso: fromDateTime.toISO(),
+          granularity,
+        },
+        cache
+      )
     );
   }
-
-  const indexOfDateRange = line.indexOf(datePart);
-  const dateRangeInText: Range = {
-    type: RangeType.DateRange,
-    from: lengthAtIndex[i] + indexOfDateRange,
-    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
-    lineFrom: {
-      line: i,
-      index: indexOfDateRange,
-    },
-    lineTo: {
-      line: i,
-      index: indexOfDateRange + datePart.length + 1,
-    },
-  };
-  context.ranges.push(dateRangeInText);
 
   const dateRange = new DateRangePart(
     fromDateTime,
@@ -205,5 +235,13 @@ export function getDateRangeFromEDTFRegexMatch(
     datePart,
     dateRangeInText
   );
+
+  if (canCacheRange && cache) {
+    cache.ranges.set(datePart, {
+      fromDateTimeIso: fromDateTime.toISO(),
+      toDateTimeIso: endDateTime.toISO(),
+    });
+  }
+
   return dateRange;
 }

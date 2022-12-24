@@ -19,7 +19,6 @@ import {
   toArray,
 } from "../src/Noder";
 import { Cache } from "../src/Cache";
-
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
 const nthEvent = (markwhen: Timelines, n: number) =>

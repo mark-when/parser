@@ -99,7 +99,39 @@ export function getDateRangeFromCasualRegexMatch(
   let fromDateTime: DateTime | undefined;
   let endDateTime: DateTime | undefined;
   let granularity: DateTimeGranularity = "instant";
+  let canCacheRange = true;
+
+  const indexOfDateRange = line.indexOf(datePart);
+  const dateRangeInText: Range = {
+    type: RangeType.DateRange,
+    from: lengthAtIndex[i] + indexOfDateRange,
+    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    lineFrom: {
+      line: i,
+      index: indexOfDateRange,
+    },
+    lineTo: {
+      line: i,
+      index: indexOfDateRange + datePart.length + 1,
+    },
+  };
+  context.ranges.push(dateRangeInText);
+
+  const cached = cache?.ranges.get(datePart);
+  if (cached) {
+    const dateRange = new DateRangePart(
+      DateTime.fromISO(cached.fromDateTimeIso),
+      DateTime.fromISO(cached.toDateTimeIso),
+      datePart,
+      dateRangeInText
+    );
+    return dateRange
+  }
+
   if (relativeFromDate) {
+    // Dependent on other events
+    canCacheRange = false;
+
     const relativeToEventId =
       eventStartLineRegexMatch[from_relativeEventIdMatchIndex];
 
@@ -116,7 +148,7 @@ export function getDateRangeFromCasualRegexMatch(
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
       if (!priorEvent) {
-        relativeTo = DateTime.now();
+        relativeTo = context.now;
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
@@ -164,7 +196,7 @@ export function getDateRangeFromCasualRegexMatch(
         .replace(/,/g, "");
     }
 
-    const parsed = parseSlashDate(slashPart, context.dateFormat);
+    const parsed = parseSlashDate(slashPart, context.dateFormat, cache);
     if (parsed) {
       if (timeComponent) {
         const timePart = getTimeFromSlashDateFrom(eventStartLineRegexMatch);
@@ -185,6 +217,9 @@ export function getDateRangeFromCasualRegexMatch(
       console.error("Was supposed to have slash date but couldn't parse it.");
     }
   } else if (timeOnlyFrom) {
+    // Dependent on previous event
+    canCacheRange = false;
+
     const timeFrom = getTimeFromRegExpMatch(
       eventStartLineRegexMatch,
       from_timeOnlyMeridiemHourMatchIndex,
@@ -208,7 +243,7 @@ export function getDateRangeFromCasualRegexMatch(
       granularity = timeFrom.granularity;
     }
   } else if (nowFrom) {
-    fromDateTime = DateTime.now();
+    fromDateTime = context.now;
     granularity = "instant";
   } else {
     fromDateTime = DateTime.fromISO(eventStartDate);
@@ -216,12 +251,14 @@ export function getDateRangeFromCasualRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime.isValid) {
-    fromDateTime = DateTime.now();
+    fromDateTime = context.now;
     granularity = "instant";
   }
 
   if (!endDateTime) {
     if (relativeToDate) {
+      canCacheRange = false;
+
       const relativeToEventId =
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
       let relativeTo =
@@ -234,7 +271,7 @@ export function getDateRangeFromCasualRegexMatch(
       }
       endDateTime = RelativeDate.from(eventEndDate, relativeTo);
     } else if (toCasual) {
-      endDateTime = DateTime.fromISO(roundDateUp(toCasual));
+      endDateTime = DateTime.fromISO(roundDateUp(toCasual, cache));
     } else if (slashDateTo) {
       const timeComponent =
         eventStartLineRegexMatch[to_slashDateTimeMatchIndex];
@@ -257,13 +294,16 @@ export function getDateRangeFromCasualRegexMatch(
             minute: timePartFromIso.minute,
           });
           endDateTime = DateTime.fromISO(
-            roundDateUp({
-              dateTimeIso: endDateTime.toISO(),
-              granularity: timePart.granularity,
-            })
+            roundDateUp(
+              {
+                dateTimeIso: endDateTime.toISO(),
+                granularity: timePart.granularity,
+              },
+              cache
+            )
           );
         } else {
-          endDateTime = DateTime.fromISO(roundDateUp(parsed));
+          endDateTime = DateTime.fromISO(roundDateUp(parsed, cache));
         }
 
         // Something non-ISO has come up, assume they want that
@@ -295,37 +335,27 @@ export function getDateRangeFromCasualRegexMatch(
       granularity = "instant";
     } else {
       endDateTime = DateTime.fromISO(
-        roundDateUp({
-          dateTimeIso: eventEndDate,
-          granularity: "instant",
-        })
+        roundDateUp(
+          {
+            dateTimeIso: eventEndDate,
+            granularity: "instant",
+          },
+          cache
+        )
       );
     }
   }
   if (!endDateTime || !endDateTime.isValid) {
     endDateTime = DateTime.fromISO(
-      roundDateUp({
-        dateTimeIso: fromDateTime.toISO(),
-        granularity,
-      })
+      roundDateUp(
+        {
+          dateTimeIso: fromDateTime.toISO(),
+          granularity,
+        },
+        cache
+      )
     );
   }
-
-  const indexOfDateRange = line.indexOf(datePart);
-  const dateRangeInText: Range = {
-    type: RangeType.DateRange,
-    from: lengthAtIndex[i] + indexOfDateRange,
-    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
-    lineFrom: {
-      line: i,
-      index: indexOfDateRange,
-    },
-    lineTo: {
-      line: i,
-      index: indexOfDateRange + datePart.length + 1,
-    },
-  };
-  context.ranges.push(dateRangeInText);
 
   const dateRange = new DateRangePart(
     fromDateTime,
@@ -333,5 +363,13 @@ export function getDateRangeFromCasualRegexMatch(
     datePart,
     dateRangeInText
   );
+
+  if (canCacheRange) {
+    cache?.ranges.set(datePart, {
+      fromDateTimeIso: fromDateTime.toISO(),
+      toDateTimeIso: endDateTime.toISO(),
+    });
+  }
+
   return dateRange;
 }

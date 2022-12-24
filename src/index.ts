@@ -1,4 +1,4 @@
-import { DateTime, Duration } from "luxon";
+import { DateTime, Duration, Settings } from "luxon";
 // import { Sort } from "./Sort";
 import {
   Timeline,
@@ -42,6 +42,8 @@ import { push } from "./Noder";
 import { Cache } from "./Cache";
 
 // export const sorts: Sort[] = ["none", "down", "up"];
+
+export interface ParseOptions {}
 
 export interface Foldable {
   endIndex: number;
@@ -105,6 +107,8 @@ export function parse(
 }
 
 export class ParsingContext {
+  now = DateTime.now();
+
   events: Node<NodeArray>;
   head?: SomeNode;
   tail?: SomeNode;
@@ -118,7 +122,7 @@ export class ParsingContext {
   dateFormat: typeof AMERICAN_DATE_FORMAT | typeof EUROPEAN_DATE_FORMAT;
   earliest: DateTime | undefined;
   latest: DateTime | undefined;
-  maxDuration: Duration | undefined;
+  maxDuration: number | undefined;
   foldables: {
     [F in number | string]: Foldable;
   };
@@ -220,7 +224,9 @@ export class ParsingContext {
     endLineIndex: number,
     endStringIndex: number
   ): Timeline {
-    const now = DateTime.now();
+    const maxDurationDays = this.maxDuration
+      ? this.maxDuration / 1000 / 60 / 60 / 24
+      : this.now.diff(this.now.minus({ years: 1 })).as("days");
     return {
       events: this.events,
       head: this.head,
@@ -230,11 +236,9 @@ export class ParsingContext {
       ranges: this.ranges,
       foldables: this.foldables,
       metadata: {
-        earliestTime: (this.earliest || now.minus({ years: 5 })).toISO(),
-        latestTime: (this.latest || now.plus({ years: 5 })).toISO(),
-        maxDurationDays: (
-          this.maxDuration || now.diff(now.minus({ years: 1 }))
-        ).as("days"),
+        earliestTime: (this.earliest || this.now.minus({ years: 5 })).toISO(),
+        latestTime: (this.latest || this.now.plus({ years: 5 })).toISO(),
+        maxDurationDays,
         dateFormat: this.dateFormat,
         startLineIndex,
         startStringIndex: lengthAtIndex[startLineIndex],
@@ -300,10 +304,10 @@ function checkEvent(
     return i;
   }
 
-  const eventDuration = dateRange.toDateTime.diff(dateRange.fromDateTime);
+  const eventDuration = +dateRange.toDateTime - +dateRange.fromDateTime;
   if (
     typeof context.maxDuration === "undefined" ||
-    +eventDuration > +context.maxDuration
+    eventDuration > context.maxDuration
   ) {
     context.maxDuration = eventDuration;
   }
