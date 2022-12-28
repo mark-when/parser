@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import {
   from_slashDateTimeMeridiemHourMatchIndex,
   from_slashDateTimeMeridiemMinuteMatchIndex,

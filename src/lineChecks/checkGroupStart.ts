@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { parseGroupFromStartTag } from "../dateRange/utils";
 import { GROUP_START_REGEX } from "../regex";
 import { RangeType } from "../Types";

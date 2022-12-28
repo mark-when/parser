@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { EDITORS_REGEX } from "../regex";
 import { RangeType, Range } from "../Types";
 

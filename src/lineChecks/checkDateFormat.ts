@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { DATE_FORMAT_REGEX } from "../regex";
 import { EUROPEAN_DATE_FORMAT } from "../Types";
 

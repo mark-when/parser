@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { HUMAN_COLORS, hexToRgb, COLORS } from "../ColorUtils";
 import { TAG_COLOR_REGEX } from "../regex";
 import { RangeType } from "../Types";

@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { Cache } from "../Cache";
 import {
   EDTF_START_REGEX,

@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { VIEWERS_REGEX } from "../regex";
 import { RangeType, Range } from "../Types";
 

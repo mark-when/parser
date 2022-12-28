@@ -1,4 +1,4 @@
-import { ParsingContext } from "..";
+import { ParsingContext } from "../ParsingContext";
 import { COLORS } from "../ColorUtils";
 import { TAG_REGEX } from "../regex";
 import { RangeType } from "../Types";
