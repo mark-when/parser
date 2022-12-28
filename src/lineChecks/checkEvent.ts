@@ -6,6 +6,7 @@ import {
   GROUP_START_REGEX,
   PAGE_BREAK_REGEX,
   GROUP_END_REGEX,
+  COMPLETION_REGEX,
 } from "../regex";
 import { RangeType, EventDescription, Event, Range } from "../Types";
 import { checkComments } from "./checkComments";
@@ -97,7 +98,40 @@ export function checkEvent(
     .substring(indexOfDateRange + datePartOfLine.length + 1)
     .trim();
 
-  const eventDescription = new EventDescription(eventGroup, matchedListItems);
+  const completionMatch = eventGroup[0].match(COMPLETION_REGEX);
+  let completed = undefined;
+  if (completionMatch) {
+    const from = dateRange.dateRangeInText.from + datePartOfLine.length + 1;
+    const to =
+      eventGroup[0].indexOf(completionMatch[1]) + completionMatch[1].length;
+    completed = ["X", "x"].some((x) => completionMatch.includes(x));
+    const indicator: Range = {
+      type: RangeType.CheckboxItemIndicator,
+      from,
+      to,
+      lineFrom: {
+        line: dateRange.dateRangeInText.lineFrom.line,
+        index:
+          dateRange.dateRangeInText.lineFrom.index + datePartOfLine.length + 1,
+      },
+      lineTo: {
+        line: dateRange.dateRangeInText.lineFrom.line,
+        index:
+          dateRange.dateRangeInText.lineFrom.index +
+          datePartOfLine.length +
+          1 +
+          completionMatch[1].length,
+      },
+      content: completed,
+    };
+    context.ranges.push(indicator);
+  }
+
+  const eventDescription = new EventDescription(
+    eventGroup,
+    matchedListItems,
+    completed
+  );
   const event = new Event(
     line,
     dateRange,

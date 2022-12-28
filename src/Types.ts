@@ -218,8 +218,9 @@ export class EventDescription {
   locations: string[] = [];
   id?: string;
   percent?: number;
+  completed?: boolean;
 
-  constructor(lines: string[], matchedListItems: Range[]) {
+  constructor(lines: string[], matchedListItems: Range[], completed?: boolean) {
     this.matchedListItems = matchedListItems;
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
@@ -275,6 +276,7 @@ export class EventDescription {
           }
         })
     );
+    this.completed = completed;
   }
 }
 

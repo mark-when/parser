@@ -201,6 +201,7 @@ export const GROUP_START_REGEX = /^(\s*)(group|section)(?:\s|$)/i;
 export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)/i;
 export const LIST_ITEM_REGEX = /^- .*/;
 export const CHECKLIST_ITEM_REGEX = /^- (\[(x|X| )?\]).*/;
+export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
 export const PAGE_BREAK = "\n_-_-_break_-_-_\n";
 export const PAGE_BREAK_REGEX = /^_-_-_break_-_-_$/;
 

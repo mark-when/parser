@@ -1809,6 +1809,30 @@ now: hello ![](example.com/image)
   });
 });
 
+describe("completion", () => {
+  test.each(sp())("checkbox in event description line indicates completion", () => {
+    const mw = parse(`
+    now: [] some item
+    
+    2 days: [] another item
+    
+    4 days: third item
+    
+    6 days: [x] last item`)
+    let event = nthEvent(mw, 0)
+    expect(event.eventDescription.completed).toBe(false)
+
+    event = nthEvent(mw, 1)
+    expect(event.eventDescription.completed).toBe(false)
+
+    event = nthEvent(mw, 2)
+    expect(event.eventDescription.completed).toBe(undefined)
+
+    event = nthEvent(mw, 3)
+    expect(event.eventDescription.completed).toBe(true)
+  })
+})
+
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)

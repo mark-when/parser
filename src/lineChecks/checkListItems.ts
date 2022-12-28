@@ -2,8 +2,7 @@ import { ParsingContext } from "../ParsingContext";
 import { CHECKLIST_ITEM_REGEX, LIST_ITEM_REGEX } from "../regex";
 import { RangeType, Range } from "../Types";
 
-export 
-function checkListItems(
+export function checkListItems(
   line: string,
   i: number,
   lengthAtIndex: number[],
