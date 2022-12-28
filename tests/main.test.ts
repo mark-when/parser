@@ -1838,7 +1838,7 @@ describe("completion", () => {
 
   test.each(sp())("completion items have correct ranges", () => {
     const mw = parse(`
-now: [] some item
+now:  [] some item
 
 2 days: [] another item
 
@@ -1850,18 +1850,24 @@ now: [] some item
       (r) => r.type === RangeType.CheckboxItemIndicator
     );
     expect(ranges.length).toBe(3);
-    let seenCheckboxes = 0;
+
     expect(ranges[0].from).toBe(5)
-    expect(ranges[0].to).toBe(7)
+    expect(ranges[0].to).toBe(9)
     expect(ranges[0].content).toBe(false)
     expect(ranges[0].lineFrom.line).toBe(1)
     expect(ranges[0].lineFrom.index).toBe(4)
 
-    expect(ranges[1].from).toBe(27)
-    expect(ranges[1].to).toBe(29)
+    expect(ranges[1].from).toBe(28)
+    expect(ranges[1].to).toBe(31)
     expect(ranges[1].lineFrom.line).toBe(3)
     expect(ranges[1].lineFrom.index).toBe(7)
     expect(ranges[1].content).toBe(false)
+
+    expect(ranges[2].from).toBe(73)
+    expect(ranges[2].to).toBe(77)
+    expect(ranges[2].lineFrom.line).toBe(7)
+    expect(ranges[2].lineFrom.index).toBe(7)
+    expect(ranges[2].content).toBe(true)
   });
 });
 

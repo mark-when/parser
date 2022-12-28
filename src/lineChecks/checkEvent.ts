@@ -94,43 +94,41 @@ export function checkEvent(
   // Remove the date part from the first line
   const datePartOfLine = dateRange.originalString!;
   const indexOfDateRange = line.indexOf(datePartOfLine);
-  eventGroup[0] = eventGroup[0]
-    .substring(indexOfDateRange + datePartOfLine.length + 1)
-    .trim();
 
-  const completionMatch = eventGroup[0].match(COMPLETION_REGEX);
+  const indexOfTextAfterDateRange =
+    indexOfDateRange + datePartOfLine.length + 1;
+  const textAfterDateRange = eventGroup[0].substring(indexOfTextAfterDateRange);
+
+  const completionMatch = textAfterDateRange.match(COMPLETION_REGEX);
   let completed = undefined;
   if (completionMatch) {
-    const from = dateRange.dateRangeInText.from + datePartOfLine.length + 1;
+    const from =
+      indexOfTextAfterDateRange +
+      textAfterDateRange.indexOf(completionMatch[0]);
     const to =
-      dateRange.dateRangeInText.from +
-      datePartOfLine.length +
-      1 +
-      eventGroup[0].indexOf(completionMatch[1]) +
+      from +
+      textAfterDateRange.indexOf(completionMatch[1]) +
       completionMatch[1].length;
     completed = ["X", "x"].some((x) => completionMatch.includes(x));
+
     const indicator: Range = {
       type: RangeType.CheckboxItemIndicator,
-      from,
-      to,
+      from: dateRange.dateRangeInText.from + from,
+      to: dateRange.dateRangeInText.from + to,
       lineFrom: {
         line: dateRange.dateRangeInText.lineFrom.line,
-        index:
-          dateRange.dateRangeInText.lineFrom.index + datePartOfLine.length + 1,
+        index: from,
       },
       lineTo: {
         line: dateRange.dateRangeInText.lineFrom.line,
-        index:
-          dateRange.dateRangeInText.lineFrom.index +
-          datePartOfLine.length +
-          1 +
-          completionMatch[1].length,
+        index: to,
       },
       content: completed,
     };
     context.ranges.push(indicator);
   }
 
+  eventGroup[0] = textAfterDateRange.trim();
   const eventDescription = new EventDescription(
     eventGroup,
     matchedListItems,
