@@ -103,7 +103,11 @@ export function checkEvent(
   if (completionMatch) {
     const from = dateRange.dateRangeInText.from + datePartOfLine.length + 1;
     const to =
-      eventGroup[0].indexOf(completionMatch[1]) + completionMatch[1].length;
+      dateRange.dateRangeInText.from +
+      datePartOfLine.length +
+      1 +
+      eventGroup[0].indexOf(completionMatch[1]) +
+      completionMatch[1].length;
     completed = ["X", "x"].some((x) => completionMatch.includes(x));
     const indicator: Range = {
       type: RangeType.CheckboxItemIndicator,

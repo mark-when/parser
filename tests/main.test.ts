@@ -6,6 +6,7 @@ import {
   Block,
   Image,
   toDateRange,
+  RangeType,
 } from "../src/Types";
 import { DateTime } from "luxon";
 import { SomeNode, Node } from "../src/Node";
@@ -1810,28 +1811,59 @@ now: hello ![](example.com/image)
 });
 
 describe("completion", () => {
-  test.each(sp())("checkbox in event description line indicates completion", () => {
-    const mw = parse(`
+  test.each(sp())(
+    "checkbox in event description line indicates completion",
+    () => {
+      const mw = parse(`
     now: [] some item
     
     2 days: [] another item
     
     4 days: third item
     
-    6 days: [x] last item`)
-    let event = nthEvent(mw, 0)
-    expect(event.eventDescription.completed).toBe(false)
+    6 days: [x] last item`);
+      let event = nthEvent(mw, 0);
+      expect(event.eventDescription.completed).toBe(false);
 
-    event = nthEvent(mw, 1)
-    expect(event.eventDescription.completed).toBe(false)
+      event = nthEvent(mw, 1);
+      expect(event.eventDescription.completed).toBe(false);
 
-    event = nthEvent(mw, 2)
-    expect(event.eventDescription.completed).toBe(undefined)
+      event = nthEvent(mw, 2);
+      expect(event.eventDescription.completed).toBe(undefined);
 
-    event = nthEvent(mw, 3)
-    expect(event.eventDescription.completed).toBe(true)
-  })
-})
+      event = nthEvent(mw, 3);
+      expect(event.eventDescription.completed).toBe(true);
+    }
+  );
+
+  test.each(sp())("completion items have correct ranges", () => {
+    const mw = parse(`
+now: [] some item
+
+2 days: [] another item
+
+4 days: third item
+
+6 days: [x] last item`);
+    let event = nthEvent(mw, 0);
+    const ranges = mw.timelines[0].ranges.filter(
+      (r) => r.type === RangeType.CheckboxItemIndicator
+    );
+    expect(ranges.length).toBe(3);
+    let seenCheckboxes = 0;
+    expect(ranges[0].from).toBe(5)
+    expect(ranges[0].to).toBe(7)
+    expect(ranges[0].content).toBe(false)
+    expect(ranges[0].lineFrom.line).toBe(1)
+    expect(ranges[0].lineFrom.index).toBe(4)
+
+    expect(ranges[1].from).toBe(27)
+    expect(ranges[1].to).toBe(29)
+    expect(ranges[1].lineFrom.line).toBe(3)
+    expect(ranges[1].lineFrom.index).toBe(7)
+    expect(ranges[1].content).toBe(false)
+  });
+});
 
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>
