@@ -268,6 +268,12 @@ export class EventDescription {
         .slice(1)
         .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim())
         .map((raw) => {
+          raw = raw.replace(TAG_REGEX, (match, tag) => {
+            if (!this.tags.includes(tag)) {
+              this.tags.push(tag);
+            }
+            return "";
+          });
           const image = raw.match(IMAGE_REGEX);
           if (image) {
             return new Image(image[1], addHttpIfNeeded(image[2]));

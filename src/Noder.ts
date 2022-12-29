@@ -2,12 +2,26 @@ import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node";
 import { Event, Path, toDateRange } from "./Types";
 
 export const toArray = (node: SomeNode) => {
-  const array = [] as { path: Path, node: SomeNode}[]
+  const array = [] as { path: Path; node: SomeNode }[];
   for (const pathAndNode of iterate(node)) {
-    array.push(pathAndNode)
+    array.push(pathAndNode);
   }
-  return array
-}
+  return array;
+};
+
+export const walk = (
+  node: SomeNode,
+  path: Path,
+  fn: (node: SomeNode, path: Path) => void
+) => {
+  fn(node, path);
+  if (!isEventNode(node)) {
+    const arr = node.value as NodeArray;
+    for (let i = 0; i < arr.length; i++) {
+      walk(arr[i], [...path, i], fn);
+    }
+  }
+};
 
 export const iterate = (node: SomeNode) => {
   return {

@@ -14,6 +14,7 @@ import { checkListItems } from "./checkListItems";
 import { Cache } from "../Cache";
 import { Node } from "../Node";
 import { ParsingContext } from "../ParsingContext";
+import { checkTags } from "./checkTags";
 
 export function checkEvent(
   line: string,
@@ -69,6 +70,8 @@ export function checkEvent(
     }
 
     checkComments(nextLine, end, lengthAtIndex, context);
+    checkTags(nextLine, end, lengthAtIndex, context)
+    
     const listItems = checkListItems(nextLine, end, lengthAtIndex, context);
     if (listItems) {
       matchedListItems.push(...listItems);

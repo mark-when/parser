@@ -1365,6 +1365,23 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
         expect(tagLiterals).toContain(i)
       );
     });
+
+    test.each(sp())("tags are picked up when they're not on the first line", (p) => {
+      const markwhen = p(`title: my timelines
+      description: my description
+      now - 10 years: an event #1 #3342 #098
+      1 year: event #2 
+      #another 
+      #tag with text after it
+      3 years: event #third #fourth 
+      #fifth #332334b #5
+      #other`);
+
+      const tagLiterals = Object.keys(markwhen.timelines[0].tags);
+      ["another", "tag", "third", "fourth", "fifth", "332334b", "other"].forEach((i) =>
+        expect(tagLiterals).toContain(i)
+      );
+    })
   });
 
   describe.skip("due dates & relative dates", () => {
