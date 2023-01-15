@@ -44,6 +44,8 @@ const timers = {
   withCache: [] as number[],
 };
 
+const currentYear = DateTime.now().year
+
 // afterAll(() => {
 //   logTimingData();
 // });
@@ -780,13 +782,13 @@ after !firstEvent 3 years 8 days 1 month: third event
     test.each(sp())("casual dates via month words 7", (p) => {
       const markwhen = p("Feb: event");
       const first = firstEvent(markwhen);
-      const startOfMonth = DateTime.fromISO("2022-02-01");
+      const startOfMonth = DateTime.fromISO(`${currentYear}-02-01`);
       expect(
         toDateRange(first.dateRangeIso).fromDateTime.equals(startOfMonth)
       ).toBe(true);
       expect(
         toDateRange(first.dateRangeIso).toDateTime.equals(
-          DateTime.fromISO("2022-03-01")
+          DateTime.fromISO(`${currentYear}-03-01`)
         )
       ).toBe(true);
     });
@@ -798,10 +800,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 0, 0);
+      checkDate(from, currentYear, 6, 4, 8, 0, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 8, 0, 0);
+      checkDate(to, currentYear, 6, 4, 8, 0, 0);
     });
 
     test.each(sp())("casual times 2", (p) => {
@@ -809,10 +811,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 0, 0);
+      checkDate(from, currentYear, 6, 4, 8, 0, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 8, 0, 0);
+      checkDate(to, currentYear, 6, 4, 8, 0, 0);
     });
 
     test.each(sp())("casual times 3", (p) => {
@@ -820,10 +822,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 0, 0);
+      checkDate(from, currentYear, 6, 4, 8, 0, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 9, 30, 0);
+      checkDate(to, currentYear, 6, 4, 9, 30, 0);
     });
 
     test.each(sp())("casual times 4", (p) => {
@@ -831,10 +833,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 0, 0);
+      checkDate(from, currentYear, 6, 4, 8, 0, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 19, 30, 0);
+      checkDate(to, currentYear, 6, 4, 19, 30, 0);
     });
 
     test.each(sp())("casual times 5", (p) => {
@@ -853,10 +855,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 0, 0);
+      checkDate(from, currentYear, 6, 4, 8, 0, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 8, 0, 0);
+      checkDate(to, currentYear, 6, 4, 8, 0, 0);
     });
 
     test.each(sp())("casual times 7", (p) => {
@@ -864,10 +866,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 39, 0);
+      checkDate(from, currentYear, 6, 4, 8, 39, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 6, 4, 8, 39, 0);
+      checkDate(to, currentYear, 6, 4, 8, 39, 0);
     });
 
     test.each(sp())("casual times 8", (p) => {
@@ -875,10 +877,10 @@ after !firstEvent 3 years 8 days 1 month: third event
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
       const from = dateRange.fromDateTime;
-      checkDate(from, 2022, 6, 4, 8, 39, 0);
+      checkDate(from, currentYear, 6, 4, 8, 39, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 8, 8, 12, 34, 0);
+      checkDate(to, currentYear, 8, 8, 12, 34, 0);
     });
 
     test.each(sp())("casual times 9", (p) => {
@@ -889,7 +891,7 @@ after !firstEvent 3 years 8 days 1 month: third event
       checkDate(from, 2020, 6, 4, 8, 39, 0);
 
       const to = dateRange.toDateTime;
-      checkDate(to, 2022, 8, 8, 12, 34, 0);
+      checkDate(to, currentYear, 8, 8, 12, 34, 0);
     });
 
     test.each(sp())("casual times 10", (p) => {
