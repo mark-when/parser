@@ -51,9 +51,23 @@ export const START_OR_END_TIME_REGEX = new RegExp(
   `(${ISO8601_REGEX.source})|(${NOW_REGEX.source})|${TIME_REGEX.source}|(${DATE_REGEX.source})|(${RELATIVE_TIME_REGEX.source})|${CASUAL_MONTH_REGEX.source}`
 );
 
-export const DATE_RANGE_REGEX = new RegExp(
-  `((${START_OR_END_TIME_REGEX.source})(?:\\s*(?:-|to)\\s*(${START_OR_END_TIME_REGEX.source}))?)\\s*:`
+export const RECURRENCE_AMOUNT_REGEX = new RegExp(
+  `((\\d+|other)\\W*)?(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source})`,
+  "g"
 );
+
+export const REPETITIONS_REGEX = new RegExp(
+  `((\\s+for\\s+(\\d+\\W*)(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source}|times))|(\\s+x\\s*(\\d+)))?`
+);
+
+export const RECURRENCE_REGEX = new RegExp(
+  `\\s*every\\s+${RECURRENCE_AMOUNT_REGEX.source}${REPETITIONS_REGEX.source}`
+);
+
+export const DATE_RANGE_REGEX = new RegExp(
+  `((${START_OR_END_TIME_REGEX.source})(?:\\s*(?:-|to)\\s*(${START_OR_END_TIME_REGEX.source}))?)(${RECURRENCE_REGEX.source}|\\s*):`
+);
+
 export const EVENT_START_REGEX = new RegExp(
   `^(\\s*)${DATE_RANGE_REGEX.source}(.*)`,
   "i"
