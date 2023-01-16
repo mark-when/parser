@@ -44,7 +44,7 @@ const timers = {
   withCache: [] as number[],
 };
 
-const currentYear = DateTime.now().year
+const currentYear = DateTime.now().year;
 
 // afterAll(() => {
 //   logTimingData();
@@ -584,6 +584,20 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect(second.eventDescription.eventDescription).toBe("next event");
     const third = nthEvent(markwhen, 2);
     expect(third.eventDescription.eventDescription).toBe("third event");
+  });
+
+  test.each(sameParse([]))("event title", (p) => {
+    const markwhen = p(
+      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\ndec 1 1989 every day for 10 days: recurring event"
+    );
+    const first = firstEvent(markwhen);
+    expect(first.eventDescription.eventDescription).toBe("event");
+    const second = nthEvent(markwhen, 1);
+    expect(second.eventDescription.eventDescription).toBe("next event");
+    const third = nthEvent(markwhen, 2);
+    expect(third.eventDescription.eventDescription).toBe("third event");
+    const last = nthEvent(markwhen, 3)
+    expect(last.eventDescription.eventDescription).toBe('recurring event')
   });
 
   test.each(sameParse([]))("supplemental descriptions", (p) => {
@@ -1368,8 +1382,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       );
     });
 
-    test.each(sp())("tags are picked up when they're not on the first line", (p) => {
-      const markwhen = p(`title: my timelines
+    test.each(sp())(
+      "tags are picked up when they're not on the first line",
+      (p) => {
+        const markwhen = p(`title: my timelines
       description: my description
       now - 10 years: an event #1 #3342 #098
       1 year: event #2 
@@ -1379,11 +1395,18 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       #fifth #332334b #5
       #other`);
 
-      const tagLiterals = Object.keys(markwhen.timelines[0].tags);
-      ["another", "tag", "third", "fourth", "fifth", "332334b", "other"].forEach((i) =>
-        expect(tagLiterals).toContain(i)
-      );
-    })
+        const tagLiterals = Object.keys(markwhen.timelines[0].tags);
+        [
+          "another",
+          "tag",
+          "third",
+          "fourth",
+          "fifth",
+          "332334b",
+          "other",
+        ].forEach((i) => expect(tagLiterals).toContain(i));
+      }
+    );
   });
 
   describe.skip("due dates & relative dates", () => {
@@ -1870,98 +1893,99 @@ now:  [] some item
     );
     expect(ranges.length).toBe(3);
 
-    expect(ranges[0].from).toBe(5)
-    expect(ranges[0].to).toBe(9)
-    expect(ranges[0].content).toBe(false)
-    expect(ranges[0].lineFrom.line).toBe(1)
-    expect(ranges[0].lineFrom.index).toBe(4)
+    expect(ranges[0].from).toBe(5);
+    expect(ranges[0].to).toBe(9);
+    expect(ranges[0].content).toBe(false);
+    expect(ranges[0].lineFrom.line).toBe(1);
+    expect(ranges[0].lineFrom.index).toBe(4);
 
-    expect(ranges[1].from).toBe(28)
-    expect(ranges[1].to).toBe(31)
-    expect(ranges[1].lineFrom.line).toBe(3)
-    expect(ranges[1].lineFrom.index).toBe(7)
-    expect(ranges[1].content).toBe(false)
+    expect(ranges[1].from).toBe(28);
+    expect(ranges[1].to).toBe(31);
+    expect(ranges[1].lineFrom.line).toBe(3);
+    expect(ranges[1].lineFrom.index).toBe(7);
+    expect(ranges[1].content).toBe(false);
 
-    expect(ranges[2].from).toBe(73)
-    expect(ranges[2].to).toBe(77)
-    expect(ranges[2].lineFrom.line).toBe(7)
-    expect(ranges[2].lineFrom.index).toBe(7)
-    expect(ranges[2].content).toBe(true)
+    expect(ranges[2].from).toBe(73);
+    expect(ranges[2].to).toBe(77);
+    expect(ranges[2].lineFrom.line).toBe(7);
+    expect(ranges[2].lineFrom.index).toBe(7);
+    expect(ranges[2].content).toBe(true);
   });
 });
 
 describe("recurrence", () => {
   test.each(sp())("edtf recurrence 1", () => {
-    const mw = parse(`2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`)
+    const mw = parse(
+      `2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`
+    );
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.days).toBe(3)
-    expect(first.recurrence?.for?.days).toBe(3)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.days).toBe(3);
+    expect(first.recurrence?.for?.days).toBe(3);
+  });
 
   test.each(sp())("edtf recurrence 2", () => {
-    const mw = parse(`2022-08-07 every 12 months x30: event title`)
+    const mw = parse(`2022-08-07 every 12 months x30: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.months).toBe(12)
-    expect(first.recurrence?.for?.times).toBe(30)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.months).toBe(12);
+    expect(first.recurrence?.for?.times).toBe(30);
+  });
 
   test.each(sp())("edtf recurrence 3", () => {
-    const mw = parse(`2022-08-07 every other year for 10 times: event title`)
+    const mw = parse(`2022-08-07 every other year for 10 times: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.years).toBe(2)
-    expect(first.recurrence?.for?.times).toBe(10)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.years).toBe(2);
+    expect(first.recurrence?.for?.times).toBe(10);
+  });
 
-  test.each(sp())('recurrence 1', () => {
-    const mw = parse(`Dec 1 2022 every other year: event title`)
+  test.each(sp())("recurrence 1", () => {
+    const mw = parse(`Dec 1 2022 every other year: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.years).toBe(2)
-    expect(first.recurrence?.for).toBeFalsy()
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.years).toBe(2);
+    expect(first.recurrence?.for).toBeFalsy();
+  });
 
-  test.each(sp())('recurrence 2', () => {
-    const mw = parse(`Dec 1 every day for 10 years: event title`)
+  test.each(sp())("recurrence 2", () => {
+    const mw = parse(`Dec 1 every day for 10 years: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.days).toBe(1)
-    expect(first.recurrence?.for?.years).toBe(10)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.days).toBe(1);
+    expect(first.recurrence?.for?.years).toBe(10);
+  });
 
-  test.each(sp())('recurrence 3', () => {
-    const mw = parse(`Dec 1 every 40 days for 1 second: event title`)
+  test.each(sp())("recurrence 3", () => {
+    const mw = parse(`Dec 1 every 40 days for 1 second: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrence).toBeTruthy()
-    expect(first.recurrence?.every.days).toBe(40)
-    expect(first.recurrence?.for?.seconds).toBe(1)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrence?.every.days).toBe(40);
+    expect(first.recurrence?.for?.seconds).toBe(1);
+  });
 
-  test.each(sp())('recurrence range 1', () => {
-    const mw = parse(`Dec 1 every 40 days for 1 second: event title`)
+  test.each(sp())("recurrence range 1", () => {
+    const mw = parse(`Dec 1 every 40 days for 1 second: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrenceRangeInText?.from).toBe(5)
-    expect(first.recurrenceRangeInText?.to).toBe(32)
-  })
+    const first = nthEvent(mw, 0);
+    expect(first.recurrenceRangeInText?.from).toBe(5);
+    expect(first.recurrenceRangeInText?.to).toBe(32);
+  });
 
-  test.each(sp())('recurrence range 2', () => {
-    const mw = parse(`2022-08-07 every 12 months x30: event title`)
+  test.each(sp())("recurrence range 2", () => {
+    const mw = parse(`2022-08-07 every 12 months x30: event title`);
 
-    const first = nthEvent(mw, 0)
-    expect(first.recurrenceRangeInText?.from).toBe(10)
-    expect(first.recurrenceRangeInText?.to).toBe(30)
-  
-  })
-})
+    const first = nthEvent(mw, 0);
+    expect(first.recurrenceRangeInText?.from).toBe(10);
+    expect(first.recurrenceRangeInText?.to).toBe(30);
+  });
+});
 
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>

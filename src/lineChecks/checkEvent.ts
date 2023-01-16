@@ -95,11 +95,17 @@ export function checkEvent(
   };
 
   // Remove the date part from the first line
-  const datePartOfLine = dateRange.originalString!;
-  const indexOfDateRange = line.indexOf(datePartOfLine);
+  let indexOfTextAfterDateRange: number
+  if (dateRange.recurrenceRangeInText) {
+    indexOfTextAfterDateRange = dateRange.recurrenceRangeInText.lineTo.index + 1
+  } else {
+    const datePartOfLine = dateRange.originalString!;
+    const indexOfDateRange = line.indexOf(datePartOfLine);
+  
+    indexOfTextAfterDateRange =
+      indexOfDateRange + datePartOfLine.length + 1;
+  }
 
-  const indexOfTextAfterDateRange =
-    indexOfDateRange + datePartOfLine.length + 1;
   const textAfterDateRange = eventGroup[0].substring(indexOfTextAfterDateRange);
 
   const completionMatch = textAfterDateRange.match(COMPLETION_REGEX);
