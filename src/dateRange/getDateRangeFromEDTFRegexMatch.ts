@@ -92,7 +92,11 @@ export function getDateRangeFromEDTFRegexMatch(
 
   const cached = cache?.ranges.get(datePart);
   if (cached) {
-    const recurrence = checkEdtfRecurrence(eventStartLineRegexMatch);
+    const recurrence = checkEdtfRecurrence(
+      eventStartLineRegexMatch,
+      lengthAtIndex,
+      i
+    );
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
       DateTime.fromISO(cached.toDateTimeIso),
@@ -232,7 +236,11 @@ export function getDateRangeFromEDTFRegexMatch(
     );
   }
 
-  const recurrence = checkEdtfRecurrence(eventStartLineRegexMatch);
+  const recurrence = checkEdtfRecurrence(
+    eventStartLineRegexMatch,
+    lengthAtIndex,
+    i
+  );
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,

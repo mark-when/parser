@@ -1,7 +1,7 @@
 import { DateTime, Duration } from "luxon";
 import { Foldable } from ".";
 import { Cache } from "./Cache";
-import { Recurrence } from "./dateRange/checkRecurrence";
+import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence";
 import { Node, NodeArray, SomeNode } from "./Node";
 import {
   AMOUNT_REGEX,
@@ -139,19 +139,21 @@ export class DateRangePart implements DateRange {
   originalString?: string;
   dateRangeInText: Range;
   recurrence?: Recurrence;
+  recurrenceRangeInText?: Range;
 
   constructor(
     fromDateTime: DateTime,
     toDateTime: DateTime,
     originalString: string,
     dateRangeInText: Range,
-    recurrence?: Recurrence
+    recurrence?: RecurrenceInText
   ) {
     this.fromDateTime = fromDateTime;
     this.toDateTime = toDateTime;
     this.originalString = originalString;
     this.dateRangeInText = dateRangeInText;
-    this.recurrence = recurrence;
+    this.recurrence = recurrence?.recurrence;
+    this.recurrenceRangeInText = recurrence?.range;
   }
 }
 
@@ -306,6 +308,7 @@ export enum RangeType {
   Event = "event",
   Edit = "edit",
   Editor = "editor",
+  Recurrence = "recurrence",
 }
 
 export interface Line {
@@ -341,6 +344,7 @@ export class Event {
   eventString: string;
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
+  recurrenceRangeInText?: Range;
   rangeInText: Range;
   eventDescription: EventDescription;
   dateText?: string;
@@ -356,7 +360,8 @@ export class Event {
   ) {
     this.eventString = eventString;
     this.dateRangeIso = toDateRangeIso(dateRange);
-    this.recurrence = dateRange.recurrence
+    this.recurrence = dateRange.recurrence;
+    this.recurrenceRangeInText = dateRange.recurrenceRangeInText;
     this.rangeInText = rangeInText;
     this.eventDescription = event;
     this.dateText = dateText;

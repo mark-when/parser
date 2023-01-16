@@ -1918,7 +1918,7 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.times).toBe(10)
   })
 
-  test.only.each(sp())('recurrence 1', () => {
+  test.each(sp())('recurrence 1', () => {
     const mw = parse(`Dec 1 2022 every other year: event title`)
 
     const first = nthEvent(mw, 0)
@@ -1927,7 +1927,7 @@ describe("recurrence", () => {
     expect(first.recurrence?.for).toBeFalsy()
   })
 
-  test.only.each(sp())('recurrence 2', () => {
+  test.each(sp())('recurrence 2', () => {
     const mw = parse(`Dec 1 every day for 10 years: event title`)
 
     const first = nthEvent(mw, 0)
@@ -1936,13 +1936,30 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.years).toBe(10)
   })
 
-  test.only.each(sp())('recurrence 3', () => {
+  test.each(sp())('recurrence 3', () => {
     const mw = parse(`Dec 1 every 40 days for 1 second: event title`)
 
     const first = nthEvent(mw, 0)
     expect(first.recurrence).toBeTruthy()
     expect(first.recurrence?.every.days).toBe(40)
     expect(first.recurrence?.for?.seconds).toBe(1)
+  })
+
+  test.each(sp())('recurrence range 1', () => {
+    const mw = parse(`Dec 1 every 40 days for 1 second: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrenceRangeInText?.from).toBe(5)
+    expect(first.recurrenceRangeInText?.to).toBe(32)
+  })
+
+  test.each(sp())('recurrence range 2', () => {
+    const mw = parse(`2022-08-07 every 12 months x30: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrenceRangeInText?.from).toBe(10)
+    expect(first.recurrenceRangeInText?.to).toBe(30)
+  
   })
 })
 

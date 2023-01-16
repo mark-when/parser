@@ -50,6 +50,7 @@ import {
   recurrence_repetitionsForAmountYearsUnitMatchIndex,
   recurrence_repetitionsMatchIndex,
 } from "../regex";
+import { Range, RangeType } from "../Types";
 
 export type DurationUnit =
   | "years"
@@ -64,19 +65,35 @@ export type DurationUnit =
 
 export type Duration = Partial<Record<DurationUnit, number>>;
 
+export interface RecurrenceInText {
+  recurrence: Recurrence;
+  range: Range;
+}
 export interface Recurrence {
   every: Duration;
   for?: Duration & { times?: number };
 }
 
 export const checkEdtfRecurrence = (
-  eventStartLineRegexMatch: RegExpMatchArray
-): Recurrence | undefined => {
+  eventStartLineRegexMatch: RegExpMatchArray,
+  lengthAtIndex: number[],
+  i: number
+): RecurrenceInText | undefined => {
   const recurrenceMatch =
     eventStartLineRegexMatch[recurrence_edtfRecurrenceMatchIndex];
+
   if (!recurrenceMatch) {
     return;
   }
+
+  const indexInString = eventStartLineRegexMatch[0].indexOf(recurrenceMatch);
+  const range: Range = {
+    type: RangeType.Recurrence,
+    from: lengthAtIndex[i] + indexInString,
+    to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
+    lineFrom: { line: i, index: indexInString },
+    lineTo: { line: i, index: indexInString + recurrenceMatch.length },
+  };
 
   let recurrenceCount: number;
   const recurrenceAmountString =
@@ -155,10 +172,13 @@ export const checkEdtfRecurrence = (
       ].findIndex((regex) => eventStartLineRegexMatch[regex])!;
       const repetitionUnit = units[repeitionUnitIndex];
       return {
-        every,
-        for: {
-          [repetitionUnit]: repetitionCount,
+        recurrence: {
+          every,
+          for: {
+            [repetitionUnit]: repetitionCount,
+          },
         },
+        range,
       };
     } else {
       const repetitionCount = parseInt(
@@ -167,24 +187,38 @@ export const checkEdtfRecurrence = (
         ].trim()
       );
       return {
-        every,
-        for: {
-          times: repetitionCount,
+        recurrence: {
+          every,
+          for: {
+            times: repetitionCount,
+          },
         },
+        range,
       };
     }
   }
-  return { every };
+  return { recurrence: { every }, range };
 };
 
 export const checkRecurrence = (
-  eventStartLineRegexMatch: RegExpMatchArray
-): Recurrence | undefined => {
+  eventStartLineRegexMatch: RegExpMatchArray,
+  lengthAtIndex: number[],
+  i: number
+): RecurrenceInText | undefined => {
   const recurrenceMatch =
     eventStartLineRegexMatch[recurrence_recurrenceMatchIndex];
   if (!recurrenceMatch) {
     return;
   }
+
+  const indexInString = eventStartLineRegexMatch[0].indexOf(recurrenceMatch);
+  const range: Range = {
+    type: RangeType.Recurrence,
+    from: lengthAtIndex[i] + indexInString,
+    to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
+    lineFrom: { line: i, index: indexInString },
+    lineTo: { line: i, index: indexInString + recurrenceMatch.length },
+  };
 
   let recurrenceCount: number;
   if (eventStartLineRegexMatch[recurrence_recurrenceAmountMatchIndex]) {
@@ -261,10 +295,13 @@ export const checkRecurrence = (
       ].findIndex((regex) => eventStartLineRegexMatch[regex])!;
       const repetitionUnit = units[repeitionUnitIndex];
       return {
-        every,
-        for: {
-          [repetitionUnit]: repetitionCount,
+        recurrence: {
+          every,
+          for: {
+            [repetitionUnit]: repetitionCount,
+          },
         },
+        range,
       };
     } else {
       const repetitionCount = parseInt(
@@ -273,12 +310,15 @@ export const checkRecurrence = (
         ].trim()
       );
       return {
-        every,
-        for: {
-          times: repetitionCount,
+        recurrence: {
+          every,
+          for: {
+            times: repetitionCount,
+          },
         },
+        range,
       };
     }
   }
-  return { every };
+  return { recurrence: { every }, range };
 };

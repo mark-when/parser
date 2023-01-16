@@ -120,7 +120,14 @@ export function getDateRangeFromCasualRegexMatch(
 
   const cached = cache?.ranges.get(datePart);
   if (cached) {
-    const recurrence = checkRecurrence(eventStartLineRegexMatch);
+    const recurrence = checkRecurrence(
+      eventStartLineRegexMatch,
+      lengthAtIndex,
+      i
+    );
+    if (recurrence) {
+      context.ranges.push(recurrence.range);
+    }
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
       DateTime.fromISO(cached.toDateTimeIso),
@@ -360,7 +367,14 @@ export function getDateRangeFromCasualRegexMatch(
     );
   }
 
-  const recurrence = checkRecurrence(eventStartLineRegexMatch);
+  const recurrence = checkRecurrence(
+    eventStartLineRegexMatch,
+    lengthAtIndex,
+    i
+  );
+  if (recurrence) {
+    context.ranges.push(recurrence.range);
+  }
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,
