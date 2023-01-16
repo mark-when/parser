@@ -52,7 +52,7 @@ export const START_OR_END_TIME_REGEX = new RegExp(
 );
 
 export const RECURRENCE_AMOUNT_REGEX = new RegExp(
-  `((\\d+|other)\\W*)?(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source})`,
+  `(?:(\\d+|other)?\\s*)(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source})`,
   "g"
 );
 
@@ -202,7 +202,6 @@ export const to_casualMonthYearMatchIndex = ++index;
 
 export const recurrence_recurrenceMatchIndex = ++index
 export const recurrence_recurrenceAmountMatchIndex = ++index
-export const recurrence_recurrenceAmountOrOtherMatchIndex = ++index
 export const recurrence_recurrenceAmountUnitMatchIndex = ++index;
 export const recurrence_recurrenceAmountMillisecondsUnitMatchIndex = ++index;
 export const recurrence_recurrenceAmountSecondsUnitMatchIndex = ++index;
@@ -313,7 +312,6 @@ export const to_edtfNowMatchIndex = ++edtfIndex;
 
 export const recurrence_edtfRecurrenceMatchIndex = ++edtfIndex
 export const recurrence_edtfRecurrenceAmountMatchIndex = ++edtfIndex
-export const recurrence_edtfRecurrenceAmountOrOtherMatchIndex = ++edtfIndex
 export const recurrence_edtfRecurrenceAmountUnitMatchIndex = ++edtfIndex;
 export const recurrence_edtfRecurrenceAmountMillisecondsUnitMatchIndex = ++edtfIndex;
 export const recurrence_edtfRecurrenceAmountSecondsUnitMatchIndex = ++edtfIndex;
