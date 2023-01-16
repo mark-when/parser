@@ -19,6 +19,7 @@ import {
   recurrence_repetitionsMatchIndex,
   recurrence_edtfRecurrenceAmountXNotationMatchIndex,
   recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex,
+  recurrence_edtfRecurrenceAmountYearsUnitMatchIndex,
 } from "../src/regex";
 
 describe("regex indices", () => {
@@ -31,7 +32,7 @@ describe("regex indices", () => {
     expect(matches![recurrence_recurrenceMatchIndex]).toBe(
       " every 3 days for 3 days"
     );
-    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("3 ");
+    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("3");
     expect(matches![recurrence_recurrenceAmountDaysUnitMatchIndex]).toBe(
       "days"
     );
@@ -45,12 +46,11 @@ describe("regex indices", () => {
     const matches = `09/09/1999 every 3 months x29: event title`.match(
       EVENT_START_REGEX
     );
-    debugger;
     expect(matches).toBeTruthy();
     expect(matches![recurrence_recurrenceMatchIndex]).toBe(
       " every 3 months x29"
     );
-    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("3 ");
+    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("3");
     expect(matches![recurrence_recurrenceAmountMonthsUnitMatchIndex]).toBe(
       "months"
     );
@@ -68,12 +68,11 @@ describe("regex indices", () => {
     const matches = `Dec 19 every 12 week days for 9 times: event title`.match(
       EVENT_START_REGEX
     );
-    debugger;
     expect(matches).toBeTruthy();
     expect(matches![recurrence_recurrenceMatchIndex]).toBe(
       " every 12 week days for 9 times"
     );
-    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("12 ");
+    expect(matches![recurrence_recurrenceAmountMatchIndex]).toBe("12");
     expect(matches![recurrence_recurrenceAmountWeekDayMatchIndex]).toBe(
       "week "
     );
@@ -93,7 +92,7 @@ describe("regex indices", () => {
 
     expect(matches).toBeTruthy()
     expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every 12 week days for 9 times')
-     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12 ");
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12");
     expect(matches![recurrence_edtfRecurrenceAmountWeekDayMatchIndex]).toBe(
       "week "
     );
@@ -113,7 +112,7 @@ describe("regex indices", () => {
 
     expect(matches).toBeTruthy()
     expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every 12 week days for 9 times')
-     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12 ");
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12");
     expect(matches![recurrence_edtfRecurrenceAmountWeekDayMatchIndex]).toBe(
       "week "
     );
@@ -133,7 +132,7 @@ describe("regex indices", () => {
 
     expect(matches).toBeTruthy()
     expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every 12 week days for 9 times')
-     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12 ");
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("12");
     expect(matches![recurrence_edtfRecurrenceAmountWeekDayMatchIndex]).toBe(
       "week "
     );
@@ -153,7 +152,7 @@ describe("regex indices", () => {
 
     expect(matches).toBeTruthy()
     expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every 3 days for 3 days')
-     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("3 ");
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("3");
     expect(matches![recurrence_edtfRecurrenceAmountDaysUnitMatchIndex]).toBe(
       "days"
     );
@@ -170,7 +169,7 @@ describe("regex indices", () => {
 
     expect(matches).toBeTruthy()
     expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every 4 months x50')
-     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("4 ");
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("4");
     expect(matches![recurrence_edtfRecurrenceAmountMonthsUnitMatchIndex]).toBe(
       "months"
     );
@@ -178,5 +177,19 @@ describe("regex indices", () => {
     expect(matches![recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex]).toBe(
       "50"
     );
+  })
+
+  test('edtf recurrence indices 4', () => {
+    const matches = `2019-01-01/now every other year: event title`.match(
+      EDTF_START_REGEX
+    );
+
+    expect(matches).toBeTruthy()
+    expect(matches![recurrence_edtfRecurrenceMatchIndex]).toBe(' every other year')
+     expect(matches![recurrence_edtfRecurrenceAmountMatchIndex]).toBe("other");
+    expect(matches![recurrence_edtfRecurrenceAmountYearsUnitMatchIndex]).toBe(
+      "year"
+    );
+    expect(matches![recurrence_edtfRecurrenceAmountXNotationMatchIndex]).toBeFalsy()
   })
 });

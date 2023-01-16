@@ -1890,6 +1890,62 @@ now:  [] some item
   });
 });
 
+describe("recurrence", () => {
+  test.each(sp())("edtf recurrence 1", () => {
+    const mw = parse(`2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.days).toBe(3)
+    expect(first.recurrence?.for?.days).toBe(3)
+  })
+
+  test.each(sp())("edtf recurrence 2", () => {
+    const mw = parse(`2022-08-07 every 12 months x30: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.months).toBe(12)
+    expect(first.recurrence?.for?.times).toBe(30)
+  })
+
+  test.each(sp())("edtf recurrence 3", () => {
+    const mw = parse(`2022-08-07 every other year for 10 times: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.years).toBe(2)
+    expect(first.recurrence?.for?.times).toBe(10)
+  })
+
+  test.only.each(sp())('recurrence 1', () => {
+    const mw = parse(`Dec 1 2022 every other year: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.years).toBe(2)
+    expect(first.recurrence?.for).toBeFalsy()
+  })
+
+  test.only.each(sp())('recurrence 2', () => {
+    const mw = parse(`Dec 1 every day for 10 years: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.days).toBe(1)
+    expect(first.recurrence?.for?.years).toBe(10)
+  })
+
+  test.only.each(sp())('recurrence 3', () => {
+    const mw = parse(`Dec 1 every 40 days for 1 second: event title`)
+
+    const first = nthEvent(mw, 0)
+    expect(first.recurrence).toBeTruthy()
+    expect(first.recurrence?.every.days).toBe(40)
+    expect(first.recurrence?.for?.seconds).toBe(1)
+  })
+})
+
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)

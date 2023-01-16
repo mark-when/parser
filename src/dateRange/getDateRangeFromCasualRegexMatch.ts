@@ -50,6 +50,7 @@ import {
   parseSlashDate,
   roundDateUp,
 } from "./utils";
+import { checkRecurrence } from "./checkRecurrence";
 
 export function getDateRangeFromCasualRegexMatch(
   line: string,
@@ -119,13 +120,15 @@ export function getDateRangeFromCasualRegexMatch(
 
   const cached = cache?.ranges.get(datePart);
   if (cached) {
+    const recurrence = checkRecurrence(eventStartLineRegexMatch);
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
       DateTime.fromISO(cached.toDateTimeIso),
       datePart,
-      dateRangeInText
+      dateRangeInText,
+      recurrence
     );
-    return dateRange
+    return dateRange;
   }
 
   if (relativeFromDate) {
@@ -357,11 +360,13 @@ export function getDateRangeFromCasualRegexMatch(
     );
   }
 
+  const recurrence = checkRecurrence(eventStartLineRegexMatch);
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,
     datePart,
-    dateRangeInText
+    dateRangeInText,
+    recurrence
   );
 
   if (canCacheRange) {

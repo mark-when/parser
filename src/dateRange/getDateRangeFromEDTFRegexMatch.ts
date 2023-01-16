@@ -29,6 +29,7 @@ import {
   toDateRange,
 } from "../Types";
 import { getPriorEvent, roundDateUp } from "./utils";
+import { checkEdtfRecurrence } from "./checkRecurrence";
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,
@@ -91,11 +92,13 @@ export function getDateRangeFromEDTFRegexMatch(
 
   const cached = cache?.ranges.get(datePart);
   if (cached) {
+    const recurrence = checkEdtfRecurrence(eventStartLineRegexMatch);
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
       DateTime.fromISO(cached.toDateTimeIso),
       datePart,
-      dateRangeInText
+      dateRangeInText,
+      recurrence
     );
     return dateRange;
   }
@@ -229,11 +232,13 @@ export function getDateRangeFromEDTFRegexMatch(
     );
   }
 
+  const recurrence = checkEdtfRecurrence(eventStartLineRegexMatch);
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,
     datePart,
-    dateRangeInText
+    dateRangeInText,
+    recurrence
   );
 
   if (canCacheRange && cache) {
