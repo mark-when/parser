@@ -30,6 +30,7 @@ import {
   to_timeOnlyMeridiemMeridiemMatchIndex,
   to_timeOnly24HourHourMatchIndex,
   to_timeOnly24HourMinuteMatchIndex,
+  eventTextMatchIndex,
 } from "../regex";
 import {
   DateRangePart,
@@ -133,6 +134,7 @@ export function getDateRangeFromCasualRegexMatch(
       DateTime.fromISO(cached.toDateTimeIso),
       datePart,
       dateRangeInText,
+      eventStartLineRegexMatch[eventTextMatchIndex],
       recurrence
     );
     return dateRange;
@@ -380,6 +382,7 @@ export function getDateRangeFromCasualRegexMatch(
     endDateTime,
     datePart,
     dateRangeInText,
+    eventStartLineRegexMatch[eventTextMatchIndex],
     recurrence
   );
 

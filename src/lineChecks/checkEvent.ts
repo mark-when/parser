@@ -70,8 +70,8 @@ export function checkEvent(
     }
 
     checkComments(nextLine, end, lengthAtIndex, context);
-    checkTags(nextLine, end, lengthAtIndex, context)
-    
+    checkTags(nextLine, end, lengthAtIndex, context);
+
     const listItems = checkListItems(nextLine, end, lengthAtIndex, context);
     if (listItems) {
       matchedListItems.push(...listItems);
@@ -94,29 +94,15 @@ export function checkEvent(
     },
   };
 
-  // Remove the date part from the first line
-  let indexOfTextAfterDateRange: number
-  if (dateRange.recurrenceRangeInText) {
-    indexOfTextAfterDateRange = dateRange.recurrenceRangeInText.lineTo.index + 1
-  } else {
-    const datePartOfLine = dateRange.originalString!;
-    const indexOfDateRange = line.indexOf(datePartOfLine);
-  
-    indexOfTextAfterDateRange =
-      indexOfDateRange + datePartOfLine.length + 1;
-  }
-
-  const textAfterDateRange = eventGroup[0].substring(indexOfTextAfterDateRange);
-
-  const completionMatch = textAfterDateRange.match(COMPLETION_REGEX);
+  const completionMatch = dateRange.eventText.match(COMPLETION_REGEX);
+  const indexOfEventText = line.indexOf(dateRange.eventText);
   let completed = undefined;
   if (completionMatch) {
     const from =
-      indexOfTextAfterDateRange +
-      textAfterDateRange.indexOf(completionMatch[0]);
+      indexOfEventText + dateRange.eventText.indexOf(completionMatch[0]);
     const to =
       from +
-      textAfterDateRange.indexOf(completionMatch[1]) +
+      dateRange.eventText.indexOf(completionMatch[1]) +
       completionMatch[1].length;
     completed = ["X", "x"].some((x) => completionMatch.includes(x));
 
@@ -137,7 +123,7 @@ export function checkEvent(
     context.ranges.push(indicator);
   }
 
-  eventGroup[0] = textAfterDateRange.trim();
+  eventGroup[0] = dateRange.eventText.trim();
   const eventDescription = new EventDescription(
     eventGroup,
     matchedListItems,

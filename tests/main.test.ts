@@ -596,8 +596,14 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect(second.eventDescription.eventDescription).toBe("next event");
     const third = nthEvent(markwhen, 2);
     expect(third.eventDescription.eventDescription).toBe("third event");
-    const last = nthEvent(markwhen, 3)
-    expect(last.eventDescription.eventDescription).toBe('recurring event')
+    const last = nthEvent(markwhen, 3);
+    expect(last.eventDescription.eventDescription).toBe("recurring event");
+  });
+
+  test.each(sp())("event title 2", (p) => {
+    const mw = p(`03/15/2013-04/2015 every 10 years: China  #Work`);
+
+    expect(nthEvent(mw, 0).eventDescription.eventDescription).toBe("China ");
   });
 
   test.each(sameParse([]))("supplemental descriptions", (p) => {
@@ -1914,8 +1920,8 @@ now:  [] some item
 });
 
 describe("recurrence", () => {
-  test.each(sp())("edtf recurrence 1", () => {
-    const mw = parse(
+  test.each(sp())("edtf recurrence 1", (p) => {
+    const mw = p(
       `2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`
     );
 
@@ -1925,8 +1931,8 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.days).toBe(3);
   });
 
-  test.each(sp())("edtf recurrence 2", () => {
-    const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  test.each(sp())("edtf recurrence 2", (p) => {
+    const mw = p(`2022-08-07 every 12 months x30: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
@@ -1934,8 +1940,8 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.times).toBe(30);
   });
 
-  test.each(sp())("edtf recurrence 3", () => {
-    const mw = parse(`2022-08-07 every other year for 10 times: event title`);
+  test.each(sp())("edtf recurrence 3", (p) => {
+    const mw = p(`2022-08-07 every other year for 10 times: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
@@ -1943,8 +1949,8 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.times).toBe(10);
   });
 
-  test.each(sp())("recurrence 1", () => {
-    const mw = parse(`Dec 1 2022 every other year: event title`);
+  test.each(sp())("recurrence 1", (p) => {
+    const mw = p(`Dec 1 2022 every other year: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
@@ -1952,8 +1958,8 @@ describe("recurrence", () => {
     expect(first.recurrence?.for).toBeFalsy();
   });
 
-  test.each(sp())("recurrence 2", () => {
-    const mw = parse(`Dec 1 every day for 10 years: event title`);
+  test.each(sp())("recurrence 2", (p) => {
+    const mw = p(`Dec 1 every day for 10 years: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
@@ -1961,8 +1967,8 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.years).toBe(10);
   });
 
-  test.each(sp())("recurrence 3", () => {
-    const mw = parse(`Dec 1 every 40 days for 1 second: event title`);
+  test.each(sp())("recurrence 3", (p) => {
+    const mw = p(`Dec 1 every 40 days for 1 second: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
@@ -1970,20 +1976,30 @@ describe("recurrence", () => {
     expect(first.recurrence?.for?.seconds).toBe(1);
   });
 
-  test.each(sp())("recurrence range 1", () => {
-    const mw = parse(`Dec 1 every 40 days for 1 second: event title`);
+  test.each(sp())("recurrence range 1", (p) => {
+    const mw = p(`Dec 1 every 40 days for 1 second: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrenceRangeInText?.from).toBe(5);
     expect(first.recurrenceRangeInText?.to).toBe(32);
   });
 
-  test.each(sp())("recurrence range 2", () => {
-    const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  test.each(sp())("recurrence range 2", (p) => {
+    const mw = p(`2022-08-07 every 12 months x30: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrenceRangeInText?.from).toBe(10);
     expect(first.recurrenceRangeInText?.to).toBe(30);
+  });
+
+  test.each(sp())("recurrence with space between colon", (p) => {
+    const mw = p(`2022-08-07 every 12 months x30  : event title`);
+
+    const first = nthEvent(mw, 0);
+    expect(first.recurrence).toBeTruthy();
+    expect(first.recurrenceRangeInText?.from).toBe(10);
+    expect(first.recurrenceRangeInText?.to).toBe(30);
+    expect(first.eventDescription.eventDescription).toBe('event title')
   });
 });
 

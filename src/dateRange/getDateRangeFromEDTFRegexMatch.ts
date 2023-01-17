@@ -19,6 +19,7 @@ import {
   to_edtfNowMatchIndex,
   from_edtfRelativeEventIdMatchIndex,
   to_edtfRelativeEventIdMatchIndex,
+  edtfEventTextMatchIndex,
 } from "../regex";
 import {
   DateRangePart,
@@ -102,6 +103,7 @@ export function getDateRangeFromEDTFRegexMatch(
       DateTime.fromISO(cached.toDateTimeIso),
       datePart,
       dateRangeInText,
+      eventStartLineRegexMatch[edtfEventTextMatchIndex],
       recurrence
     );
     return dateRange;
@@ -246,6 +248,7 @@ export function getDateRangeFromEDTFRegexMatch(
     endDateTime,
     datePart,
     dateRangeInText,
+    eventStartLineRegexMatch[edtfEventTextMatchIndex],
     recurrence
   );
 

@@ -65,7 +65,7 @@ export const RECURRENCE_REGEX = new RegExp(
 );
 
 export const DATE_RANGE_REGEX = new RegExp(
-  `((${START_OR_END_TIME_REGEX.source})(?:\\s*(?:-|to)\\s*(${START_OR_END_TIME_REGEX.source}))?)(${RECURRENCE_REGEX.source}|\\s*):`
+  `((${START_OR_END_TIME_REGEX.source})(?:\\s*(?:-|to)\\s*(${START_OR_END_TIME_REGEX.source}))?)(${RECURRENCE_REGEX.source})?\\s*:`
 );
 
 export const EVENT_START_REGEX = new RegExp(
@@ -231,6 +231,8 @@ export const recurrence_repetitionsForAmountTimesMatchIndex = ++index;
 export const recurrence_recurrenceAmountXNotationMatchIndex = ++index;
 export const recurrence_recurrenceAmountXNotationAmountMatchIndex = ++index;
 
+export const eventTextMatchIndex = ++index
+
 export const COMMENT_REGEX = /^\s*\/\/.*/;
 export const TAG_COLOR_REGEX = /^\s*#(\w*):\s*(\S+)/;
 export const TITLE_REGEX = /^\s*(title:)\s*(.+)\s*$/i;
@@ -252,7 +254,7 @@ export const PAGE_BREAK_REGEX = /^_-_-_break_-_-_$/;
 
 export const EDTF_DATE_REGEX = /(\d{4}(-\d{2}(-\d{2})?)?)/;
 export const EDTF_RANGE_REGEX = new RegExp(
-  `((?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source}))(\\s*/\\s*(?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source})))?)(${RECURRENCE_REGEX.source}|\\s*):`
+  `((?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source}))(\\s*/\\s*(?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source})))?)(${RECURRENCE_REGEX.source})?\\s*:`
 );
 export const EDTF_START_REGEX = new RegExp(
   `^(\\s*)${EDTF_RANGE_REGEX.source}(.*)`,
@@ -340,3 +342,5 @@ export const recurrence_edtfRepetitionsForAmountTimesMatchIndex = ++edtfIndex;
 
 export const recurrence_edtfRecurrenceAmountXNotationMatchIndex = ++edtfIndex;
 export const recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex = ++edtfIndex;
+
+export const edtfEventTextMatchIndex = ++edtfIndex

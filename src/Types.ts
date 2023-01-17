@@ -137,6 +137,7 @@ export class DateRangePart implements DateRange {
   fromDateTime: DateTime;
   toDateTime: DateTime;
   originalString?: string;
+  eventText: string;
   dateRangeInText: Range;
   recurrence?: Recurrence;
   recurrenceRangeInText?: Range;
@@ -146,12 +147,14 @@ export class DateRangePart implements DateRange {
     toDateTime: DateTime,
     originalString: string,
     dateRangeInText: Range,
+    eventText: string,
     recurrence?: RecurrenceInText
   ) {
     this.fromDateTime = fromDateTime;
     this.toDateTime = toDateTime;
     this.originalString = originalString;
     this.dateRangeInText = dateRangeInText;
+    this.eventText = eventText;
     this.recurrence = recurrence?.recurrence;
     this.recurrenceRangeInText = recurrence?.range;
   }
@@ -342,6 +345,7 @@ export const toDateRange = (dr: DateRangeIso) => ({
 
 export class Event {
   eventString: string;
+  eventText: string;
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
   recurrenceRangeInText?: Range;
@@ -359,6 +363,7 @@ export class Event {
     dateText?: string
   ) {
     this.eventString = eventString;
+    this.eventText = dateRange.eventText;
     this.dateRangeIso = toDateRangeIso(dateRange);
     this.recurrence = dateRange.recurrence;
     this.recurrenceRangeInText = dateRange.recurrenceRangeInText;
