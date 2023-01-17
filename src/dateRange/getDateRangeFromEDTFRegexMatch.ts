@@ -79,24 +79,41 @@ export function getDateRangeFromEDTFRegexMatch(
   const dateRangeInText: Range = {
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
-    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    to: lengthAtIndex[i] + indexOfDateRange + datePart.length,
     lineFrom: {
       line: i,
       index: indexOfDateRange,
     },
     lineTo: {
       line: i,
-      index: indexOfDateRange + datePart.length + 1,
+      index: indexOfDateRange + datePart.length,
     },
   };
   context.ranges.push(dateRangeInText);
 
+  const colonIndex = line.indexOf(":", indexOfDateRange + datePart.length);
+  const colonRange = (rangeType: RangeType) => ({
+    type: rangeType,
+    from: lengthAtIndex[i] + colonIndex,
+    to: lengthAtIndex[i] + colonIndex + 1,
+    lineFrom: {
+      line: i,
+      index: colonIndex,
+    },
+    lineTo: {
+      line: i,
+      index: colonIndex + 1,
+    },
+  });
   const cached = cache?.ranges.get(datePart);
   if (cached) {
     const recurrence = checkEdtfRecurrence(
       eventStartLineRegexMatch,
       lengthAtIndex,
       i
+    );
+    context.ranges.push(
+      colonRange(recurrence ? RangeType.Recurrence : RangeType.DateRange)
     );
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
@@ -242,6 +259,9 @@ export function getDateRangeFromEDTFRegexMatch(
     eventStartLineRegexMatch,
     lengthAtIndex,
     i
+  );
+  context.ranges.push(
+    colonRange(recurrence ? RangeType.Recurrence : RangeType.DateRange)
   );
   const dateRange = new DateRangePart(
     fromDateTime,

@@ -107,17 +107,32 @@ export function getDateRangeFromCasualRegexMatch(
   const dateRangeInText: Range = {
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
-    to: lengthAtIndex[i] + indexOfDateRange + datePart.length + 1,
+    to: lengthAtIndex[i] + indexOfDateRange + datePart.length,
     lineFrom: {
       line: i,
       index: indexOfDateRange,
     },
     lineTo: {
       line: i,
-      index: indexOfDateRange + datePart.length + 1,
+      index: indexOfDateRange + datePart.length,
     },
   };
   context.ranges.push(dateRangeInText);
+
+  const colonIndex = line.indexOf(":", indexOfDateRange + datePart.length);
+  const colonRange = (rangeType: RangeType) => ({
+    type: rangeType,
+    from: lengthAtIndex[i] + colonIndex,
+    to: lengthAtIndex[i] + colonIndex + 1,
+    lineFrom: {
+      line: i,
+      index: colonIndex,
+    },
+    lineTo: {
+      line: i,
+      index: colonIndex + 1,
+    },
+  });
 
   const cached = cache?.ranges.get(datePart);
   if (cached) {
@@ -128,6 +143,9 @@ export function getDateRangeFromCasualRegexMatch(
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
+      context.ranges.push(colonRange(RangeType.Recurrence));
+    } else {
+      context.ranges.push(colonRange(RangeType.DateRange));
     }
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
@@ -376,6 +394,9 @@ export function getDateRangeFromCasualRegexMatch(
   );
   if (recurrence) {
     context.ranges.push(recurrence.range);
+    context.ranges.push(colonRange(RangeType.Recurrence));
+  } else {
+    context.ranges.push(colonRange(RangeType.DateRange));
   }
   const dateRange = new DateRangePart(
     fromDateTime,

@@ -1993,13 +1993,21 @@ describe("recurrence", () => {
   });
 
   test.each(sp())("recurrence with space between colon", (p) => {
-    const mw = p(`2022-08-07 every 12 months x30  : event title`);
+    const string = `2022-08-07 every 12 months x30  : event title`;
+    const mw = p(string);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
     expect(first.recurrenceRangeInText?.from).toBe(10);
     expect(first.recurrenceRangeInText?.to).toBe(30);
-    expect(first.eventDescription.eventDescription).toBe('event title')
+    expect(first.eventDescription.eventDescription).toBe("event title");
+
+    const colonRange = mw.timelines[0].ranges.find(
+      (range) => range.to - range.from === 1
+    );
+    expect(colonRange).toBeTruthy();
+    expect(colonRange?.from).toBe(32);
+    expect(colonRange?.type).toBe(RangeType.Recurrence);
   });
 });
 
