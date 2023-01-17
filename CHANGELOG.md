@@ -1,3 +1,6 @@
+## 0.4.3
+
+- Add eventText directly to Event and EventDescription (parsed from regex instead of inferred)
 
 ## 0.4.1
 
