@@ -73,6 +73,17 @@ export interface Recurrence {
   every: Duration;
   for?: Duration & { times?: number };
 }
+export const recurrenceDurationUnits = [
+  "years",
+  "months",
+  "weeks",
+  "weekdays",
+  "days",
+  "hours",
+  "minutes",
+  "seconds",
+  "milliseconds",
+] as DurationUnit[];
 
 export const checkEdtfRecurrence = (
   eventStartLineRegexMatch: RegExpMatchArray,
@@ -108,17 +119,6 @@ export const checkEdtfRecurrence = (
     recurrenceCount = 1;
   }
 
-  const units = [
-    "years",
-    "months",
-    "weeks",
-    "weekdays",
-    "days",
-    "hours",
-    "minutes",
-    "seconds",
-    "milliseconds",
-  ] as DurationUnit[];
   const recurrenceUnitIndex = [
     recurrence_edtfRecurrenceAmountYearsUnitMatchIndex,
     recurrence_edtfRecurrenceAmountMonthsUnitMatchIndex,
@@ -131,7 +131,7 @@ export const checkEdtfRecurrence = (
     recurrence_edtfRecurrenceAmountMillisecondsUnitMatchIndex,
   ].findIndex((regex) => !!eventStartLineRegexMatch[regex])!;
 
-  const unit = units[recurrenceUnitIndex];
+  const unit = recurrenceDurationUnits[recurrenceUnitIndex];
   const every = {
     [unit]: recurrenceCount,
   } as Duration;
@@ -146,18 +146,10 @@ export const checkEdtfRecurrence = (
         ].trim()
       );
 
-      const units = [
-        "years",
-        "months",
-        "weeks",
-        "weekdays",
-        "days",
-        "hours",
-        "minutes",
-        "seconds",
-        "milliseconds",
-        "times",
-      ] as (DurationUnit | "times")[];
+      const units = [...recurrenceDurationUnits, "times"] as (
+        | DurationUnit
+        | "times"
+      )[];
       const repeitionUnitIndex = [
         recurrence_edtfRepetitionsForAmountYearsUnitMatchIndex,
         recurrence_edtfRepetitionsForAmountMonthsUnitMatchIndex,

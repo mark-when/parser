@@ -22,7 +22,7 @@ import {
 import { Cache } from "../src/Cache";
 const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
 
-const nthEvent = (markwhen: Timelines, n: number) =>
+export const nthEvent = (markwhen: Timelines, n: number) =>
   nthNode(markwhen, n).value as Event;
 
 const nthNode = (markwhen: Timelines, n: number) => {
