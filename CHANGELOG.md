@@ -1,3 +1,7 @@
+## 0.4.6 
+
+- Add recurrence match to recurrence range content
+
 ## 0.4.5
 
 - Add utility function `expand` (src/utilities/recurrence.ts) to expand recurrent events
