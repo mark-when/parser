@@ -1,3 +1,7 @@
+## 0.4.9
+
+- Fix list item content ranges
+
 ## 0.4.8
 
 - Add recurrence match to edtf range match too
