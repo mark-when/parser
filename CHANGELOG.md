@@ -1,3 +1,7 @@
+## 0.4.8
+
+- Add recurrence match to edtf range match too
+
 ## 0.4.6 
 
 - Add recurrence match to recurrence range content

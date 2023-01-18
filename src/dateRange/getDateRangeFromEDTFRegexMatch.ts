@@ -112,9 +112,12 @@ export function getDateRangeFromEDTFRegexMatch(
       lengthAtIndex,
       i
     );
-    context.ranges.push(
-      colonRange(recurrence ? RangeType.Recurrence : RangeType.DateRange)
-    );
+    if (recurrence) {
+      context.ranges.push(recurrence.range);
+      context.ranges.push(colonRange(RangeType.Recurrence));
+    } else {
+      context.ranges.push(colonRange(RangeType.DateRange));
+    }
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
       DateTime.fromISO(cached.toDateTimeIso),
@@ -260,9 +263,12 @@ export function getDateRangeFromEDTFRegexMatch(
     lengthAtIndex,
     i
   );
-  context.ranges.push(
-    colonRange(recurrence ? RangeType.Recurrence : RangeType.DateRange)
-  );
+  if (recurrence) {
+    context.ranges.push(recurrence.range);
+    context.ranges.push(colonRange(RangeType.Recurrence));
+  } else {
+    context.ranges.push(colonRange(RangeType.DateRange));
+  }
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,
