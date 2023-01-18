@@ -20,23 +20,7 @@ import {
   toArray,
 } from "../src/Noder";
 import { Cache } from "../src/Cache";
-const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
-
-export const nthEvent = (markwhen: Timelines, n: number) =>
-  nthNode(markwhen, n).value as Event;
-
-const nthNode = (markwhen: Timelines, n: number) => {
-  let i = 0;
-  for (const { path, node } of iterate(markwhen.timelines[0].events)) {
-    if (isEventNode(node)) {
-      if (i === n) {
-        return node;
-      }
-      i++;
-    }
-  }
-  throw new Error();
-};
+import { firstEvent, nthEvent } from "./testUtilities";
 
 const timers = {
   normal: [] as number[],
@@ -1855,6 +1839,28 @@ now: hello ![](example.com/image)
     expect(supplemental![4].type).toBe("image");
     expect(supplemental![5].type).toBe("checkbox");
     expect(supplemental![6].type).toBe("text");
+  });
+});
+
+describe("ranges", () => {
+  test("list item contents", () => {
+    const mw = parse(`06/2025 - 09/2025: Sub
+- [ ] We need to get this done
+- [x] And this
+- [ ] This one is extra
+`);
+    const listItemContents = mw.timelines[0].ranges.filter(
+      (r) => r.type === RangeType.ListItemContents
+    );
+    expect(listItemContents.length).toBe(3);
+    expect(listItemContents[0].lineFrom.line).toBe(1);
+    expect(listItemContents[0].lineFrom.index).toBe(6);
+    expect(listItemContents[0].from).toBe(28);
+    expect(listItemContents[0].to).toBe(52);
+
+    expect(listItemContents[1].from).toBe(59);
+    expect(listItemContents[1].to).toBe(67);
+
   });
 });
 

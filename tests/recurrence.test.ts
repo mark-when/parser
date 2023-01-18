@@ -1,7 +1,7 @@
 import { parse } from "../src"
-import { nthEvent } from "./main.test"
 import { expand, expandEvent } from "../src/utilities/recurrence"
 import { toDateRange } from "../src/Types"
+import { nthEvent } from "./testUtilities"
 
 test("expansion 1", () => {
   const mw = parse(`2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`)

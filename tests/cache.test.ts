@@ -27,7 +27,7 @@ describe("caching", () => {
       profile.delete();
     });
   });
-  test.only("Using cache results in same ", () => {
+  test("Using cache results in same ", () => {
     const big = bigTimeline();
 
     const cache = new Cache();

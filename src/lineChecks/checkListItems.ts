@@ -31,8 +31,8 @@ export function checkListItems(
     };
     const contents: Range = {
       type: RangeType.ListItemContents,
-      from: to + 1,
-      to: from - to - 1, // ? i dont get this
+      from: to,
+      to: from + line.length - 1,
       lineFrom: {
         line: i,
         index: indexInLine + 1,
@@ -61,7 +61,7 @@ export function checkListItems(
     };
     const contents = {
       type: RangeType.ListItemContents,
-      from: from + 1,
+      from: from,
       to: from + line.length - 1,
       lineFrom: {
         line: i,
