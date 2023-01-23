@@ -1,5 +1,5 @@
 import { ParsingContext } from "../ParsingContext";
-import { COLORS } from "../ColorUtils";
+import { MARKWHEN_COLORS } from "../ColorUtils";
 import { TAG_REGEX } from "../regex";
 import { RangeType } from "../Types";
 
@@ -13,7 +13,7 @@ export function checkTags(
   if (matches) {
     for (let m of matches) {
       if (!context.tags[m[1]]) {
-        context.tags[m[1]] = COLORS[context.paletteIndex++ % COLORS.length];
+        context.tags[m[1]] = MARKWHEN_COLORS[context.paletteIndex++ % MARKWHEN_COLORS.length].rgb;
       }
       const indexOfTag = line.indexOf("#" + m[1]);
       const from = lengthAtIndex[i] + indexOfTag;

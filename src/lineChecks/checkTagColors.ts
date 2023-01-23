@@ -1,5 +1,5 @@
 import { ParsingContext } from "../ParsingContext";
-import { HUMAN_COLORS, hexToRgb, COLORS } from "../ColorUtils";
+import { hexToRgb, HUMAN_COLORS_MAP, HTML_COLORS_MAP, MARKWHEN_COLORS } from "../ColorUtils";
 import { TAG_COLOR_REGEX } from "../regex";
 import { RangeType } from "../Types";
 
@@ -11,19 +11,8 @@ export function checkTagColors(
 ): boolean {
   const tagColorMatch = line.match(TAG_COLOR_REGEX);
   if (tagColorMatch) {
-    const tagName = tagColorMatch[1];
-    const colorDef = tagColorMatch[2];
-    const humanColorIndex = HUMAN_COLORS.indexOf(colorDef);
-    if (humanColorIndex === -1) {
-      const rgb = hexToRgb(colorDef);
-      if (rgb) {
-        context.tags[tagName] = rgb;
-      } else {
-        context.tags[tagName] = COLORS[context.paletteIndex++ % COLORS.length];
-      }
-    } else {
-      context.tags[tagName] = COLORS[humanColorIndex];
-    }
+    const tagName = tagColorMatch.groups!.tagName;
+
     const indexOfTag = line.indexOf(tagName);
     const from = lengthAtIndex[i] + indexOfTag - 1;
     context.ranges.push({
@@ -41,6 +30,37 @@ export function checkTagColors(
       content: { tag: tagName, color: context.tags[tagName] },
     });
 
+    // One of the following is cases is guaranteed to be true based on how TAG_COLOR_REGEX is structured.
+    if (tagColorMatch.groups!.color_named) {
+      const colorDef = tagColorMatch.groups!.color_named.toLowerCase();
+      if (HUMAN_COLORS_MAP.has(colorDef)) {
+        context.tags[tagName] = HUMAN_COLORS_MAP.get(colorDef)!.rgb;
+      } else {
+        // Named color is not recognized. Default to the next markwhen color.
+        context.tags[tagName] = MARKWHEN_COLORS[context.paletteIndex++ % MARKWHEN_COLORS.length].rgb;
+      }
+    }
+    if (tagColorMatch.groups!.color_html) {
+      const colorDef = tagColorMatch.groups!.color_html.toLowerCase();
+      if (HTML_COLORS_MAP.has(colorDef)) {
+        context.tags[tagName] = HTML_COLORS_MAP.get(colorDef)!.rgb;
+      } else {
+        // Named color is not recognized. Default to the next markwhen color.
+        context.tags[tagName] = MARKWHEN_COLORS[context.paletteIndex++ % MARKWHEN_COLORS.length].rgb;
+      }
+    }
+    if (tagColorMatch.groups!.color_hex) {
+      const colorDef = tagColorMatch.groups!.color_hex;
+      const rgb = hexToRgb(colorDef);
+      if (rgb) {
+        context.tags[tagName] = rgb;
+      } else {
+        // Named color is not recognized. Default to the next markwhen color.
+        context.tags[tagName] = MARKWHEN_COLORS[context.paletteIndex++ % MARKWHEN_COLORS.length].rgb;
+      }
+    }
+
+    const colorDef = tagColorMatch.groups!.colorDef;
     const indexOfColorDefPlusLength = line.indexOf(colorDef) + colorDef.length;
     context.ranges.push({
       type: RangeType.tagDefinition,
@@ -56,6 +76,7 @@ export function checkTagColors(
       },
       content: { tag: tagName, color: context.tags[tagName] },
     });
+
     return true;
   }
   return false;
