@@ -380,6 +380,7 @@ export interface Timeline {
   ranges: Range[];
   foldables: { [index: number]: Foldable };
   events: Node<NodeArray>;
+  header: any;
   head?: SomeNode;
   tail?: SomeNode;
   tags: Tags;
@@ -395,18 +396,16 @@ export function emptyTimeline(): Timeline {
     foldables: [],
     tags: {},
     ids: {},
+    header: { dateFormat: AMERICAN_DATE_FORMAT },
     metadata: {
       earliestTime: now.minus({ years: 5 }).toISO(),
       latestTime: now.plus({ years: 5 }).toISO(),
       maxDurationDays: now.diff(now.minus({ years: 1 })).as("days"),
-      dateFormat: AMERICAN_DATE_FORMAT,
       startLineIndex: 0,
       endLineIndex: 0,
       startStringIndex: 0,
       endStringIndex: 0,
       preferredInterpolationFormat: undefined,
-      view: [],
-      edit: [],
     },
   };
 }
@@ -432,17 +431,12 @@ export interface EventGroup extends Array<Event | EventGroup> {
 export interface TimelineMetadata {
   earliestTime: DateTimeIso;
   latestTime: DateTimeIso;
-  dateFormat: string;
   startLineIndex: number;
   startStringIndex: number;
   endLineIndex: number;
   endStringIndex: number;
-  title?: string;
-  description?: string;
   maxDurationDays: number;
   preferredInterpolationFormat: string | undefined;
-  view: string[];
-  edit: string[];
 }
 
 export type GroupStyle = "section" | "group";

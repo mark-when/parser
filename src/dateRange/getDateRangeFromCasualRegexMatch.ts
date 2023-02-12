@@ -226,7 +226,7 @@ export function getDateRangeFromCasualRegexMatch(
         .replace(/,/g, "");
     }
 
-    const parsed = parseSlashDate(slashPart, context.dateFormat, cache);
+    const parsed = parseSlashDate(slashPart, context.header.dateFormat, cache);
     if (parsed) {
       if (timeComponent) {
         const timePart = getTimeFromSlashDateFrom(eventStartLineRegexMatch);
@@ -242,7 +242,7 @@ export function getDateRangeFromCasualRegexMatch(
       }
 
       // Something non-ISO has come up, assume they want that
-      context.preferredInterpolationFormat = context.dateFormat;
+      context.preferredInterpolationFormat = context.header.dateFormat;
     } else {
       console.error("Was supposed to have slash date but couldn't parse it.");
     }
@@ -313,7 +313,7 @@ export function getDateRangeFromCasualRegexMatch(
           .replace(/,/g, "");
       }
 
-      const parsed = parseSlashDate(slashPart, context.dateFormat, cache);
+      const parsed = parseSlashDate(slashPart, context.header.dateFormat, cache);
       if (parsed) {
         if (timeComponent) {
           const parsedFromIso = DateTime.fromISO(parsed.dateTimeIso);
@@ -337,7 +337,7 @@ export function getDateRangeFromCasualRegexMatch(
         }
 
         // Something non-ISO has come up, assume they want that
-        context.preferredInterpolationFormat = context.dateFormat;
+        context.preferredInterpolationFormat = context.header.dateFormat;
       } else {
         console.error("Was supposed to have slash date but couldn't parse it.");
       }

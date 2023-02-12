@@ -1,13 +1,21 @@
 import { DateTime, Duration, Settings } from "luxon";
 // import { Sort } from "./Sort";
 import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types";
-import { PAGE_BREAK_REGEX } from "./regex";
+import {
+  EDTF_START_REGEX,
+  EVENT_START_REGEX,
+  GROUP_START_REGEX,
+  PAGE_BREAK_REGEX,
+} from "./regex";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
 import { Cache } from "./Cache";
 import { checkEvent } from "./lineChecks/checkEvent";
 import { ParsingContext } from "./ParsingContext";
 import { checkNonEvents } from "./lineChecks/checkNonEvents";
+import { parseHeader } from "./parseHeader";
+import { checkComments } from "./lineChecks/checkComments";
+import { checkTagColors } from "./lineChecks/checkTagColors";
 
 export interface ParseOptions {}
 
@@ -99,7 +107,39 @@ export function parseTimeline(
   cache?: Cache
 ): Timeline {
   const context = new ParsingContext();
-  for (let i = startLineIndex; i < lines.length; i++) {
+
+  const headerStartLineIndex = startLineIndex;
+  const excludedHeaderLines = [];
+  let headerEndLineIndex = headerStartLineIndex;
+  // Determine where the header is
+  const eventsStarted = (line: string) =>
+    !!line.match(EDTF_START_REGEX) ||
+    !!line.match(EVENT_START_REGEX) ||
+    !!line.match(GROUP_START_REGEX) ||
+    !!line.match(PAGE_BREAK_REGEX);
+
+  let line = lines[headerStartLineIndex];
+  while (typeof line !== 'undefined' && !eventsStarted(line)) {
+    if (
+      checkComments(line, headerEndLineIndex, lengthAtIndex, context) ||
+      checkTagColors(line, headerEndLineIndex, lengthAtIndex, context)
+    ) {
+      excludedHeaderLines.push(headerEndLineIndex);
+    }
+    headerEndLineIndex++;
+    line = lines[headerEndLineIndex];
+  }
+
+  parseHeader(
+    lines,
+    lengthAtIndex,
+    headerStartLineIndex,
+    headerEndLineIndex,
+    excludedHeaderLines,
+    context
+  );
+
+  for (let i = headerEndLineIndex; i < lines.length; i++) {
     const line = lines[i];
     if (checkNonEvents(line, i, lengthAtIndex, context)) {
       continue;

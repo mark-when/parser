@@ -2,7 +2,16 @@ import { DateTime } from "luxon";
 import { Foldable } from ".";
 import { NodeArray, SomeNode, Node } from "./Node";
 import { push } from "./Noder";
-import { Path, Tags, IdedEvents, AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, Line, Timeline, Range } from "./Types";
+import {
+  Path,
+  Tags,
+  IdedEvents,
+  AMERICAN_DATE_FORMAT,
+  EUROPEAN_DATE_FORMAT,
+  Line,
+  Timeline,
+  Range,
+} from "./Types";
 
 export class ParsingContext {
   now = DateTime.now();
@@ -17,7 +26,6 @@ export class ParsingContext {
   title: string | undefined;
   description: string | undefined;
   paletteIndex: number;
-  dateFormat: typeof AMERICAN_DATE_FORMAT | typeof EUROPEAN_DATE_FORMAT;
   earliest: DateTime | undefined;
   latest: DateTime | undefined;
   maxDuration: number | undefined;
@@ -27,17 +35,13 @@ export class ParsingContext {
   foldableSections: Foldable[];
   ranges: Range[];
   preferredInterpolationFormat: string | undefined;
-  viewers: string[];
-  editors: string[];
+  header: any;
 
   constructor() {
     this.events = new Node([]);
     this.tags = {};
     this.ids = {};
-    this.title = undefined;
-    this.description = undefined;
     this.paletteIndex = 0;
-    this.dateFormat = AMERICAN_DATE_FORMAT;
     this.earliest = undefined;
     this.latest = undefined;
     this.maxDuration = undefined;
@@ -45,8 +49,7 @@ export class ParsingContext {
     this.foldables = {};
     this.foldableSections = [];
     this.ranges = [];
-    this.viewers = [];
-    this.editors = [];
+    this.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
 
   currentFoldableSection() {
@@ -133,11 +136,11 @@ export class ParsingContext {
       ids: this.ids,
       ranges: this.ranges,
       foldables: this.foldables,
+      header: this.header,
       metadata: {
         earliestTime: (this.earliest || this.now.minus({ years: 5 })).toISO(),
         latestTime: (this.latest || this.now.plus({ years: 5 })).toISO(),
         maxDurationDays,
-        dateFormat: this.dateFormat,
         startLineIndex,
         startStringIndex: lengthAtIndex[startLineIndex],
         endLineIndex,
@@ -147,8 +150,6 @@ export class ParsingContext {
         endStringIndex,
         ...(this.title ? { title: this.title } : {}),
         ...(this.description ? { description: this.description } : {}),
-        view: this.viewers ? this.viewers : [],
-        edit: this.editors,
       },
     };
   }

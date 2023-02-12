@@ -1451,7 +1451,7 @@ now - 10 years: an event #1 #3342 #098
 description: my description
 now - 10 years: an event`);
 
-      expect(markwhen.timelines[0].metadata.view.length).toBe(0);
+      expect(markwhen.timelines[0].header.view).toBeFalsy();
     });
 
     test.each(sp())("Single viewer", (p) => {
@@ -1462,7 +1462,8 @@ view: example@example.com
 description: my description
 now - 10 years: an event`);
 
-      const viewers = markwhen.timelines[0].metadata.view;
+      const viewers = markwhen.timelines[0].header.view;
+      expect(typeof viewers).toBe("object"); // array
       expect(viewers.length).toBe(1);
       expect(viewers).toContain("example@example.com");
     });
@@ -1475,7 +1476,7 @@ view: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const viewers = markwhen.timelines[0].metadata.view;
+      const viewers = markwhen.timelines[0].header.view;
       [
         "example@example.com",
         "example2@example.com",
@@ -1488,7 +1489,7 @@ now - 10 years: an event`);
 description: my description
 now - 10 years: an event`);
 
-      expect(markwhen.timelines[0].metadata.edit.length).toBe(0);
+      expect(markwhen.timelines[0].header.edit).toBeFalsy();
     });
 
     test.each(sp())("Single editor", (p) => {
@@ -1499,7 +1500,8 @@ edit: example@example.com
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].metadata.edit;
+      const editors = markwhen.timelines[0].header.edit;
+      expect(typeof editors).toBe("object");
       expect(editors.length).toBe(1);
       expect(editors).toContain("example@example.com");
     });
@@ -1512,7 +1514,7 @@ edit: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].metadata.edit;
+      const editors = markwhen.timelines[0].header.edit;
       [
         "example@example.com",
         "example2@example.com",
@@ -1529,13 +1531,13 @@ edit: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].metadata.edit;
+      const editors = markwhen.timelines[0].header.edit;
       [
         "example@example.com",
         "example2@example.com",
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
-      const viewers = markwhen.timelines[0].metadata.view;
+      const viewers = markwhen.timelines[0].header.view;
       ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
         expect(viewers).toContain(e)
       );
@@ -1550,13 +1552,13 @@ view: me@example.com, someone@google.com b@g.i
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].metadata.edit;
+      const editors = markwhen.timelines[0].header.edit;
       [
         "example@example.com",
         "example2@example.com",
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
-      const viewers = markwhen.timelines[0].metadata.view;
+      const viewers = markwhen.timelines[0].header.view;
       ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
         expect(viewers).toContain(e)
       );
