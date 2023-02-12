@@ -605,19 +605,17 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   test.each(sameParse([]))("list items", (p) => {
-    const markwhen = p(
-      `dateFormat: d/M/y
-      5/9/2009: event
-      1 month 1 day: next event
-      - item 1
-      - item 2
+    const markwhen = p(`dateFormat: d/M/y
+5/9/2009: event
+1 month 1 day: next event
+- item 1
+- item 2
 
-      3 years 8 days 1 month: third event
+3 years 8 days 1 month: third event
 
-      - item 3
+- item 3
 
-      - item 4`
-    );
+- item 4`);
 
     const [first, second, third] = getEvents(markwhen);
     expect(second.eventDescription.supplemental.length).toBe(2);
@@ -642,19 +640,17 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   test.each(sameParse([]))("checkbox items", (p) => {
-    const markwhen = p(
-      `dateFormat: d/M/y
-      5/9/2009: event
-      1 month 1 day: next event
-      - [] item 1
-      - [ ] item 2
+    const markwhen = p(`dateFormat: d/M/y
+5/9/2009: event
+1 month 1 day: next event
+- [] item 1
+- [ ] item 2
 
-      3 years 8 days 1 month: third event
+3 years 8 days 1 month: third event
 
-      - [x] item 3
+- [x] item 3
 
-      - [x] item 4`
-    );
+- [x] item 4`);
 
     const [first, second, third] = getEvents(markwhen);
     expect(second.eventDescription.supplemental.length).toBe(2);
@@ -1085,8 +1081,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("yyyy-mm/relative", (p) => {
       const markwhen = p(
         `2021: a thing
-        2022-06/3 weeks: am i stupid or what
-        8 days 6 minutes/2023: event`
+2022-06/3 weeks: am i stupid or what
+8 days 6 minutes/2023: event`
       );
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
@@ -1129,9 +1125,9 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   describe("work/week days", () => {
     test.each(sp())("Less than a week", (p) => {
       const markwhen = p(`
-      July 10, 2022: Sunday
-      5 work days: til friday
-      `);
+July 10, 2022: Sunday
+5 work days: til friday
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       // Til the end of Friday
@@ -1140,9 +1136,9 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Less than a week (week)", (p) => {
       const markwhen = p(`
-      July 10, 2022: Sunday
-      5 week days: til friday
-      `);
+July 10, 2022: Sunday
+5 week days: til friday
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       // Til the end of Friday
@@ -1151,9 +1147,9 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Span over a weekend", (p) => {
       const markwhen = p(`
-      July 10, 2022: Sunday
-      10 work days: til next friday
-      `);
+July 10, 2022: Sunday
+10 work days: til next friday
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       // Til the end of Friday
@@ -1162,8 +1158,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("From middle of week", (p) => {
       const markwhen = p(`
-      July 13, 2022 - 10 workdays: til next friday
-      `);
+July 13, 2022 - 10 workdays: til next friday
+`);
 
       const firstRange = toDateRange(nthEvent(markwhen, 0).dateRangeIso);
       // Til the end of Friday
@@ -1172,11 +1168,11 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("As from and to times", (p) => {
       const markwhen = p(`
-      July 11, 2022: Monday
+July 11, 2022: Monday
 
-      // This is 10 work days after July 10, lasting for 10 work days
-      10 work days - 10 work days: til next friday
-      `);
+// This is 10 work days after July 10, lasting for 10 work days
+10 work days - 10 work days: til next friday
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
@@ -1185,11 +1181,11 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("As from and to times (week)", (p) => {
       const markwhen = p(`
-      July 11, 2022: Monday
+July 11, 2022: Monday
 
-      // This is 10 work days after July 10, lasting for 10 work days
-      10 week days - 10 week days: til next friday
-      `);
+// This is 10 work days after July 10, lasting for 10 work days
+10 week days - 10 week days: til next friday
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
@@ -1198,14 +1194,14 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Business/week/work days", (p) => {
       const markwhen = p(`
-      July 11, 2022: Monday
+July 11, 2022: Monday
 
-      // This is 10 work days after July 10, lasting for 10 work days
-      10 business days - 10 week days: til next friday
+// This is 10 work days after July 10, lasting for 10 work days
+10 business days - 10 week days: til next friday
 
-      // beginning of the 13th til beginning of 20th
-      4 week days - 1 week: third event
-      `);
+// beginning of the 13th til beginning of 20th
+4 week days - 1 week: third event
+`);
 
       const secondRange = toDateRange(nthEvent(markwhen, 1).dateRangeIso);
       checkDate(secondRange.fromDateTime, 2022, 7, 26);
@@ -1218,10 +1214,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 1", (p) => {
       const markwhen = p(`
-      July 11 2022: !monday Monday
+July 11 2022: !monday Monday
 
-      by !monday 7 work days: event
-      `);
+by !monday 7 work days: event
+`);
 
       const [first, second] = getDateRanges(markwhen);
 
@@ -1231,12 +1227,12 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 2", (p) => {
       const markwhen = p(`
-      July 11 2022: !monday Monday
+July 11 2022: !monday Monday
 
-      August 18 2022: another event
+August 18 2022: another event
 
-      by !monday 7 work days: event
-      `);
+by !monday 7 work days: event
+`);
 
       const [first, , third] = getDateRanges(markwhen);
 
@@ -1246,12 +1242,12 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 3", (p) => {
       const markwhen = p(`
-      July 11 2022: !monday Monday
+July 11 2022: !monday Monday
 
-      August 18 2022: another event
+August 18 2022: another event
 
-      by 7 work days: event
-      `);
+by 7 work days: event
+`);
 
       const [, second, third] = getDateRanges(markwhen);
 
@@ -1261,12 +1257,12 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 4", (p) => {
       const markwhen = p(`
-      July 11 2022: !monday Monday
+July 11 2022: !monday Monday
 
-      August 18 2022: another event
+August 18 2022: another event
 
-      by !monday 7 work days: event
-      `);
+by !monday 7 work days: event
+`);
 
       const [first, , third] = getDateRanges(markwhen);
 
@@ -1276,14 +1272,14 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 5", (p) => {
       const markwhen = p(`
-      group
-      July 11 2022: !monday Monday
-      endGroup
-      August 18 2022: another event
-      group
-      by !monday 7 work days: event
-      endGroup
-      `);
+group
+July 11 2022: !monday Monday
+endGroup
+August 18 2022: another event
+group
+by !monday 7 work days: event
+endGroup
+`);
 
       const [first, , third] = getDateRanges(markwhen);
 
@@ -1293,12 +1289,12 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before 6", (p) => {
       const markwhen = p(`dateFormat: d/M/y
-      #announcements: red
-      10/4/2023: ANNUAL CHURCH MEETING !ACM
+#announcements: red
+10/4/2023: ANNUAL CHURCH MEETING !ACM
 
-      10/2/2023: Event !event
-      before !event 10 week days: revise voting eligibility list
-      January 27 2023 - 10 week days: something`);
+10/2/2023: Event !event
+before !event 10 week days: revise voting eligibility list
+January 27 2023 - 10 week days: something`);
 
       const [, , third, fourth] = getDateRanges(markwhen);
 
@@ -1308,16 +1304,16 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before with buffer", (p) => {
       const markwhen = p(`
-      group
-      July 11 2022: !monday Monday
-      endGroup
-      August 18 2022: another event
-      group
+group
+July 11 2022: !monday Monday
+endGroup
+August 18 2022: another event
+group
 
-      // 3 work days before !monday, for 7 business days
-      by !monday 3 week days - 7 business days: event
-      endGroup
-      `);
+// 3 work days before !monday, for 7 business days
+by !monday 3 week days - 7 business days: event
+endGroup
+`);
 
       const [first, , third] = getDateRanges(markwhen);
 
@@ -1327,16 +1323,16 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("Before with buffer", (p) => {
       const markwhen = p(`
-      group
-      July 11 2022: !monday Monday
-      endGroup
-      August 18 2022: another event
-      group
+group
+July 11 2022: !monday Monday
+endGroup
+August 18 2022: another event
+group
 
-      // 3 work days before !monday, for 7 business days
-      by !monday 3 week days - 7 business days: event
-      endGroup
-      `);
+// 3 work days before !monday, for 7 business days
+by !monday 3 week days - 7 business days: event
+endGroup
+`);
 
       const [first, , third] = getDateRanges(markwhen);
 
@@ -1348,10 +1344,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   describe("tags", () => {
     test.each(sp())("skips number only", (p) => {
       const markwhen = p(`title: my timelines
-      description: my description
-      now - 10 years: an event #1
-      1 year: event #2
-      3 years: event #third`);
+description: my description
+now - 10 years: an event #1
+1 year: event #2
+3 years: event #third`);
 
       const tagLiterals = Object.keys(markwhen.timelines[0].tags);
       expect(tagLiterals).toHaveLength(1);
@@ -1360,10 +1356,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("skips number only 2", (p) => {
       const markwhen = p(`title: my timelines
-      description: my description
-      now - 10 years: an event #1 #3342 #098
-      1 year: event #2 #another #tag
-      3 years: event #third #fourth #fifth #332334b #5`);
+description: my description
+now - 10 years: an event #1 #3342 #098
+1 year: event #2 #another #tag
+3 years: event #third #fourth #fifth #332334b #5`);
 
       const tagLiterals = Object.keys(markwhen.timelines[0].tags);
       expect(tagLiterals).toHaveLength(6);
@@ -1376,14 +1372,14 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
       "tags are picked up when they're not on the first line",
       (p) => {
         const markwhen = p(`title: my timelines
-      description: my description
-      now - 10 years: an event #1 #3342 #098
-      1 year: event #2 
-      #another 
-      #tag with text after it
-      3 years: event #third #fourth 
-      #fifth #332334b #5
-      #other`);
+description: my description
+now - 10 years: an event #1 #3342 #098
+1 year: event #2 
+#another 
+#tag with text after it
+3 years: event #third #fourth 
+#fifth #332334b #5
+#other`);
 
         const tagLiterals = Object.keys(markwhen.timelines[0].tags);
         [
@@ -1402,8 +1398,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   describe.skip("due dates & relative dates", () => {
     test.each(sp())("to event 1", (p) => {
       const markwhen = p(`
-      2024: !event1 event
-      2022/!event1: from 2022 to !event1
+2024: !event1 event
+2022/!event1: from 2022 to !event1
       `);
 
       const [first, second] = getDateRanges(markwhen);
@@ -1414,8 +1410,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("to event 2", (p) => {
       const markwhen = p(`
-      2024: !event1 event
-      2022 - !event1: from 2022 to !event1
+2024: !event1 event
+2022 - !event1: from 2022 to !event1
       `);
 
       const [first, second] = getDateRanges(markwhen);
@@ -1426,9 +1422,9 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("to event 3", (p) => {
       const markwhen = p(`
-      2024: !event1 event
-      !event1/2025: from 2024 to 2025
-      `);
+2024: !event1 event
+!event1/2025: from 2024 to 2025
+`);
 
       const [first, second] = getDateRanges(markwhen);
 
@@ -1438,9 +1434,9 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("to event 4", (p) => {
       const markwhen = p(`
-      2024: !event1 event
-      !event1 - 2025: from 2024 to 2025
-      `);
+2024: !event1 event
+!event1 - 2025: from 2024 to 2025
+`);
 
       const [first, second] = getDateRanges(markwhen);
 
@@ -1452,8 +1448,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
   describe("viewers and editors", () => {
     test.each(sp())("no viewers specified, none parsed", (p) => {
       const markwhen = p(`title: my timelines
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       expect(markwhen.timelines[0].metadata.view.length).toBe(0);
     });
@@ -1461,10 +1457,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Single viewer", (p) => {
       const markwhen = p(`title: my timelines
 
-      view: example@example.com
+view: example@example.com
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const viewers = markwhen.timelines[0].metadata.view;
       expect(viewers.length).toBe(1);
@@ -1474,10 +1470,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Multiple viewers", (p) => {
       const markwhen = p(`title: my timelines
 
-      view: example@example.com, example2@example.com someoneelse@g.co
+view: example@example.com, example2@example.com someoneelse@g.co
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const viewers = markwhen.timelines[0].metadata.view;
       [
@@ -1489,8 +1485,8 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 
     test.each(sp())("no editors specified, none parsed", (p) => {
       const markwhen = p(`title: my timelines
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       expect(markwhen.timelines[0].metadata.edit.length).toBe(0);
     });
@@ -1498,10 +1494,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Single editor", (p) => {
       const markwhen = p(`title: my timelines
 
-      edit: example@example.com
+edit: example@example.com
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const editors = markwhen.timelines[0].metadata.edit;
       expect(editors.length).toBe(1);
@@ -1511,10 +1507,10 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Multiple editors", (p) => {
       const markwhen = p(`title: my timelines
 
-      edit: example@example.com, example2@example.com someoneelse@g.co
+edit: example@example.com, example2@example.com someoneelse@g.co
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const editors = markwhen.timelines[0].metadata.edit;
       [
@@ -1527,11 +1523,11 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Viewers and editors 1", (p) => {
       const markwhen = p(`title: my timelines
 
-      view: me@example.com, someone@google.com b@g.i
-      edit: example@example.com, example2@example.com someoneelse@g.co
+view: me@example.com, someone@google.com b@g.i
+edit: example@example.com, example2@example.com someoneelse@g.co
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const editors = markwhen.timelines[0].metadata.edit;
       [
@@ -1548,11 +1544,11 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
     test.each(sp())("Viewers and editors 2", (p) => {
       const markwhen = p(`title: my timelines
 
-      edit: example@example.com, example2@example.com someoneelse@g.co
-      view: me@example.com, someone@google.com b@g.i
+edit: example@example.com, example2@example.com someoneelse@g.co
+view: me@example.com, someone@google.com b@g.i
 
-      description: my description
-      now - 10 years: an event`);
+description: my description
+now - 10 years: an event`);
 
       const editors = markwhen.timelines[0].metadata.edit;
       [
@@ -1600,28 +1596,28 @@ May 12 2011, 6pm - 5/9/2099, 18:00: event
 describe("nested groups", () => {
   test.each(sp())("can nest groups", (p) => {
     const mw = p(`
-    
-    now: 1
 
-    group 1
-    now: 2
+now: 1
 
-    group 2
-    now: 3
-    now: 4
-    now: 5
+group 1
+now: 2
 
-    endGroup
+group 2
+now: 3
+now: 4
+now: 5
 
-    now: 6
-    now: 7
+endGroup
 
-    endGroup
+now: 6
+now: 7
 
-    now: 8
-    now: 9
-    
-    `);
+endGroup
+
+now: 8
+now: 9
+
+`);
 
     let head: SomeNode = mw.timelines[0].events;
     const flt = flat(head);
@@ -1631,34 +1627,34 @@ describe("nested groups", () => {
   test.each(sp())("can iterate nodes", (p) => {
     const mw = p(`
 
-    now: 1
+now: 1
 
-    group 1
-    now: 2
+group 1
+now: 2
 
-    group 2
-    now: 3
-    now: 4
-    now: 5
+group 2
+now: 3
+now: 4
+now: 5
 
-    endGroup
+endGroup
 
-    now: 6
-    now: 7
+now: 6
+now: 7
 
-    group surprise
-    now: 8
-    endGroup
+group surprise
+now: 8
+endGroup
 
-    endGroup
+endGroup
 
-    group extra special
-    group
-    now: 9
-    endGroup
-    now: 10
-    endGroup
-    `);
+group extra special
+group
+now: 9
+endGroup
+now: 10
+endGroup
+`);
 
     /**
      * [0]
@@ -1695,30 +1691,30 @@ describe("nested groups", () => {
 
   test.each(sp())("entirely empty has no head", (p) => {
     const mw = p(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    `);
+group 1
+group 2
+group 3
+group 4
+group 5
+`);
 
     expect(mw.timelines[0].head).toBeFalsy();
   });
 
   test.each(sp())("deeply nested path", (p) => {
     const mw = p(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    group 6
-    group 7
-    group 8
-    group 9
-    group 10
-    2021: an event
-    `);
+group 1
+group 2
+group 3
+group 4
+group 5
+group 6
+group 7
+group 8
+group 9
+group 10
+2021: an event
+`);
 
     for (const { path, node } of iterate(mw.timelines[0].events)) {
       if (isEventNode(node)) {
@@ -1734,13 +1730,13 @@ describe("nested groups", () => {
 
   test.each(sp())("deeply nested has head", (p) => {
     const mw = p(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    2021: an event
-    `);
+group 1
+group 2
+group 3
+group 4
+group 5
+2021: an event
+`);
 
     expect(
       (mw.timelines[0].head?.value as Event).eventDescription.eventDescription
@@ -1749,20 +1745,20 @@ describe("nested groups", () => {
 
   test.each(sp())("group foldables", (p) => {
     const mw = p(`
-    group 1
-    group 2
-    group 3
-    group 4
-    group 5
-    2021: an event
-    endGroup
-    endGroup
-    endGroup
-    endGroup
-    endGroup
+group 1
+group 2
+group 3
+group 4
+group 5
+2021: an event
+endGroup
+endGroup
+endGroup
+endGroup
+endGroup
 
-    2022: last event
-    `);
+2022: last event
+`);
 
     const foldables = mw.timelines[0].foldables;
     expect(Object.keys(foldables).length).toBe(5);
@@ -1815,16 +1811,16 @@ now: hello ![](example.com/image)
   test.each(sp())("supplemental items appear in order", (p) => {
     const mw =
       p(`10/2010: Barn built across the street ![](https://user-images.githubusercontent.com/10823320/199108323-99529603-fab1-485c-ae7f-23c8cbab6918.png)
-    some text in the middle
-    
-    ![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
-    
-    other middle text
-    
-    ![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
-    
-    - [] checkbox
-    some text after`);
+some text in the middle
+
+![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
+
+other middle text
+
+![](https://user-images.githubusercontent.com/10823320/199339494-310d9159-238c-4ba6-be8c-57906d77c08e.png)
+
+- [] checkbox
+some text after`);
 
     const firstEvent = eventValue(
       get(mw.timelines[0].events, [0]) as Node<Event>
@@ -1860,7 +1856,6 @@ describe("ranges", () => {
 
     expect(listItemContents[1].from).toBe(59);
     expect(listItemContents[1].to).toBe(67);
-
   });
 });
 
@@ -1869,13 +1864,13 @@ describe("completion", () => {
     "checkbox in event description line indicates completion",
     () => {
       const mw = parse(`
-    now: [] some item
-    
-    2 days: [] another item
-    
-    4 days: third item
-    
-    6 days: [x] last item`);
+now: [] some item
+
+2 days: [] another item
+
+4 days: third item
+
+6 days: [x] last item`);
       let event = nthEvent(mw, 0);
       expect(event.eventDescription.completed).toBe(false);
 
