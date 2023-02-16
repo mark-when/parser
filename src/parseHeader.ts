@@ -1,6 +1,6 @@
 import { ParsingContext } from "./ParsingContext";
 import YAML from "yaml";
-import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT } from "./Types";
+import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, RangeType } from "./Types";
 import { checkComments } from "./lineChecks/checkComments";
 import { checkTagColors } from "./lineChecks/checkTagColors";
 import {
@@ -22,7 +22,7 @@ export function parseHeader(
   startLineIndex: number,
   context: ParsingContext
 ) {
-  const headerStartLineIndex = startLineIndex;
+  let headerStartLineIndex = startLineIndex;
 
   let headerEndLineIndex = headerStartLineIndex;
   // Determine where the header is
@@ -36,6 +36,8 @@ export function parseHeader(
   let hasThreeDashStart = false;
   const headerLines = [];
 
+  const threeDashRanges = [];
+
   let line = lines[headerStartLineIndex];
   while (typeof line !== "undefined") {
     // If we're using three dash syntax, we're not stopping until
@@ -48,9 +50,28 @@ export function parseHeader(
       break;
     }
     if (line.match(threeDashRegex)) {
+      const range = {
+        type: RangeType.FrontmatterDelimiter,
+        from: lengthAtIndex[headerEndLineIndex],
+        to: lengthAtIndex[headerEndLineIndex] + 4,
+        lineFrom: {
+          line: headerEndLineIndex,
+          index: 0,
+        },
+        lineTo: {
+          line: headerEndLineIndex,
+          index: 4,
+        },
+      };
+      threeDashRanges.push(range);
       if (!hasThreeDashStart) {
+        headerStartLineIndex = headerEndLineIndex
         hasThreeDashStart = true;
       } else {
+        if (threeDashRanges.length === 2) {
+          context.ranges.push(threeDashRanges[0]);
+          context.ranges.push(threeDashRanges[1]);
+        }
         break;
       }
     }
@@ -82,5 +103,19 @@ export function parseHeader(
   } catch {
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
+
+  if (headerLines.some((l) => !!l)) {
+    context.foldables[headerStartLineIndex] = {
+      startLine: headerStartLineIndex,
+      startIndex: lengthAtIndex[headerStartLineIndex],
+      endIndex: lengthAtIndex[headerEndLineIndex],
+      type: "header",
+      foldStartIndex:
+        threeDashRanges.length === 2
+          ? headerStartLineIndex + 4
+          : headerStartLineIndex,
+    };
+  }
+
   return headerEndLineIndex;
 }

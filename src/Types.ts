@@ -1,8 +1,8 @@
 import { DateTime, Duration } from "luxon";
-import { Foldable } from ".";
 import { Cache } from "./Cache";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence";
 import { Node, NodeArray, SomeNode } from "./Node";
+import { Foldable } from "./ParsingContext";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -312,6 +312,7 @@ export enum RangeType {
   Edit = "edit",
   Editor = "editor",
   Recurrence = "recurrence",
+  FrontmatterDelimiter = "frontMatterDelimiter"
 }
 
 export interface Line {

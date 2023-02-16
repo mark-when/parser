@@ -1,5 +1,4 @@
 import { DateTime } from "luxon";
-import { Foldable } from ".";
 import { NodeArray, SomeNode, Node } from "./Node";
 import { push } from "./Noder";
 import {
@@ -7,11 +6,18 @@ import {
   Tags,
   IdedEvents,
   AMERICAN_DATE_FORMAT,
-  EUROPEAN_DATE_FORMAT,
   Line,
   Timeline,
   Range,
 } from "./Types";
+
+export interface Foldable {
+  endIndex: number;
+  type: "comment" | "section" | 'header';
+  startLine: number;
+  startIndex?: number;
+  foldStartIndex?: number;
+}
 
 export class ParsingContext {
   now = DateTime.now();

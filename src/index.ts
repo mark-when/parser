@@ -1,10 +1,5 @@
-import { DateTime, Duration, Settings } from "luxon";
-// import { Sort } from "./Sort";
 import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types";
 import {
-  EDTF_START_REGEX,
-  EVENT_START_REGEX,
-  GROUP_START_REGEX,
   PAGE_BREAK_REGEX,
 } from "./regex";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
@@ -14,18 +9,6 @@ import { checkEvent } from "./lineChecks/checkEvent";
 import { ParsingContext } from "./ParsingContext";
 import { checkNonEvents } from "./lineChecks/checkNonEvents";
 import { parseHeader } from "./parseHeader";
-import { checkComments } from "./lineChecks/checkComments";
-import { checkTagColors } from "./lineChecks/checkTagColors";
-
-export interface ParseOptions {}
-
-export interface Foldable {
-  endIndex: number;
-  type: "comment" | "section";
-  startLine: number;
-  startIndex?: number;
-  foldStartIndex?: number;
-}
 
 export function parseDateRange(
   dateRangeString: string

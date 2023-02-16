@@ -155,7 +155,6 @@ now: event`);
   });
 
   test("2", () => {
-    // debugger
     const mw = parse(`
 #tag1: #abc
 #tag2: red
@@ -184,3 +183,63 @@ now: event`);
     expect(mw.timelines[1].header.arbEntry).toBe("value");
   });
 });
+
+describe("Folding and ranges", () => {
+  test("without dashes", () => {
+    const mw = parse(`
+#tag1: #abc
+#tag2: red
+#education: white
+
+title: Title
+arbitraryThing:
+  - one
+  - two
+  
+_-_-_break_-_-_
+
+title: Page 2 title
+#page2tag: blue
+
+arbEntry: value
+
+now: event`);
+
+    const headerFoldable = mw.timelines[0].foldables[0]
+    expect(headerFoldable).toBeTruthy()
+    expect(headerFoldable.type).toBe('header')
+    expect(headerFoldable.endIndex).toBe(91)
+  })
+
+  test("with dashes", () => {
+    const mw = parse(`
+
+---
+#tag1: #abc
+#tag2: red
+#education: white
+
+title: Title
+arbitraryThing:
+  - one
+  - two
+  
+---
+
+
+_-_-_break_-_-_
+
+title: Page 2 title
+#page2tag: blue
+
+arbEntry: value
+
+now: event`);
+
+    let headerFoldable = mw.timelines[0].foldables[2]
+    expect(headerFoldable).toBeTruthy()
+    expect(headerFoldable.type).toBe('header')
+    expect(headerFoldable.foldStartIndex).toBe(6)
+    expect(headerFoldable.endIndex).toBe(96)
+  })
+})
