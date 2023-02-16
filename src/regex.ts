@@ -234,7 +234,7 @@ export const recurrence_recurrenceAmountXNotationAmountMatchIndex = ++index;
 export const eventTextMatchIndex = ++index
 
 export const COMMENT_REGEX = /^\s*\/\/.*/;
-export const TAG_COLOR_REGEX = /^\s*#(\w*):\s*(\S+)/;
+export const TAG_COLOR_REGEX = /^\s*#(?<tagName>\w*):\s*(?<colorDef>(?<html>html\([A-Za-z]+\))|(?<hex>#?[0-9a-fA-F]{6})|(?<named>[A-Za-z]+))/;
 export const TITLE_REGEX = /^\s*(title:)\s*(.+)\s*$/i;
 export const VIEWERS_REGEX = /^\s*(view:)\s*(.*)$/i;
 export const EDITORS_REGEX = /^\s*(edit:)\s*(.*)$/i;
