@@ -1,3 +1,7 @@
+## 0.5.0
+
+- Support for yaml frontmatter
+
 ## 0.4.9
 
 - Fix list item content ranges
