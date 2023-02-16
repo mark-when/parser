@@ -1,4 +1,4 @@
-import { ParsingContext } from "./ParsingContext";
+import { Foldable, ParsingContext } from "./ParsingContext";
 import YAML from "yaml";
 import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, RangeType } from "./Types";
 import { checkComments } from "./lineChecks/checkComments";
@@ -23,9 +23,11 @@ export function parseHeader(
   context: ParsingContext
 ) {
   let headerStartLineIndex = startLineIndex;
-
   let headerEndLineIndex = headerStartLineIndex;
-  // Determine where the header is
+
+  let firstHeaderLineIndexWithText = -1;
+  let lastHeaderLineIndexWithText = -1;
+
   const eventsStarted = (line: string) =>
     !!line.match(EDTF_START_REGEX) ||
     !!line.match(EVENT_START_REGEX) ||
@@ -65,7 +67,7 @@ export function parseHeader(
       };
       threeDashRanges.push(range);
       if (!hasThreeDashStart) {
-        headerStartLineIndex = headerEndLineIndex
+        headerStartLineIndex = headerEndLineIndex;
         hasThreeDashStart = true;
       } else {
         if (threeDashRanges.length === 2) {
@@ -82,6 +84,12 @@ export function parseHeader(
       )
     ) {
       headerLines.push(line);
+    }
+    if (line.length) {
+      if (firstHeaderLineIndexWithText === -1) {
+        firstHeaderLineIndexWithText = headerEndLineIndex;
+      }
+      lastHeaderLineIndexWithText = headerEndLineIndex;
     }
     headerEndLineIndex++;
     line = lines[headerEndLineIndex];
@@ -104,17 +112,30 @@ export function parseHeader(
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
 
-  if (headerLines.some((l) => !!l)) {
-    context.foldables[headerStartLineIndex] = {
+  if (threeDashRanges.length === 2) {
+    const index = lengthAtIndex[headerStartLineIndex];
+    context.foldables[index] = {
       startLine: headerStartLineIndex,
-      startIndex: lengthAtIndex[headerStartLineIndex],
-      endIndex: lengthAtIndex[headerEndLineIndex],
+      startIndex: index,
+      endIndex: lengthAtIndex[headerEndLineIndex] - 1,
       type: "header",
-      foldStartIndex:
-        threeDashRanges.length === 2
-          ? headerStartLineIndex + 4
-          : headerStartLineIndex,
+      foldStartIndex: threeDashRanges.length === 2 ? index + 3 : index,
     };
+  } else if (firstHeaderLineIndexWithText >= 0) {
+    if (
+      lastHeaderLineIndexWithText >= 0 &&
+      lastHeaderLineIndexWithText !== firstHeaderLineIndexWithText
+    ) {
+      const index = lengthAtIndex[firstHeaderLineIndexWithText];
+      const foldable: Foldable = {
+        startLine: firstHeaderLineIndexWithText,
+        startIndex: index,
+        endIndex: lengthAtIndex[lastHeaderLineIndexWithText + 1] - 1,
+        type: "header",
+        foldStartIndex: index,
+      };
+      context.foldables[index] = foldable;
+    }
   }
 
   return headerEndLineIndex;
