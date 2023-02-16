@@ -10,12 +10,14 @@ export const toArray = (node: SomeNode) => {
 };
 
 export const walk = (
-  node: SomeNode,
+  node: SomeNode | undefined,
   path: Path,
-  fn: (node: SomeNode, path: Path) => void
+  fn: (node: SomeNode | undefined, path: Path) => boolean | void
 ) => {
-  fn(node, path);
-  if (!isEventNode(node)) {
+  if (fn(node, path)) {
+    return
+  }
+  if (node && !isEventNode(node)) {
     const arr = node.value as NodeArray;
     for (let i = 0; i < arr.length; i++) {
       walk(arr[i], [...path, i], fn);
@@ -23,6 +25,11 @@ export const walk = (
   }
 };
 
+/**
+ * @deprecated Use `walk` instead
+ * @param node Root node to start from
+ * @returns void
+ */
 export const iterate = (node: SomeNode) => {
   return {
     [Symbol.iterator](): Iterator<{ path: number[]; node: SomeNode }> {

@@ -108,34 +108,10 @@ export function parseTimeline(
 ): Timeline {
   const context = new ParsingContext();
 
-  const headerStartLineIndex = startLineIndex;
-  const excludedHeaderLines = [];
-  let headerEndLineIndex = headerStartLineIndex;
-  // Determine where the header is
-  const eventsStarted = (line: string) =>
-    !!line.match(EDTF_START_REGEX) ||
-    !!line.match(EVENT_START_REGEX) ||
-    !!line.match(GROUP_START_REGEX) ||
-    !!line.match(PAGE_BREAK_REGEX);
-
-  let line = lines[headerStartLineIndex];
-  while (typeof line !== 'undefined' && !eventsStarted(line)) {
-    if (
-      checkComments(line, headerEndLineIndex, lengthAtIndex, context) ||
-      checkTagColors(line, headerEndLineIndex, lengthAtIndex, context)
-    ) {
-      excludedHeaderLines.push(headerEndLineIndex);
-    }
-    headerEndLineIndex++;
-    line = lines[headerEndLineIndex];
-  }
-
-  parseHeader(
+  const headerEndLineIndex = parseHeader(
     lines,
     lengthAtIndex,
-    headerStartLineIndex,
-    headerEndLineIndex,
-    excludedHeaderLines,
+    startLineIndex,
     context
   );
 

@@ -1,6 +1,14 @@
 import { ParsingContext } from "./ParsingContext";
 import YAML from "yaml";
 import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT } from "./Types";
+import { checkComments } from "./lineChecks/checkComments";
+import { checkTagColors } from "./lineChecks/checkTagColors";
+import {
+  EDTF_START_REGEX,
+  EVENT_START_REGEX,
+  GROUP_START_REGEX,
+  PAGE_BREAK_REGEX,
+} from "./regex";
 
 const stringEmailListToArray = (s: string) =>
   s
@@ -11,17 +19,53 @@ const stringEmailListToArray = (s: string) =>
 export function parseHeader(
   lines: string[],
   lengthAtIndex: number[],
-  headerStartLineIndex: number,
-  headerEndLineIndex: number,
-  excludedHeaderLines: number[],
+  startLineIndex: number,
   context: ParsingContext
 ) {
+  const headerStartLineIndex = startLineIndex;
+
+  let headerEndLineIndex = headerStartLineIndex;
+  // Determine where the header is
+  const eventsStarted = (line: string) =>
+    !!line.match(EDTF_START_REGEX) ||
+    !!line.match(EVENT_START_REGEX) ||
+    !!line.match(GROUP_START_REGEX) ||
+    !!line.match(PAGE_BREAK_REGEX);
+
+  const threeDashRegex = /^---/;
+  let hasThreeDashStart = false;
   const headerLines = [];
-  for (let i = headerStartLineIndex; i < headerEndLineIndex; i++) {
-    if (!excludedHeaderLines.includes(i)) {
-      headerLines.push(lines[i]);
+
+  let line = lines[headerStartLineIndex];
+  while (typeof line !== "undefined") {
+    // If we're using three dash syntax, we're not stopping until
+    // we see the ending token...
+    if (!hasThreeDashStart && eventsStarted(line)) {
+      break;
     }
+    // ... unless it's a page break
+    if (hasThreeDashStart && !!line.match(PAGE_BREAK_REGEX)) {
+      break;
+    }
+    if (line.match(threeDashRegex)) {
+      if (!hasThreeDashStart) {
+        hasThreeDashStart = true;
+      } else {
+        break;
+      }
+    }
+    if (
+      !(
+        checkComments(line, headerEndLineIndex, lengthAtIndex, context) ||
+        checkTagColors(line, headerEndLineIndex, lengthAtIndex, context)
+      )
+    ) {
+      headerLines.push(line);
+    }
+    headerEndLineIndex++;
+    line = lines[headerEndLineIndex];
   }
+
   try {
     const parsedHeader = YAML.parse(headerLines.join("\n"));
     parsedHeader.dateFormat =
@@ -38,5 +82,5 @@ export function parseHeader(
   } catch {
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
-  return context.header;
+  return headerEndLineIndex;
 }
