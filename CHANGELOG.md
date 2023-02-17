@@ -1,3 +1,6 @@
+## 0.5.1
+- Better support for yaml frontmatter
+
 ## 0.5.0
 
 - Support for yaml frontmatter
