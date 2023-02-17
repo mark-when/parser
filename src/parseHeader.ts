@@ -16,6 +16,9 @@ const stringEmailListToArray = (s: string) =>
     .split(/ |,/)
     .filter((email) => !!email && email.includes("@"));
 
+const headerKeyRegex = /^([^:]+)(:)(?:\s|$)/;
+const headerValueRegex = /[^:]+$/;
+
 export function parseHeader(
   lines: string[],
   lengthAtIndex: number[],
@@ -37,6 +40,7 @@ export function parseHeader(
   const threeDashRegex = /^---/;
   let hasThreeDashStart = false;
   const headerLines = [];
+  const headerRanges = []
 
   const threeDashRanges = [];
 
@@ -51,7 +55,8 @@ export function parseHeader(
     if (hasThreeDashStart && !!line.match(PAGE_BREAK_REGEX)) {
       break;
     }
-    if (line.match(threeDashRegex)) {
+    const isThreeDash = line.match(threeDashRegex)
+    if (isThreeDash) {
       const range = {
         type: RangeType.FrontmatterDelimiter,
         from: lengthAtIndex[headerEndLineIndex],
@@ -77,13 +82,69 @@ export function parseHeader(
         break;
       }
     }
-    if (
-      !(
-        checkComments(line, headerEndLineIndex, lengthAtIndex, context) ||
-        checkTagColors(line, headerEndLineIndex, lengthAtIndex, context)
-      )
-    ) {
+    const isComment = checkComments(
+      line,
+      headerEndLineIndex,
+      lengthAtIndex,
+      context
+    );
+    const isTagColor = checkTagColors(
+      line,
+      headerEndLineIndex,
+      lengthAtIndex,
+      context
+    );
+    if (!isComment && !isTagColor) {
       headerLines.push(line);
+    }
+    if (!isComment && !isThreeDash) {
+      // check for syntax highlighting
+      const keyMatch = line.match(headerKeyRegex);
+      if (keyMatch) {
+        headerRanges.push({
+          type: RangeType.HeaderKey,
+          from: lengthAtIndex[headerEndLineIndex],
+          to: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length,
+          lineFrom: {
+            line: headerEndLineIndex,
+            index: 0,
+          },
+          lineTo: {
+            line: headerEndLineIndex,
+            index: keyMatch[1].length,
+          },
+        });
+        headerRanges.push({
+          type: RangeType.HeaderKeyColon,
+          from: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length,
+          to: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length + 1,
+          lineFrom: {
+            line: headerEndLineIndex,
+            index: keyMatch[1].length,
+          },
+          lineTo: {
+            line: headerEndLineIndex,
+            index: keyMatch[1].length + 1,
+          },
+        });
+      }
+      const valueMatch = line.match(headerValueRegex);
+      if (valueMatch) {
+        const index = line.indexOf(valueMatch[0]);
+        headerRanges.push({
+          type: RangeType.HeaderValue,
+          from: lengthAtIndex[headerEndLineIndex] + index,
+          to: lengthAtIndex[headerEndLineIndex] + index + valueMatch[0].length,
+          lineFrom: {
+            line: headerEndLineIndex,
+            index,
+          },
+          lineTo: {
+            line: headerEndLineIndex,
+            index: index + valueMatch[0].length,
+          },
+        });
+      }
     }
     if (line.length) {
       if (firstHeaderLineIndexWithText === -1) {
@@ -107,6 +168,8 @@ export function parseHeader(
     if (parsedHeader.edit && typeof parsedHeader.edit === "string") {
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
+    // We're only going to push our ranges if the parsing was successful
+    context.ranges.push(...headerRanges)
     context.header = parsedHeader;
   } catch {
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };

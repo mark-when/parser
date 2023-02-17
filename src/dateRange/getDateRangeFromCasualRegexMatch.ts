@@ -143,9 +143,9 @@ export function getDateRangeFromCasualRegexMatch(
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
-      context.ranges.push(colonRange(RangeType.Recurrence));
+      context.ranges.push(colonRange(RangeType.DateRangeColon));
     } else {
-      context.ranges.push(colonRange(RangeType.DateRange));
+      context.ranges.push(colonRange(RangeType.DateRangeColon));
     }
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso),
@@ -394,9 +394,9 @@ export function getDateRangeFromCasualRegexMatch(
   );
   if (recurrence) {
     context.ranges.push(recurrence.range);
-    context.ranges.push(colonRange(RangeType.Recurrence));
+    context.ranges.push(colonRange(RangeType.DateRangeColon));
   } else {
-    context.ranges.push(colonRange(RangeType.DateRange));
+    context.ranges.push(colonRange(RangeType.DateRangeColon));
   }
   const dateRange = new DateRangePart(
     fromDateTime,

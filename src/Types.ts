@@ -308,11 +308,15 @@ export enum RangeType {
   Description = "description",
   Section = "section",
   DateRange = "dateRange",
+  DateRangeColon = "dateRangeColon",
   Event = "event",
   Edit = "edit",
   Editor = "editor",
   Recurrence = "recurrence",
-  FrontmatterDelimiter = "frontMatterDelimiter"
+  FrontmatterDelimiter = "frontMatterDelimiter",
+  HeaderKey = "headerKey",
+  HeaderKeyColon = "headerKeyColon",
+  HeaderValue = "headerValue",
 }
 
 export interface Line {
