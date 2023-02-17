@@ -3,12 +3,13 @@
   "version": "0.5.0",
   "description": "Markwhen parser",
   "main": "lib/index.js",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect-brk ./node_modules/jest/bin/jest.js",
     "build": "tsc",
     "prepublish": "tsc && jest",
-    "watch": "tsc-watch --onSuccess \"yalc push\""
+    "watch": "tsc-watch --onSuccess \"yalc push --update\""
   },
   "repository": {
     "type": "git",
