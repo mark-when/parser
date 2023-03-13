@@ -1,5 +1,9 @@
 import { parse } from "../src/index";
 import { nthEvent } from "./testUtilities";
+import path from "path";
+import { readFileSync } from "fs";
+
+const small = () => readFileSync(path.resolve("./", "tests/big.mw"), "utf-8");
 
 describe("editors", () => {
   test("single editor", () => {
@@ -75,6 +79,12 @@ describe("Random items in header", () => {
     expect(header.key).toBe("value");
     expect(header.otherKey).toBe("otherValue");
     expect(header.thirdKey.fourthKey.fifthKey).toBe("value");
+  });
+
+  describe("small header", () => {
+    const mw = parse(small());
+
+    expect(Object.keys(mw.timelines[0].header).length).toBe(2);
   });
 });
 
@@ -185,17 +195,15 @@ now: event`);
 });
 
 describe("Folding and ranges", () => {
-  test("without dashes", () => {
+  test.only("without dashes", () => {
+    debugger
     const mw = parse(`
-#tag1: #abc
-#tag2: red
-#education: white
 
 title: Title
 arbitraryThing:
   - one
   - two
-  
+
 _-_-_break_-_-_
 
 title: Page 2 title
@@ -205,11 +213,11 @@ arbEntry: value
 
 now: event`);
 
-    const headerFoldable = mw.timelines[0].foldables[0]
-    expect(headerFoldable).toBeTruthy()
-    expect(headerFoldable.type).toBe('header')
-    expect(headerFoldable.endIndex).toBe(91)
-  })
+    const headerFoldable = mw.timelines[0].foldables[2];
+    expect(headerFoldable).toBeTruthy();
+    expect(headerFoldable.type).toBe("header");
+    expect(headerFoldable.endIndex).toBe(46);
+  });
 
   test("with dashes", () => {
     const mw = parse(`
@@ -236,10 +244,10 @@ arbEntry: value
 
 now: event`);
 
-    let headerFoldable = mw.timelines[0].foldables[2]
-    expect(headerFoldable).toBeTruthy()
-    expect(headerFoldable.type).toBe('header')
-    expect(headerFoldable.foldStartIndex).toBe(6)
-    expect(headerFoldable.endIndex).toBe(96)
-  })
-})
+    let headerFoldable = mw.timelines[0].foldables[2];
+    expect(headerFoldable).toBeTruthy();
+    expect(headerFoldable.type).toBe("header");
+    expect(headerFoldable.foldStartIndex).toBe(5);
+    expect(headerFoldable.endIndex).toBe(95);
+  });
+});

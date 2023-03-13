@@ -31,7 +31,7 @@
   "homepage": "https://github.com/mark-when/parser#readme",
   "dependencies": {
     "lru-cache": "^7.14.1",
-    "luxon": "^2.4.0",
+    "luxon": "^3.3.0",
     "yaml": "^2.2.1"
   },
   "devDependencies": {

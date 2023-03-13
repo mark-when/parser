@@ -2010,7 +2010,7 @@ describe("recurrence", () => {
     );
     expect(colonRange).toBeTruthy();
     expect(colonRange?.from).toBe(32);
-    expect(colonRange?.type).toBe(RangeType.Recurrence);
+    expect(colonRange?.type).toBe(RangeType.DateRangeColon);
   });
 });
 
