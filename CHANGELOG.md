@@ -1,3 +1,6 @@
+## 0.5.2
+Added shell command for parsing markwhen: `mw {file name}` or `bash bin/index.js {file name}`
+
 ## 0.5.1
 - Better support for yaml frontmatter
 
