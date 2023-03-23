@@ -39,7 +39,7 @@ import {
   RangeType,
   Range,
   toDateRange,
-} from "../Types";
+} from "../Types.js";
 import {
   fromCasualDateFrom,
   fromCasualDateTo,
