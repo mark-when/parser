@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { ParsingContext } from "../ParsingContext";
+import { ParsingContext } from "../ParsingContext.js";
 import {
   from_slashDateTimeMeridiemHourMatchIndex,
   from_slashDateTimeMeridiemMinuteMatchIndex,
@@ -46,7 +46,7 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex";
-import { Node, NodeArray, NodeValue } from "../Node";
+import { Node, NodeArray, NodeValue } from "../Node.js";
 import {
   GranularDateTime,
   Event,
@@ -57,7 +57,7 @@ import {
   toDateRange,
   DateTimeIso,
 } from "../Types";
-import { Cache } from "../Cache";
+import { Cache } from "../Cache.js";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,

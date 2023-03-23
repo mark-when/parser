@@ -1,8 +1,8 @@
-import { Foldable, ParsingContext } from "./ParsingContext";
+import { Foldable, ParsingContext } from "./ParsingContext.js";
 import YAML from "yaml";
-import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, RangeType } from "./Types";
-import { checkComments } from "./lineChecks/checkComments";
-import { checkTagColors } from "./lineChecks/checkTagColors";
+import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, RangeType } from "./Types.js";
+import { checkComments } from "./lineChecks/checkComments.js";
+import { checkTagColors } from "./lineChecks/checkTagColors.js";
 import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,

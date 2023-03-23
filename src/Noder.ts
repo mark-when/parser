@@ -1,5 +1,5 @@
-import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node";
-import { Event, Path, toDateRange } from "./Types";
+import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node.js";
+import { Event, Path, toDateRange } from "./Types.js";
 
 export const toArray = (node: SomeNode) => {
   const array = [] as { path: Path; node: SomeNode }[];

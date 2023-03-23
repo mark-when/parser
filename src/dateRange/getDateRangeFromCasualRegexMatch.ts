@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
-import { ParsingContext } from "../ParsingContext";
-import { Cache } from "../Cache";
+import { ParsingContext } from "../ParsingContext.js";
+import { Cache } from "../Cache.js";
 import {
   EVENT_START_REGEX,
   datePartMatchIndex,
@@ -51,7 +51,7 @@ import {
   parseSlashDate,
   roundDateUp,
 } from "./utils";
-import { checkRecurrence } from "./checkRecurrence";
+import { checkRecurrence } from "./checkRecurrence.js";
 
 export function getDateRangeFromCasualRegexMatch(
   line: string,

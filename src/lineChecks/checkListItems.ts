@@ -1,6 +1,6 @@
-import { ParsingContext } from "../ParsingContext";
-import { CHECKLIST_ITEM_REGEX, LIST_ITEM_REGEX } from "../regex";
-import { RangeType, Range } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { CHECKLIST_ITEM_REGEX, LIST_ITEM_REGEX } from "../regex.js";
+import { RangeType, Range } from "../Types.js";
 
 export function checkListItems(
   line: string,

@@ -1,4 +1,4 @@
-import { LINK_REGEX, AT_REGEX } from "../Types";
+import { LINK_REGEX, AT_REGEX } from "../Types.js";
 
 export function toInnerHtml(s: string): string {
   return s

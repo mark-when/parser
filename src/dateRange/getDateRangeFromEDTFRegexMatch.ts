@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
-import { ParsingContext } from "../ParsingContext";
-import { Cache } from "../Cache";
+import { ParsingContext } from "../ParsingContext.js";
+import { Cache } from "../Cache.js";
 import {
   EDTF_START_REGEX,
   edtfDatePartMatchIndex,
@@ -29,8 +29,8 @@ import {
   Range,
   toDateRange,
 } from "../Types";
-import { getPriorEvent, roundDateUp } from "./utils";
-import { checkEdtfRecurrence } from "./checkRecurrence";
+import { getPriorEvent, roundDateUp } from "./utils.js";
+import { checkEdtfRecurrence } from "./checkRecurrence.js";
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,

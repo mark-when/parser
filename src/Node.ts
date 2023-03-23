@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { DateRange, Event, GroupStyle, Path, Range } from "./Types";
+import { DateRange, Event, GroupStyle, Path, Range } from "./Types.js";
 
 export type SomeNode = Node<NodeValue>;
 export type NodeArray = Array<SomeNode>;

@@ -1,7 +1,7 @@
-import { ParsingContext } from "../ParsingContext";
-import { parseGroupFromStartTag } from "../dateRange/utils";
-import { GROUP_START_REGEX } from "../regex";
-import { RangeType } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { parseGroupFromStartTag } from "../dateRange/utils.js";
+import { GROUP_START_REGEX } from "../regex.js";
+import { RangeType } from "../Types.js";
 
 export function checkGroupStart(
   line: string,

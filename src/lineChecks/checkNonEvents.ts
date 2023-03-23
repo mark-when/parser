@@ -1,8 +1,8 @@
-import { ParsingContext } from "../ParsingContext";
-import { checkComments } from "./checkComments";
-import { checkGroupEnd } from "./checkGroupEnd";
-import { checkGroupStart } from "./checkGroupStart";
-import { checkTags } from "./checkTags";
+import { ParsingContext } from "../ParsingContext.js";
+import { checkComments } from "./checkComments.js";
+import { checkGroupEnd } from "./checkGroupEnd.js";
+import { checkGroupStart } from "./checkGroupStart.js";
+import { checkTags } from "./checkTags.js";
 
 export function checkNonEvents(
   line: string,

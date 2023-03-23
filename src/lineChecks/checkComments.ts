@@ -1,6 +1,6 @@
-import { ParsingContext } from "../ParsingContext";
-import { COMMENT_REGEX } from "../regex";
-import { RangeType } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { COMMENT_REGEX } from "../regex.js";
+import { RangeType } from "../Types.js";
 
 export function checkComments(
   line: string,

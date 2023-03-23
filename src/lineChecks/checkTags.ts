@@ -1,7 +1,7 @@
-import { ParsingContext } from "../ParsingContext";
-import { COLORS } from "../ColorUtils";
-import { TAG_REGEX } from "../regex";
-import { RangeType } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { COLORS } from "../ColorUtils.js";
+import { TAG_REGEX } from "../regex.js";
+import { RangeType } from "../Types.js";
 
 export function checkTags(
   line: string,

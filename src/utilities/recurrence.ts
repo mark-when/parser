@@ -1,6 +1,6 @@
-import { DateRange, Event, toDateRange, toDateRangeIso } from "../Types";
+import { DateRange, Event, toDateRange, toDateRangeIso } from "../Types.js";
 import { DateTime, Duration } from "luxon";
-import { Recurrence } from "../dateRange/checkRecurrence";
+import { Recurrence } from "../dateRange/checkRecurrence.js";
 
 export const expand = (
   dateRange: DateRange,

@@ -2,11 +2,7 @@
   "name": "@markwhen/parser",
   "version": "0.5.2",
   "description": "Markwhen parser",
-  "main": "lib/index.js",
   "type": "module",
-  "bin": {
-    "mw": "bin/index.js"
-  },
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect-brk ./node_modules/jest/bin/jest.js",

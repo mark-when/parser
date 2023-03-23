@@ -1,15 +1,15 @@
 import { DateTime, Duration } from "luxon";
-import { Cache } from "./Cache";
-import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence";
-import { Node, NodeArray, SomeNode } from "./Node";
-import { Foldable } from "./ParsingContext";
+import { Cache } from "./Cache.js";
+import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
+import { Node, NodeArray, SomeNode } from "./Node.js";
+import { Foldable } from "./ParsingContext.js";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
   EVENT_ID_REGEX,
   TAG_REGEX,
 } from "./regex";
-import { addHttpIfNeeded } from "./utilities/html";
+import { addHttpIfNeeded } from "./utilities/html.js";
 
 export type DateTimeGranularity =
   | "instant"

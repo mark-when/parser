@@ -1,5 +1,5 @@
-import { getDateRangeFromCasualRegexMatch } from "../dateRange/getDateRangeFromCasualRegexMatch";
-import { getDateRangeFromEDTFRegexMatch } from "../dateRange/getDateRangeFromEDTFRegexMatch";
+import { getDateRangeFromCasualRegexMatch } from "../dateRange/getDateRangeFromCasualRegexMatch.js";
+import { getDateRangeFromEDTFRegexMatch } from "../dateRange/getDateRangeFromEDTFRegexMatch.js";
 import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
@@ -8,13 +8,13 @@ import {
   GROUP_END_REGEX,
   COMPLETION_REGEX,
 } from "../regex";
-import { RangeType, EventDescription, Event, Range } from "../Types";
-import { checkComments } from "./checkComments";
-import { checkListItems } from "./checkListItems";
-import { Cache } from "../Cache";
-import { Node } from "../Node";
-import { ParsingContext } from "../ParsingContext";
-import { checkTags } from "./checkTags";
+import { RangeType, EventDescription, Event, Range } from "../Types.js";
+import { checkComments } from "./checkComments.js";
+import { checkListItems } from "./checkListItems.js";
+import { Cache } from "../Cache.js";
+import { Node } from "../Node.js";
+import { ParsingContext } from "../ParsingContext.js";
+import { checkTags } from "./checkTags.js";
 
 export function checkEvent(
   line: string,

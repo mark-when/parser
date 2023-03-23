@@ -50,7 +50,7 @@ import {
   recurrence_repetitionsForAmountYearsUnitMatchIndex,
   recurrence_repetitionsMatchIndex,
 } from "../regex";
-import { Range, RangeType } from "../Types";
+import { Range, RangeType } from "../Types.js";
 
 export type DurationUnit =
   | "years"

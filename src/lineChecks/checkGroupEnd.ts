@@ -1,6 +1,6 @@
-import { ParsingContext } from "../ParsingContext";
-import { GROUP_END_REGEX } from "../regex";
-import { RangeType } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { GROUP_END_REGEX } from "../regex.js";
+import { RangeType } from "../Types.js";
 
 export function checkGroupEnd(
   line: string,

@@ -1,5 +1,5 @@
 import LRUCache from "lru-cache";
-import { DateRangeIso, GranularDateTime } from "./Types";
+import { DateRangeIso, GranularDateTime } from "./Types.js";
 
 const newLru = <K, V>() => new LRUCache<K, V>({ max: 1000 });
 

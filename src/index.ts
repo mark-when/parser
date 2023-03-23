@@ -1,14 +1,12 @@
-import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types";
-import {
-  PAGE_BREAK_REGEX,
-} from "./regex";
-import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch";
-import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch";
-import { Cache } from "./Cache";
-import { checkEvent } from "./lineChecks/checkEvent";
-import { ParsingContext } from "./ParsingContext";
-import { checkNonEvents } from "./lineChecks/checkNonEvents";
-import { parseHeader } from "./parseHeader";
+import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types.js";
+import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch.js";
+import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch.js";
+import { Cache } from "./Cache.js";
+import { checkEvent } from "./lineChecks/checkEvent.js";
+import { ParsingContext } from "./ParsingContext.js";
+import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
+import { parseHeader } from "./parseHeader.js";
+import { checkNewPage } from "./lineChecks/checkNewPage.js";
 
 export function parseDateRange(
   dateRangeString: string
@@ -61,26 +59,6 @@ export function parse(
   } while (index < lines.length);
 
   return { timelines: timelines, cache };
-}
-
-function checkNewPage(
-  line: string,
-  i: number,
-  startLineIndex: number,
-  lengthAtIndex: number[],
-  context: ParsingContext
-): Timeline | undefined {
-  if (line.match(PAGE_BREAK_REGEX)) {
-    while (context.foldableSections.length) {
-      context.finishFoldableSection(i, lengthAtIndex[i] + line.length);
-    }
-    return context.toTimeline(
-      lengthAtIndex,
-      startLineIndex,
-      i,
-      lengthAtIndex[i] - 1
-    );
-  }
 }
 
 export function parseTimeline(

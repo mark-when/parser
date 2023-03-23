@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
-import { NodeArray, SomeNode, Node } from "./Node";
-import { push } from "./Noder";
+import { NodeArray, SomeNode, Node } from "./Node.js";
+import { push } from "./Noder.js";
 import {
   Path,
   Tags,

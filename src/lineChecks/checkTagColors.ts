@@ -1,7 +1,7 @@
-import { ParsingContext } from "../ParsingContext";
-import { HUMAN_COLORS, hexToRgb, COLORS } from "../ColorUtils";
-import { TAG_COLOR_REGEX } from "../regex";
-import { RangeType } from "../Types";
+import { ParsingContext } from "../ParsingContext.js";
+import { HUMAN_COLORS, hexToRgb, COLORS } from "../ColorUtils.js";
+import { TAG_COLOR_REGEX } from "../regex.js";
+import { RangeType } from "../Types.js";
 
 export function checkTagColors(
   line: string,
