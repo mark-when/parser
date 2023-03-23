@@ -20,7 +20,7 @@ import {
   from_edtfRelativeEventIdMatchIndex,
   to_edtfRelativeEventIdMatchIndex,
   edtfEventTextMatchIndex,
-} from "../regex";
+} from "../regex.js";
 import {
   DateRangePart,
   DateTimeGranularity,
@@ -28,7 +28,7 @@ import {
   RangeType,
   Range,
   toDateRange,
-} from "../Types";
+} from "../Types.js";
 import { getPriorEvent, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
 

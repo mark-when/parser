@@ -8,7 +8,7 @@ import {
   COMMENT_REGEX,
   EVENT_ID_REGEX,
   TAG_REGEX,
-} from "./regex";
+} from "./regex.js";
 import { addHttpIfNeeded } from "./utilities/html.js";
 
 export type DateTimeGranularity =

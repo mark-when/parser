@@ -45,7 +45,7 @@ import {
   to_casualMonthMonthAbbrMatchIndex,
   GROUP_START_REGEX,
   TAG_REGEX,
-} from "../regex";
+} from "../regex.js";
 import { Node, NodeArray, NodeValue } from "../Node.js";
 import {
   GranularDateTime,
@@ -56,7 +56,7 @@ import {
   DATE_TIME_FORMAT_YEAR,
   toDateRange,
   DateTimeIso,
-} from "../Types";
+} from "../Types.js";
 import { Cache } from "../Cache.js";
 
 export function getTimeFromRegExpMatch(

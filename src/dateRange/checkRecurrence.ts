@@ -49,7 +49,7 @@ import {
   recurrence_repetitionsForAmountWeeksUnitMatchIndex,
   recurrence_repetitionsForAmountYearsUnitMatchIndex,
   recurrence_repetitionsMatchIndex,
-} from "../regex";
+} from "../regex.js";
 import { Range, RangeType } from "../Types.js";
 
 export type DurationUnit =

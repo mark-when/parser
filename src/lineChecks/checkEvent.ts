@@ -7,7 +7,7 @@ import {
   PAGE_BREAK_REGEX,
   GROUP_END_REGEX,
   COMPLETION_REGEX,
-} from "../regex";
+} from "../regex.js";
 import { RangeType, EventDescription, Event, Range } from "../Types.js";
 import { checkComments } from "./checkComments.js";
 import { checkListItems } from "./checkListItems.js";

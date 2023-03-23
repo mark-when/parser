@@ -31,7 +31,7 @@ import {
   to_timeOnly24HourHourMatchIndex,
   to_timeOnly24HourMinuteMatchIndex,
   eventTextMatchIndex,
-} from "../regex";
+} from "../regex.js";
 import {
   DateRangePart,
   DateTimeGranularity,
@@ -50,7 +50,7 @@ import {
   getPriorEvent,
   parseSlashDate,
   roundDateUp,
-} from "./utils";
+} from "./utils.js";
 import { checkRecurrence } from "./checkRecurrence.js";
 
 export function getDateRangeFromCasualRegexMatch(
