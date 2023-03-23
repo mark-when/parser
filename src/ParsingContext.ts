@@ -9,7 +9,7 @@ import {
   Line,
   Timeline,
   Range,
-} from "./Types";
+} from "./Types.js";
 
 export interface Foldable {
   endIndex: number;

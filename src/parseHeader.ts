@@ -8,7 +8,7 @@ import {
   EVENT_START_REGEX,
   GROUP_START_REGEX,
   PAGE_BREAK_REGEX,
-} from "./regex";
+} from "./regex.js";
 
 const stringEmailListToArray = (s: string) =>
   s
