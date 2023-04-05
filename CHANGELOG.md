@@ -1,5 +1,9 @@
+## 0.6.5
+- Removed shell command (use `@markwhen/mw` instead)
+- Support for folding events in editor
+
 ## 0.5.2
-Added shell command for parsing markwhen: `mw {file name}` or `bash bin/index.js {file name}`
+- Added shell command for parsing markwhen: `mw {file name}` or `bash bin/index.js {file name}`
 
 ## 0.5.1
 - Better support for yaml frontmatter
