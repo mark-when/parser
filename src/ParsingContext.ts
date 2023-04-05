@@ -13,7 +13,7 @@ import {
 
 export interface Foldable {
   endIndex: number;
-  type: "comment" | "section" | 'header';
+  type: "comment" | "section" | "header" | "event";
   startLine: number;
   startIndex?: number;
   foldStartIndex?: number;

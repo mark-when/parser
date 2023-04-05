@@ -151,6 +151,15 @@ export function checkEvent(
     if (!context.latest || dateRange.toDateTime > context.latest) {
       context.latest = dateRange.toDateTime;
     }
+    if (end - i > 1) {
+      context.foldables[lengthAtIndex[i]] = {
+        startIndex: lengthAtIndex[i + 1] - 1,
+        endIndex: lengthAtIndex[end] - 1,
+        type: "event",
+        foldStartIndex: lengthAtIndex[i + 1] - 1,
+        startLine: i,
+      };
+    }
   }
   return end - 1;
 }
