@@ -46,6 +46,3 @@ output:
 }
 */
 ```
-
-# Expect breaking changes
-Markwhen is a work in progress and things are likely to change.
