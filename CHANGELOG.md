@@ -1,3 +1,6 @@
+## 0.7.0
+- Remove support for pages
+
 ## 0.6.5
 - Removed shell command (use `@markwhen/mw` instead)
 - Support for folding events in editor
