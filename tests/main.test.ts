@@ -1759,8 +1759,7 @@ endGroup
 endGroup
 endGroup
 
-2022: last event
-`);
+2022: last event`);
 
     const foldables = mw.timelines[0].foldables;
     expect(Object.keys(foldables).length).toBe(5);
