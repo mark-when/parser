@@ -4,7 +4,6 @@ import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   GROUP_START_REGEX,
-  PAGE_BREAK_REGEX,
   GROUP_END_REGEX,
   COMPLETION_REGEX,
 } from "../regex.js";
@@ -63,7 +62,6 @@ export function checkEvent(
       nextLine.match(EDTF_START_REGEX) ||
       nextLine.match(EVENT_START_REGEX) ||
       nextLine.match(GROUP_START_REGEX) ||
-      nextLine.match(PAGE_BREAK_REGEX) ||
       (context.currentPath.length > 1 && nextLine.match(GROUP_END_REGEX))
     ) {
       break;

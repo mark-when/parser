@@ -132,70 +132,8 @@ now: event`);
   expect(nthEvent(mw, 0).dateText).toBe("now");
 });
 
-describe("multiple pages", () => {
-  test("1", () => {
-    const mw = parse(`
----
-#tag1: #abc
-#tag2: red
-#education: white
-
-title: Title
-arbitraryThing:
-  - one
-  - two
----
-
-_-_-_break_-_-_
-
-title: Page 2 title
-#page2tag: blue
-
-arbEntry: value
-
-now: event`);
-
-    const tags = mw.timelines[0].tags;
-    expect(Object.keys(tags).length).toBe(3);
-    expect(mw.timelines[0].header.title).toBe("Title");
-    expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
-
-    expect(mw.timelines[1].header.title).toBe("Page 2 title");
-    expect(mw.timelines[1].header.arbEntry).toBe("value");
-  });
-
-  test("2", () => {
-    const mw = parse(`
-#tag1: #abc
-#tag2: red
-#education: white
-
-title: Title
-arbitraryThing:
-  - one
-  - two
-  
-_-_-_break_-_-_
-
-title: Page 2 title
-#page2tag: blue
-
-arbEntry: value
-
-now: event`);
-
-    const tags = mw.timelines[0].tags;
-    expect(Object.keys(tags).length).toBe(3);
-    expect(mw.timelines[0].header.title).toBe("Title");
-    expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
-
-    expect(mw.timelines[1].header.title).toBe("Page 2 title");
-    expect(mw.timelines[1].header.arbEntry).toBe("value");
-  });
-});
-
 describe("Folding and ranges", () => {
-  test.only("without dashes", () => {
+  test("without dashes", () => {
     debugger
     const mw = parse(`
 
@@ -203,13 +141,6 @@ title: Title
 arbitraryThing:
   - one
   - two
-
-_-_-_break_-_-_
-
-title: Page 2 title
-#page2tag: blue
-
-arbEntry: value
 
 now: event`);
 

@@ -249,8 +249,6 @@ export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)/i;
 export const LIST_ITEM_REGEX = /^- .*/;
 export const CHECKLIST_ITEM_REGEX = /^- (\[(x|X| )?\]).*/;
 export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
-export const PAGE_BREAK = "\n_-_-_break_-_-_\n";
-export const PAGE_BREAK_REGEX = /^_-_-_break_-_-_$/;
 
 export const EDTF_DATE_REGEX = /(\d{4}(-\d{2}(-\d{2})?)?)/;
 export const EDTF_RANGE_REGEX = new RegExp(

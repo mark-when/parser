@@ -7,7 +7,6 @@ import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   GROUP_START_REGEX,
-  PAGE_BREAK_REGEX,
 } from "./regex.js";
 
 const stringEmailListToArray = (s: string) =>
@@ -34,8 +33,7 @@ export function parseHeader(
   const eventsStarted = (line: string) =>
     !!line.match(EDTF_START_REGEX) ||
     !!line.match(EVENT_START_REGEX) ||
-    !!line.match(GROUP_START_REGEX) ||
-    !!line.match(PAGE_BREAK_REGEX);
+    !!line.match(GROUP_START_REGEX)
 
   const threeDashRegex = /^---/;
   let hasThreeDashStart = false;
@@ -47,14 +45,11 @@ export function parseHeader(
   let line = lines[headerStartLineIndex];
   while (typeof line !== "undefined") {
     // If we're using three dash syntax, we're not stopping until
-    // we see the ending token...
+    // we see the ending token
     if (!hasThreeDashStart && eventsStarted(line)) {
       break;
     }
-    // ... unless it's a page break
-    if (hasThreeDashStart && !!line.match(PAGE_BREAK_REGEX)) {
-      break;
-    }
+
     const isThreeDash = line.match(threeDashRegex)
     if (isThreeDash) {
       const range = {

@@ -6,7 +6,6 @@ import { checkEvent } from "./lineChecks/checkEvent.js";
 import { ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader } from "./parseHeader.js";
-import { checkNewPage } from "./lineChecks/checkNewPage.js";
 
 export function parseDateRange(
   dateRangeString: string
@@ -80,17 +79,6 @@ export function parseTimeline(
     const line = lines[i];
     if (checkNonEvents(line, i, lengthAtIndex, context)) {
       continue;
-    }
-
-    const completedTimeline = checkNewPage(
-      line,
-      i,
-      startLineIndex,
-      lengthAtIndex,
-      context
-    );
-    if (completedTimeline) {
-      return completedTimeline;
     }
 
     // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
