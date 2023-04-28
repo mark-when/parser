@@ -1,11 +1,11 @@
 import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types.js";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch.js";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch.js";
-import { Cache } from "./Cache.js";
+import { Caches } from "./Cache.js";
 import { checkEvent } from "./lineChecks/checkEvent.js";
 import { ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
-import { parseHeader } from "./parseHeader.js";
+import { parseHeader as _parseHeader } from "./parseHeader.js";
 
 export function parseDateRange(
   dateRangeString: string
@@ -28,14 +28,7 @@ export function parseDateRange(
   return dateRange;
 }
 
-export function parse(
-  timelineString?: string,
-  cache?: Cache | true
-): Timelines {
-  if (!timelineString) {
-    return { timelines: [emptyTimeline()] };
-  }
-
+const linesAndLengths = (timelineString: string) => {
   const lines = timelineString.split("\n");
   let lengthAtIndex: number[] = [];
   for (let i = 0; i < lines.length; i++) {
@@ -46,34 +39,38 @@ export function parse(
       1 + lines[i].length + lengthAtIndex[lengthAtIndex.length - 1] || 0
     );
   }
-  const timelines = [];
-  let index = 0;
-  if (cache === true) {
-    cache = new Cache();
-  }
-  do {
-    const timeline = parseTimeline(lines, lengthAtIndex, index, cache);
-    index = timeline.metadata.endLineIndex + 1;
-    timelines.push(timeline);
-  } while (index < lines.length);
+  return { lines, lengthAtIndex };
+};
 
-  return { timelines: timelines, cache };
+export function parse(
+  timelineString?: string,
+  cache?: Caches | true
+): Timelines {
+  if (cache === true) {
+    cache = new Caches();
+  }
+  if (!timelineString) {
+    return { timelines: [emptyTimeline()], cache };
+  }
+  const { lines, lengthAtIndex } = linesAndLengths(timelineString);
+  return { timelines: [parseTimeline(lines, lengthAtIndex, cache)], cache };
+}
+
+export function parseHeader(timelineString: string) {
+  const { lines, lengthAtIndex } = linesAndLengths(timelineString);
+  const context = new ParsingContext();
+  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context);
+  return { ...context, headerEndLineIndex };
 }
 
 export function parseTimeline(
   lines: string[],
   lengthAtIndex: number[],
-  startLineIndex: number = 0,
-  cache?: Cache
+  cache?: Caches
 ): Timeline {
   const context = new ParsingContext();
 
-  const headerEndLineIndex = parseHeader(
-    lines,
-    lengthAtIndex,
-    startLineIndex,
-    context
-  );
+  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
 
   for (let i = headerEndLineIndex; i < lines.length; i++) {
     const line = lines[i];
@@ -91,7 +88,6 @@ export function parseTimeline(
   // }
   return context.toTimeline(
     lengthAtIndex,
-    startLineIndex,
     lines.length - 1,
     // As this is the last timeline, return the length of the whole string
     lengthAtIndex[lines.length - 1] + lines[lines.length - 1].length

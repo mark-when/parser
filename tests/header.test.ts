@@ -134,7 +134,6 @@ now: event`);
 
 describe("Folding and ranges", () => {
   test("without dashes", () => {
-    debugger
     const mw = parse(`
 
 title: Title
@@ -182,3 +181,13 @@ now: event`);
     expect(headerFoldable.endIndex).toBe(95);
   });
 });
+
+describe("Programmatic editing", () => {
+  const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`
+
+})

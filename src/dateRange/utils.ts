@@ -46,18 +46,18 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex.js";
-import { Node, NodeArray, NodeValue } from "../Node.js";
+import { Node, NodeArray } from "../Node.js";
 import {
   GranularDateTime,
   Event,
   Range,
-  EventGroup,
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
   toDateRange,
   DateTimeIso,
+  DateTimeGranularity,
 } from "../Types.js";
-import { Cache } from "../Cache.js";
+import { Caches } from "../Cache.js";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -376,54 +376,47 @@ export function getPriorEventFromDateTime(context: ParsingContext) {
 export function parseSlashDate(
   s: string,
   fullFormat: string,
-  cache?: Cache
+  context: ParsingContext,
+  cache?: Caches
 ): GranularDateTime | undefined {
   const cacheKey = JSON.stringify({ s, fullFormat });
-  const cached = cache?.slashDate.get(cacheKey);
+  const cached = cache?.zone(context.timezone).slashDate.get(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const cacheAndReturn = (gdt: GranularDateTime) => {
-    cache?.slashDate.set(cacheKey, gdt);
-    return gdt;
-  };
+  const formatsAndGranularities = [
+    [fullFormat, "day"],
+    [DATE_TIME_FORMAT_MONTH_YEAR, "month"],
+    [DATE_TIME_FORMAT_YEAR, "year"],
+  ] as [string, DateTimeGranularity][];
 
-  let dateTime = DateTime.fromFormat(s, fullFormat);
-  if (dateTime.isValid) {
-    return cacheAndReturn({
-      dateTimeIso: dateTime.toISO(),
-      granularity: "day",
-    });
-  }
-  dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_MONTH_YEAR);
-  if (dateTime.isValid) {
-    return cacheAndReturn({
-      dateTimeIso: dateTime.toISO(),
-      granularity: "month",
-    });
-  }
-  dateTime = DateTime.fromFormat(s, DATE_TIME_FORMAT_YEAR);
-  if (dateTime.isValid) {
-    return cacheAndReturn({
-      dateTimeIso: dateTime.toISO(),
-      granularity: "year",
-    });
+  for (const f of formatsAndGranularities) {
+    let dateTime = DateTime.fromFormat(s, f[0]);
+    if (dateTime.isValid) {
+      const gdt = {
+        dateTimeIso: dateTime.toISO(),
+        granularity: f[1],
+      };
+      cache?.zone(context.timezone).slashDate.set(cacheKey, gdt);
+      return gdt;
+    }
   }
 }
 
 export function roundDateUp(
   granularDateTime: GranularDateTime,
-  cache?: Cache
+  context: ParsingContext,
+  cache?: Caches
 ): DateTimeIso {
   const cacheKey = JSON.stringify(granularDateTime);
-  const cached = cache?.roundDateUp.get(cacheKey);
+  const cached = cache?.zone(context.timezone).roundDateUp.get(cacheKey);
   if (cached) {
     return cached;
   }
 
   const cacheAndReturn = (s: DateTimeIso) => {
-    cache?.roundDateUp.set(cacheKey, s);
+    cache?.zone(context.timezone).roundDateUp.set(cacheKey, s);
     return s;
   };
 

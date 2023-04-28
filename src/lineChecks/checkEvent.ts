@@ -10,7 +10,7 @@ import {
 import { RangeType, EventDescription, Event, Range } from "../Types.js";
 import { checkComments } from "./checkComments.js";
 import { checkListItems } from "./checkListItems.js";
-import { Cache } from "../Cache.js";
+import { Caches } from "../Cache.js";
 import { Node } from "../Node.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
@@ -21,7 +21,7 @@ export function checkEvent(
   i: number,
   lengthAtIndex: number[],
   context: ParsingContext,
-  cache?: Cache
+  cache?: Caches
 ): number {
   let dateRange = getDateRangeFromEDTFRegexMatch(
     line,

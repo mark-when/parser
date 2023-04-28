@@ -1,6 +1,10 @@
 import { Foldable, ParsingContext } from "./ParsingContext.js";
 import YAML from "yaml";
-import { AMERICAN_DATE_FORMAT, EUROPEAN_DATE_FORMAT, RangeType } from "./Types.js";
+import {
+  AMERICAN_DATE_FORMAT,
+  EUROPEAN_DATE_FORMAT,
+  RangeType,
+} from "./Types.js";
 import { checkComments } from "./lineChecks/checkComments.js";
 import { checkTagColors } from "./lineChecks/checkTagColors.js";
 import {
@@ -8,6 +12,8 @@ import {
   EVENT_START_REGEX,
   GROUP_START_REGEX,
 } from "./regex.js";
+import { Caches } from "./Cache.js";
+import { DateTime } from "luxon";
 
 const stringEmailListToArray = (s: string) =>
   s
@@ -21,10 +27,10 @@ const headerValueRegex = /[^:]+$/;
 export function parseHeader(
   lines: string[],
   lengthAtIndex: number[],
-  startLineIndex: number,
-  context: ParsingContext
+  context: ParsingContext,
+  cache?: Caches
 ) {
-  let headerStartLineIndex = startLineIndex;
+  let headerStartLineIndex = 0;
   let headerEndLineIndex = headerStartLineIndex;
 
   let firstHeaderLineIndexWithText = -1;
@@ -33,12 +39,12 @@ export function parseHeader(
   const eventsStarted = (line: string) =>
     !!line.match(EDTF_START_REGEX) ||
     !!line.match(EVENT_START_REGEX) ||
-    !!line.match(GROUP_START_REGEX)
+    !!line.match(GROUP_START_REGEX);
 
   const threeDashRegex = /^---/;
   let hasThreeDashStart = false;
   const headerLines = [];
-  const headerRanges = []
+  const headerRanges = [];
 
   const threeDashRanges = [];
 
@@ -50,7 +56,7 @@ export function parseHeader(
       break;
     }
 
-    const isThreeDash = line.match(threeDashRegex)
+    const isThreeDash = line.match(threeDashRegex);
     if (isThreeDash) {
       const range = {
         type: RangeType.FrontmatterDelimiter,
@@ -163,10 +169,39 @@ export function parseHeader(
     if (parsedHeader.edit && typeof parsedHeader.edit === "string") {
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
+    if (typeof parsedHeader.timezone !== "undefined") {
+      const tz = `${parsedHeader.timezone}`;
+      const cached = cache?.zones.get(tz);
+      if (cached) {
+        context.timezone = cached;
+      } else {
+        const formats = ["z", "ZZZ", "ZZ", "Z"] as const;
+        let zoneDateTime: DateTime;
+        for (const format of formats) {
+          zoneDateTime = DateTime.fromFormat(tz, format, { setZone: true });
+          if (zoneDateTime.isValid && zoneDateTime.zone.isValid) {
+            cache?.zones.set(tz, zoneDateTime.zone);
+            context.timezone = zoneDateTime.zone;
+            break;
+          }
+          if (format !== "z") {
+            // try with a plus appended in case the yaml parser turned it into a number
+            zoneDateTime = DateTime.fromFormat(`+${tz}`, format, {
+              setZone: true,
+            });
+            if (zoneDateTime.isValid && zoneDateTime.zone.isValid) {
+              cache?.zones.set(tz, zoneDateTime.zone);
+              context.timezone = zoneDateTime.zone;
+              break;
+            }
+          }
+        }
+      }
+    }
     // We're only going to push our ranges if the parsing was successful
-    context.ranges.push(...headerRanges)
+    context.ranges.push(...headerRanges);
     context.header = parsedHeader;
-  } catch {
+  } catch (e) {
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
 

@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { ParsingContext } from "../ParsingContext.js";
-import { Cache } from "../Cache.js";
+import { Caches } from "../Cache.js";
 import {
   EDTF_START_REGEX,
   edtfDatePartMatchIndex,
@@ -37,7 +37,7 @@ export function getDateRangeFromEDTFRegexMatch(
   i: number,
   lengthAtIndex: number[],
   context: ParsingContext,
-  cache?: Cache
+  cache?: Caches
 ): DateRangePart | undefined {
   const eventStartLineRegexMatch = line.match(EDTF_START_REGEX);
   if (!eventStartLineRegexMatch) {
@@ -105,7 +105,7 @@ export function getDateRangeFromEDTFRegexMatch(
       index: colonIndex + 1,
     },
   });
-  const cached = cache?.ranges.get(datePart);
+  const cached = cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const recurrence = checkEdtfRecurrence(
       eventStartLineRegexMatch,
@@ -136,7 +136,7 @@ export function getDateRangeFromEDTFRegexMatch(
   let canCacheRange = true;
 
   if (edtfFrom) {
-    fromDateTime = DateTime.fromISO(edtfFrom);
+    fromDateTime = DateTime.fromISO(edtfFrom, { zone: context.timezone });
     granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
   } else if (relativeFromDate) {
     // Dependent on other event
@@ -198,15 +198,15 @@ export function getDateRangeFromEDTFRegexMatch(
     }
     granularity = "instant";
   } else if (nowFrom) {
-    fromDateTime = context.now;
+    fromDateTime = context.now.setZone(context.timezone);
     granularity = "instant";
   } else {
-    fromDateTime = DateTime.fromISO(edtfFrom);
+    fromDateTime = DateTime.fromISO(edtfFrom, { zone: context.timezone });
     granularity = "instant";
   }
 
   if (!fromDateTime || !fromDateTime?.isValid) {
-    fromDateTime = context.now;
+    fromDateTime = context.now.setZone(context.timezone);
     granularity = "instant";
   }
 
@@ -227,7 +227,7 @@ export function getDateRangeFromEDTFRegexMatch(
       }
       endDateTime = RelativeDate.from(relativeToDate, relativeTo);
     } else if (nowTo) {
-      endDateTime = context.now;
+      endDateTime = context.now.setZone(context.timezone);
       granularity = "instant";
     } else if (edtfTo) {
       endDateTime = DateTime.fromISO(
@@ -240,6 +240,7 @@ export function getDateRangeFromEDTFRegexMatch(
               ? "month"
               : "year",
           },
+          context,
           cache
         )
       );
@@ -253,6 +254,7 @@ export function getDateRangeFromEDTFRegexMatch(
           dateTimeIso: fromDateTime.toISO(),
           granularity,
         },
+        context,
         cache
       )
     );
@@ -278,8 +280,8 @@ export function getDateRangeFromEDTFRegexMatch(
     recurrence
   );
 
-  if (canCacheRange && cache) {
-    cache.ranges.set(datePart, {
+  if (canCacheRange) {
+    cache?.zone(context.timezone).ranges.set(datePart, {
       fromDateTimeIso: fromDateTime.toISO(),
       toDateTimeIso: endDateTime.toISO(),
     });

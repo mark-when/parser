@@ -1,5 +1,5 @@
-import { DateTime, Duration } from "luxon";
-import { Cache } from "./Cache.js";
+import { DateTime } from "luxon";
+import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
 import { Node, NodeArray, SomeNode } from "./Node.js";
 import { Foldable } from "./ParsingContext.js";
@@ -417,7 +417,7 @@ export function emptyTimeline(): Timeline {
 
 export interface Timelines {
   timelines: Timeline[];
-  cache?: Cache;
+  cache?: Caches;
 }
 
 export interface EventGroup extends Array<Event | EventGroup> {

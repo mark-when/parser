@@ -15,7 +15,7 @@ export const walk = (
   fn: (node: SomeNode | undefined, path: Path) => boolean | void
 ) => {
   if (fn(node, path)) {
-    return
+    return;
   }
   if (node && !isEventNode(node)) {
     const arr = node.value as NodeArray;
@@ -24,6 +24,19 @@ export const walk = (
     }
   }
 };
+
+export function* walk2(
+  node: SomeNode | undefined,
+  path: Path
+): Generator<{ node: SomeNode | undefined; path: number[] }> {
+  yield { node, path };
+  if (node && !isEventNode(node)) {
+    const arr = node.value as NodeArray;
+    for (let i = 0; i < arr.length; i++) {
+      yield* walk2(arr[i], [...path, i]);
+    }
+  }
+}
 
 /**
  * @deprecated Use `walk` instead

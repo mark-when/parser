@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, SystemZone, Zone } from "luxon";
 import { NodeArray, SomeNode, Node } from "./Node.js";
 import { push } from "./Noder.js";
 import {
@@ -42,6 +42,7 @@ export class ParsingContext {
   ranges: Range[];
   preferredInterpolationFormat: string | undefined;
   header: any;
+  timezone: Zone;
 
   constructor() {
     this.events = new Node([]);
@@ -56,6 +57,7 @@ export class ParsingContext {
     this.foldableSections = [];
     this.ranges = [];
     this.header = { dateFormat: AMERICAN_DATE_FORMAT };
+    this.timezone = new SystemZone();
   }
 
   currentFoldableSection() {
@@ -127,7 +129,6 @@ export class ParsingContext {
 
   toTimeline(
     lengthAtIndex: number[],
-    startLineIndex: number,
     endLineIndex: number,
     endStringIndex: number
   ): Timeline {
@@ -147,8 +148,8 @@ export class ParsingContext {
         earliestTime: (this.earliest || this.now.minus({ years: 5 })).toISO(),
         latestTime: (this.latest || this.now.plus({ years: 5 })).toISO(),
         maxDurationDays,
-        startLineIndex,
-        startStringIndex: lengthAtIndex[startLineIndex],
+        startLineIndex: 0,
+        startStringIndex: lengthAtIndex[0],
         endLineIndex,
         preferredInterpolationFormat: this.preferredInterpolationFormat,
 
