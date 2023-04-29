@@ -2,6 +2,7 @@ import { parse } from "../src/index";
 import { nthEvent } from "./testUtilities";
 import path from "path";
 import { readFileSync } from "fs";
+import { set } from "../src/utilities/header";
 
 const small = () => readFileSync(path.resolve("./", "tests/big.mw"), "utf-8");
 
@@ -182,12 +183,105 @@ now: event`);
   });
 });
 
-describe("Programmatic editing", () => {
-  const mw = `title: this is the title
+const replace = (
+  originalString: string,
+  toInsert?: { from: number; insert: string; to?: number }
+) =>
+  toInsert
+    ? originalString.substring(0, toInsert.from) +
+      toInsert.insert +
+      (toInsert.to ? originalString.substring(toInsert.to) : 0)
+    : originalString;
+
+describe.only("Programmatic editing", () => {
+  test("can overwrite string", () => {
+    const mw = `title: this is the title
 description: This is the description
 objectAsValue:
   aKey: value
   notherKey: v
-`
+`;
 
-})
+    const toInsert = set(mw, "description", "new description");
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: new description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`);
+  });
+
+  test("can overwrite object with object", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`;
+
+    const toInsert = set(mw, "objectAsValue", { neato: "cool" });
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  neato: cool
+`);
+  });
+
+  test("can overwrite interior object with object", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+key: v
+`;
+
+    const toInsert = set(mw, "objectAsValue", {
+      neato: "cool",
+      other: "thing",
+    });
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  neato: cool
+  other: thing
+key: v
+`);
+  });
+
+  test("can overwrite interior object with string", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+key: v
+`;
+
+    const toInsert = set(mw, "objectAsValue", "hi");
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue: hi
+key: v
+`);
+  });
+
+  test("can overwrite interior nested object", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+key: v
+`;
+
+    const toInsert = set(mw, "objectAsValue.aKey", "hi");
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: hi
+key: v
+`);
+  });
+});

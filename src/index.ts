@@ -60,7 +60,7 @@ export function parseHeader(timelineString: string) {
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
   const context = new ParsingContext();
   const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context);
-  return { ...context, headerEndLineIndex };
+  return { ...context, lines, lengthAtIndex, headerEndLineIndex };
 }
 
 export function parseTimeline(
