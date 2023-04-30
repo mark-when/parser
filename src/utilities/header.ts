@@ -31,8 +31,14 @@ export function set(
   value: string | Object | string[] | Object[] | undefined
 ) {
   const path = key.split(".");
-  const { header, ranges, foldables, headerEndLineIndex, lines } =
-    parseHeader(mw);
+  const {
+    header,
+    ranges,
+    foldables,
+    headerEndLineIndex,
+    lines,
+    lengthAtIndex: origLengthAtIndex,
+  } = parseHeader(mw);
 
   let indentation = 0;
   let searchRange: SearchRange = {
@@ -40,25 +46,24 @@ export function set(
     endLine: 0,
   };
 
-  let headerStartIndex = 0,
-    headerEndIndex = 0;
+  let headerlines: string[] = [];
+  let offset = 0;
   for (const foldable of Object.values(foldables)) {
     if (foldable.type === "header") {
+      headerlines = lines.slice(foldable.startLine, headerEndLineIndex);
       searchRange = {
-        startLine: foldable.startLine,
-        endLine: headerEndLineIndex,
+        startLine: 0,
+        endLine: headerlines.length,
       };
-      headerStartIndex = foldable.startIndex!;
-      headerEndIndex = foldable.endIndex;
+      offset = origLengthAtIndex[foldable.startLine];
       break;
     }
   }
 
-  const headerlines = lines.slice(searchRange.startLine, searchRange.endLine);
   const lengthAtIndex: number[] = [];
   for (let i = 0; i < headerlines.length; i++) {
     if (i === 0) {
-      lengthAtIndex.push(0);
+      lengthAtIndex.push(offset);
     }
     lengthAtIndex.push(
       1 + headerlines[i].length + lengthAtIndex[lengthAtIndex.length - 1] || 0
@@ -78,12 +83,12 @@ export function set(
     if (obj[key]) {
       const from = findLine(
         headerlines,
-        new RegExp(`\\s{${indentation}}${key}`),
+        new RegExp(`^\\s{${indentation * 2}}${key}`),
         searchRange
       );
       const to = findLine(
         headerlines,
-        new RegExp(`^\\s{0,${indentation}}\\w+`),
+        new RegExp(`^\\s{0,${indentation * 2}}\\w+`),
         {
           startLine: from + 1,
           endLine: searchRange.endLine,
@@ -108,6 +113,7 @@ export function set(
       return {
         insert: stringToInsert(),
         from: lengthAtIndex[searchRange.endLine],
+        to: lengthAtIndex[searchRange.endLine],
       };
     }
     obj = obj[key];

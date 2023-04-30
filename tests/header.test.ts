@@ -185,7 +185,7 @@ now: event`);
 
 const replace = (
   originalString: string,
-  toInsert?: { from: number; insert: string; to?: number }
+  toInsert?: { from: number; insert: string; to: number }
 ) =>
   toInsert
     ? originalString.substring(0, toInsert.from) +
@@ -193,7 +193,7 @@ const replace = (
       (toInsert.to ? originalString.substring(toInsert.to) : 0)
     : originalString;
 
-describe.only("Programmatic editing", () => {
+describe("Programmatic editing", () => {
   test("can overwrite string", () => {
     const mw = `title: this is the title
 description: This is the description
@@ -282,6 +282,65 @@ description: This is the description
 objectAsValue:
   aKey: hi
 key: v
+`);
+  });
+
+  test("works with three dash syntax", () => {
+    const mw = `
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+key: v
+---
+`;
+
+    const toInsert = set(mw, "objectAsValue.aKey", { so: "this is christmas" });
+    expect(replace(mw, toInsert)).toBe(`
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    so: this is christmas
+key: v
+---
+`);
+  });
+
+  test("works with three dash syntax", () => {
+    const mw = `
+
+
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+key: v
+
+`;
+
+    const toInsert = set(mw, "objectAsValue.aKey.whimsy", { so: "this is christmas" });
+    expect(replace(mw, toInsert)).toBe(`
+
+
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+    whimsy:
+      so: this is christmas
+key: v
+
 `);
   });
 });
