@@ -388,7 +388,6 @@ export interface Timeline {
   header: any;
   head?: SomeNode;
   tail?: SomeNode;
-  tags: Tags;
   ids: IdedEvents;
   metadata: TimelineMetadata;
 }
@@ -399,7 +398,6 @@ export function emptyTimeline(): Timeline {
     events: new Node([]),
     ranges: [],
     foldables: [],
-    tags: {},
     ids: {},
     header: { dateFormat: AMERICAN_DATE_FORMAT },
     metadata: {

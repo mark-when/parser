@@ -27,7 +27,6 @@ export class ParsingContext {
   tail?: SomeNode;
   currentPath: Path;
 
-  tags: Tags;
   ids: IdedEvents;
   title: string | undefined;
   description: string | undefined;
@@ -46,7 +45,6 @@ export class ParsingContext {
 
   constructor() {
     this.events = new Node([]);
-    this.tags = {};
     this.ids = {};
     this.paletteIndex = 0;
     this.earliest = undefined;
@@ -139,7 +137,6 @@ export class ParsingContext {
       events: this.events,
       head: this.head,
       tail: this.tail,
-      tags: this.tags,
       ids: this.ids,
       ranges: this.ranges,
       foldables: this.foldables,

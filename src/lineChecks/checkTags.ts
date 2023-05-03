@@ -51,9 +51,6 @@ export function checkTags(
   const matches = line.matchAll(TAG_REGEX);
   if (matches) {
     for (let m of matches) {
-      if (!context.tags[m[1]]) {
-        context.tags[m[1]] = COLORS[context.paletteIndex++ % COLORS.length];
-      }
       const indexOfTag = line.indexOf("#" + m[1]);
       const from = lengthAtIndex[i] + indexOfTag;
       context.ranges.push({
@@ -68,7 +65,7 @@ export function checkTags(
           line: i,
           index: indexOfTag + m[1].length + 1,
         },
-        content: { tag: m[1], color: context.tags[m[1]] },
+        content: { tag: m[1] },
       });
     }
   }

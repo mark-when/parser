@@ -14,16 +14,16 @@ export function checkTagColors(
     const tagName = tagColorMatch[1];
     const colorDef = tagColorMatch[2];
     const humanColorIndex = HUMAN_COLORS.indexOf(colorDef);
-    if (humanColorIndex === -1) {
-      const rgb = hexToRgb(colorDef);
-      if (rgb) {
-        context.tags[tagName] = rgb;
-      } else {
-        context.tags[tagName] = COLORS[context.paletteIndex++ % COLORS.length];
-      }
-    } else {
-      context.tags[tagName] = COLORS[humanColorIndex];
-    }
+    // if (humanColorIndex === -1) {
+    //   const rgb = hexToRgb(colorDef);
+    //   if (rgb) {
+    //     context.tags[tagName] = rgb;
+    //   } else {
+    //     context.tags[tagName] = COLORS[context.paletteIndex++ % COLORS.length];
+    //   }
+    // } else {
+    //   context.tags[tagName] = COLORS[humanColorIndex];
+    // }
     const indexOfTag = line.indexOf(tagName);
     const from = lengthAtIndex[i] + indexOfTag - 1;
     context.ranges.push({
@@ -38,7 +38,7 @@ export function checkTagColors(
         line: i,
         index: indexOfTag + tagName.length,
       },
-      content: { tag: tagName, color: context.tags[tagName] },
+      content: { tag: tagName },
     });
 
     const indexOfColorDefPlusLength = line.indexOf(colorDef) + colorDef.length;
@@ -54,7 +54,7 @@ export function checkTagColors(
         line: i,
         index: indexOfTag - 1 + indexOfColorDefPlusLength,
       },
-      content: { tag: tagName, color: context.tags[tagName] },
+      content: { tag: tagName },
     });
     return true;
   }
