@@ -6,14 +6,14 @@ import {
   RangeType,
 } from "./Types.js";
 import { checkComments } from "./lineChecks/checkComments.js";
-import { checkTagColors } from "./lineChecks/checkTagColors.js";
 import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   GROUP_START_REGEX,
 } from "./regex.js";
 import { Caches } from "./Cache.js";
-import { DateTime } from "luxon";
+import { parseZone } from "./zones/parseZone.js";
+import { checkHeaderTags } from "./lineChecks/checkTags.js";
 
 const stringEmailListToArray = (s: string) =>
   s
@@ -89,13 +89,8 @@ export function parseHeader(
       lengthAtIndex,
       context
     );
-    const isTagColor = checkTagColors(
-      line,
-      headerEndLineIndex,
-      lengthAtIndex,
-      context
-    );
-    if (!isComment && !isTagColor) {
+    if (!isComment) {
+      line = checkHeaderTags(line, headerEndLineIndex, lengthAtIndex, context);
       headerLines.push(line);
     }
     if (!isComment && !isThreeDash) {
@@ -169,35 +164,7 @@ export function parseHeader(
     if (parsedHeader.edit && typeof parsedHeader.edit === "string") {
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
-    if (typeof parsedHeader.timezone !== "undefined") {
-      const tz = `${parsedHeader.timezone}`;
-      const cached = cache?.zones.get(tz);
-      if (cached) {
-        context.timezone = cached;
-      } else {
-        const formats = ["z", "ZZZ", "ZZ", "Z"] as const;
-        let zoneDateTime: DateTime;
-        for (const format of formats) {
-          zoneDateTime = DateTime.fromFormat(tz, format, { setZone: true });
-          if (zoneDateTime.isValid && zoneDateTime.zone.isValid) {
-            cache?.zones.set(tz, zoneDateTime.zone);
-            context.timezone = zoneDateTime.zone;
-            break;
-          }
-          if (format !== "z") {
-            // try with a plus appended in case the yaml parser turned it into a number
-            zoneDateTime = DateTime.fromFormat(`+${tz}`, format, {
-              setZone: true,
-            });
-            if (zoneDateTime.isValid && zoneDateTime.zone.isValid) {
-              cache?.zones.set(tz, zoneDateTime.zone);
-              context.timezone = zoneDateTime.zone;
-              break;
-            }
-          }
-        }
-      }
-    }
+    parseZone(parsedHeader, context, cache);
     // We're only going to push our ranges if the parsing was successful
     context.ranges.push(...headerRanges);
     context.header = parsedHeader;

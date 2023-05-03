@@ -21,8 +21,8 @@ edit: email@example.com`);
 
   test("Multiple editors separated by commas", () => {
     const mw = parse(`
-    title: this is the title
-    edit: email@example.com, other@example.com`);
+title: this is the title
+edit: email@example.com, other@example.com`);
 
     const header = mw.timelines[0].header;
     expect(header.title).toBe("this is the title");
@@ -34,10 +34,10 @@ edit: email@example.com`);
 
   test("Multiple editors via yaml", () => {
     const mw = parse(`
-    title: this is the title
-    edit: 
-      - email@example.com
-      - other@example.com`);
+title: this is the title
+edit: 
+  - email@example.com
+  - other@example.com`);
 
     const header = mw.timelines[0].header;
     expect(header.title).toBe("this is the title");
@@ -49,11 +49,11 @@ edit: email@example.com`);
 
   test("More editors via yaml", () => {
     const mw = parse(`
-    title: this is the title
-    edit: 
-      - email@example.com
-      - other@example.com
-      - another@email.com`);
+title: this is the title
+edit: 
+  - email@example.com
+  - other@example.com
+  - another@email.com`);
 
     const header = mw.timelines[0].header;
     expect(header.title).toBe("this is the title");
@@ -68,13 +68,12 @@ edit: email@example.com`);
 describe("Random items in header", () => {
   test("1", () => {
     const mw = parse(`
-    key: value
-    otherKey: otherValue
-    
-    
-    thirdKey:
-      fourthKey:
-        fifthKey: value`);
+key: value
+otherKey: otherValue
+
+thirdKey:
+  fourthKey:
+    fifthKey: value`);
 
     const header = mw.timelines[0].header;
     expect(header.key).toBe("value");
@@ -82,26 +81,26 @@ describe("Random items in header", () => {
     expect(header.thirdKey.fourthKey.fifthKey).toBe("value");
   });
 
-  describe("small header", () => {
+  test("small header", () => {
     const mw = parse(small());
 
-    expect(Object.keys(mw.timelines[0].header).length).toBe(2);
+    expect(Object.keys(mw.timelines[0].header).length).toBe(45);
   });
 });
 
 describe("Tags are correctly parsed", () => {
   test("1", () => {
     const mw = parse(`
-    #tag1: #abc
-    #tag2: red
-    #education: white
-    
-    title: Title
-    arbitraryThing:
-      - one
-      - two
-      
-    now: event`);
+title: Title
+arbitraryThing:
+  - one
+  - two
+
+#tag1: #abc
+#tag2: red
+#education: white
+
+now: event`);
 
     const tags = mw.timelines[0].tags;
     expect(Object.keys(tags).length).toBe(3);
@@ -163,23 +162,18 @@ arbitraryThing:
   - one
   - two
   
----
-
-
-_-_-_break_-_-_
-
 title: Page 2 title
 #page2tag: blue
 
 arbEntry: value
-
+---
 now: event`);
 
     let headerFoldable = mw.timelines[0].foldables[2];
     expect(headerFoldable).toBeTruthy();
     expect(headerFoldable.type).toBe("header");
     expect(headerFoldable.foldStartIndex).toBe(5);
-    expect(headerFoldable.endIndex).toBe(95);
+    expect(headerFoldable.endIndex).toBe(148);
   });
 });
 
