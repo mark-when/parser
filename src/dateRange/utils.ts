@@ -58,6 +58,7 @@ import {
   DateTimeGranularity,
 } from "../Types.js";
 import { Caches } from "../Cache.js";
+import { parseZone } from "../zones/parseZone.js";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,

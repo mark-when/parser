@@ -1,6 +1,6 @@
 import { DateTime, SystemZone, Zone } from "luxon";
 import { NodeArray, SomeNode, Node } from "./Node.js";
-import { push } from "./Noder.js";
+import { get, isEventNode, push } from "./Noder.js";
 import {
   Path,
   Tags,
@@ -10,6 +10,8 @@ import {
   Timeline,
   Range,
 } from "./Types.js";
+import { parseZone } from "./zones/parseZone.js";
+import { Caches } from "./Cache.js";
 
 export interface Foldable {
   endIndex: number;
@@ -41,7 +43,7 @@ export class ParsingContext {
   ranges: Range[];
   preferredInterpolationFormat: string | undefined;
   header: any;
-  timezone: Zone;
+  timezoneStack: Zone[];
 
   constructor() {
     this.events = new Node([]);
@@ -55,7 +57,11 @@ export class ParsingContext {
     this.foldableSections = [];
     this.ranges = [];
     this.header = { dateFormat: AMERICAN_DATE_FORMAT };
-    this.timezone = new SystemZone();
+    this.timezoneStack = [new SystemZone()];
+  }
+
+  public get timezone(): Zone {
+    return this.timezoneStack[this.timezoneStack.length - 1];
   }
 
   currentFoldableSection() {
@@ -116,8 +122,26 @@ export class ParsingContext {
     this.currentPath = path;
   }
 
-  endCurrentGroup(to: number, lineTo: Line) {
+  endCurrentGroup(to: number, lineTo: Line, cache?: Caches) {
     this.currentPath.pop();
+    // Pop timezone if necessary
+    if (this.timezoneStack.length > 1) {
+      const group = get(this.events, this.currentPath);
+      if (group && !isEventNode(group)) {
+        const lastTagsDefinitionInHeader =
+          group.tags?.length &&
+          this.header[`)${group.tags[group.tags.length - 1]}`];
+        if (
+          typeof lastTagsDefinitionInHeader === "object" &&
+          typeof lastTagsDefinitionInHeader.timezone !== "undefined"
+        ) {
+          const zone = parseZone(lastTagsDefinitionInHeader.timezone, cache);
+          if (zone && this.timezone.equals(zone)) {
+            this.timezoneStack.pop();
+          }
+        }
+      }
+    }
     // Assign text range
     // const group = this.events.get(this.currentPath) as Node<NodeArray>;
     // group.rangeInText!.lineTo = lineTo;

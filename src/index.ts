@@ -74,7 +74,7 @@ export function parseTimeline(
 
   for (let i = headerEndLineIndex; i < lines.length; i++) {
     const line = lines[i];
-    if (checkNonEvents(line, i, lengthAtIndex, context)) {
+    if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
       continue;
     }
 

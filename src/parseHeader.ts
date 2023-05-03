@@ -12,7 +12,7 @@ import {
   GROUP_START_REGEX,
 } from "./regex.js";
 import { Caches } from "./Cache.js";
-import { parseZone } from "./zones/parseZone.js";
+import { parseTopLevelHeaderZone } from "./zones/parseZone.js";
 import { checkHeaderTags } from "./lineChecks/checkTags.js";
 
 const stringEmailListToArray = (s: string) =>
@@ -164,7 +164,7 @@ export function parseHeader(
     if (parsedHeader.edit && typeof parsedHeader.edit === "string") {
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
-    parseZone(parsedHeader, context, cache);
+    parseTopLevelHeaderZone(parsedHeader, context, cache);
     // We're only going to push our ranges if the parsing was successful
     context.ranges.push(...headerRanges);
     context.header = parsedHeader;

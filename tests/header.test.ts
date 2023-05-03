@@ -84,7 +84,7 @@ thirdKey:
   test("small header", () => {
     const mw = parse(small());
 
-    expect(Object.keys(mw.timelines[0].header).length).toBe(45);
+    expect(Object.keys(mw.timelines[0].header).length).toBe(46);
   });
 });
 
@@ -102,16 +102,16 @@ arbitraryThing:
 
 now: event`);
 
-    const tags = mw.timelines[0].tags;
-    expect(Object.keys(tags).length).toBe(3);
     expect(mw.timelines[0].header.title).toBe("Title");
     expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
+    expect(mw.timelines[0].header[")tag1"]).toBe(")abc");
+    expect(mw.timelines[0].header[")tag2"]).toBe("red");
+    expect(mw.timelines[0].header[")education"]).toBe("white");
     expect(nthEvent(mw, 0).dateText).toBe("now");
   });
-});
 
-test("can use three dashes", () => {
-  const mw = parse(`
+  test("can use three dashes", () => {
+    const mw = parse(`
 ---
 #tag1: #abc
 #tag2: red
@@ -125,11 +125,13 @@ arbitraryThing:
 
 now: event`);
 
-  const tags = mw.timelines[0].tags;
-  expect(Object.keys(tags).length).toBe(3);
-  expect(mw.timelines[0].header.title).toBe("Title");
-  expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
-  expect(nthEvent(mw, 0).dateText).toBe("now");
+    const header = mw.timelines[0].header;
+    // 5 plus dateFormat
+    expect(Object.keys(header).length).toBe(6);
+    expect(mw.timelines[0].header.title).toBe("Title");
+    expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
+    expect(nthEvent(mw, 0).dateText).toBe("now");
+  });
 });
 
 describe("Folding and ranges", () => {
@@ -321,7 +323,9 @@ key: v
 
 `;
 
-    const toInsert = set(mw, "objectAsValue.aKey.whimsy", { so: "this is christmas" });
+    const toInsert = set(mw, "objectAsValue.aKey.whimsy", {
+      so: "this is christmas",
+    });
     expect(replace(mw, toInsert)).toBe(`
 
 

@@ -1,6 +1,6 @@
 import { DateTime, IANAZone, SystemZone } from "luxon";
 import { toDateRange } from "../src/Types";
-import { firstEvent, sp } from "./testUtilities";
+import { firstEvent, nthEvent, sp } from "./testUtilities";
 
 describe("timezones", () => {
   test.each(sp())("timezone works", (p) => {
@@ -61,11 +61,59 @@ describe("timezones", () => {
     expect(diff).toEqual(-1);
   });
 
-  test.each(sp())('relative dates with zones', (p) => {
+  test.each(sp())("relative dates with zones", (p) => {
     const mw = `timezone: -05:00
     2023-05-01: event
     5 days: event
-    `
+    `;
+  });
 
-  })
+  describe("zones via tags", () => {
+    test.each(sp())("zone via tag is parsed correctly", (p) => {
+      const mw = `
+timezone: America/New_York
+#generalGrievous:
+  timezone: +0
+  
+2023-05-01: this is an event in the ny timezone
+
+2023-05-01: this is an event in the UK timezone
+
+#generalGrievous`;
+
+      const timelines = p(mw);
+
+      const ny = DateTime.fromISO(
+        firstEvent(timelines).dateRangeIso.fromDateTimeIso
+      );
+      const uk = DateTime.fromISO(
+        nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
+      );
+      expect(+ny.minus({ hours: 5 })).toBe(+uk);
+    });
+  });
+
+  test.only.each(sp())("zone via group tag is parsed correctly", (p) => {
+    const mw = `
+timezone: America/New_York
+#generalGrievous:
+  timezone: +0
+
+group #generalGrievous 
+2023-05-01: this is an event in the UK timezone
+endGroup
+2023-05-01: this is an event in the UK timezone
+
+#generalGrievous`;
+
+    const timelines = p(mw);
+
+    const ny = DateTime.fromISO(
+      firstEvent(timelines).dateRangeIso.fromDateTimeIso
+    );
+    const uk = DateTime.fromISO(
+      nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
+    );
+    expect(+ny.minus({ hours: 5 })).toBe(+uk);
+  });
 });

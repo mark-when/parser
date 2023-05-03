@@ -1,3 +1,4 @@
+import { Caches } from "../Cache.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkComments } from "./checkComments.js";
 import { checkGroupEnd } from "./checkGroupEnd.js";
@@ -8,12 +9,10 @@ export function checkNonEvents(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext
+  context: ParsingContext,
+  cache?: Caches
 ): boolean {
-  return [
-    checkComments,
-    checkTags,
-    checkGroupStart,
-    checkGroupEnd,
-  ].some((f) => f(line, i, lengthAtIndex, context));
+  return [checkComments, checkTags, checkGroupStart, checkGroupEnd].some((f) =>
+    f(line, i, lengthAtIndex, context, cache)
+  );
 }
