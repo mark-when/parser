@@ -120,9 +120,3 @@ export function set(
     indentation++;
   }
 }
-
-export function push(
-  mw: string,
-  headerKey: string,
-  headerValue: string | Object | string[] | Object[]
-) {}
