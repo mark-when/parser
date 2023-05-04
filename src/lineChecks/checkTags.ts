@@ -1,5 +1,4 @@
 import { ParsingContext } from "../ParsingContext.js";
-import { COLORS } from "../ColorUtils.js";
 import { TAG_REGEX } from "../regex.js";
 import { RangeType } from "../Types.js";
 
@@ -32,6 +31,9 @@ export function checkHeaderTags(
           line: i,
           index: offset + preHashWhitespace.length + 1 + tagName.length,
         },
+        content: {
+          tag: tagName
+        }
       });
     }
 

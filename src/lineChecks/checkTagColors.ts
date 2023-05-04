@@ -1,5 +1,4 @@
 import { ParsingContext } from "../ParsingContext.js";
-import { HUMAN_COLORS, hexToRgb, COLORS } from "../ColorUtils.js";
 import { TAG_COLOR_REGEX } from "../regex.js";
 import { RangeType } from "../Types.js";
 
@@ -13,7 +12,7 @@ export function checkTagColors(
   if (tagColorMatch) {
     const tagName = tagColorMatch[1];
     const colorDef = tagColorMatch[2];
-    const humanColorIndex = HUMAN_COLORS.indexOf(colorDef);
+    // const humanColorIndex = HUMAN_COLORS.indexOf(colorDef);
     // if (humanColorIndex === -1) {
     //   const rgb = hexToRgb(colorDef);
     //   if (rgb) {
