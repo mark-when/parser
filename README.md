@@ -2,7 +2,7 @@
 
 Parse markwhen documents. Outputs a list of events given plain text.
 
-See [markwhen.com](https://markwhen.com) and [the documentation](https://docs.markwhen.com).
+See [markwhen.com](https://markwhen.com), [the documentation](https://docs.markwhen.com), and the [changelog](./CHANGELOG.md).
 
 ```js
 import { parse } from "@markwhen/parser";
@@ -34,15 +34,19 @@ output:
       ids: {},
       ranges: [Array],
       foldables: {},
-      metadata: [Object]
-    },
-    {
-      events: [Array],
-      tags: {},
-      ids: {},
-      ranges: [Array],
-      foldables: {},
-      metadata: [Object]
+      metadata: [Object],
+      header: {
+        title: "this is my title",
+        timezone: "America/New_York"
+        // Note that for compatability with the embedded yaml parser 
+        // as well as how markwhen uses comments (two slashes),
+        // entries in the header that start with a hash `#` will 
+        // replace the hash with a right paren `)`
+        )neat: {
+          color: "blue",
+          timezone: -3
+        }
+      }
     }
   ]
 }

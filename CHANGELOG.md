@@ -1,3 +1,6 @@
+## 0.8.8
+- Add support for timezone specification via the header
+
 ## 0.7.0
 - Remove support for pages
 
