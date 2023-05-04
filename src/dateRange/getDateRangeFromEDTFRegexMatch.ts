@@ -119,8 +119,8 @@ export function getDateRangeFromEDTFRegexMatch(
       context.ranges.push(colonRange(RangeType.DateRangeColon));
     }
     const dateRange = new DateRangePart(
-      DateTime.fromISO(cached.fromDateTimeIso),
-      DateTime.fromISO(cached.toDateTimeIso),
+      DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
+      DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
       datePart,
       dateRangeInText,
       eventStartLineRegexMatch[edtfEventTextMatchIndex],
@@ -136,7 +136,7 @@ export function getDateRangeFromEDTFRegexMatch(
   let canCacheRange = true;
 
   if (edtfFrom) {
-    fromDateTime = DateTime.fromISO(edtfFrom, { zone: context.timezone });
+    fromDateTime = DateTime.fromISO(edtfFrom, { setZone: true, zone: context.timezone });
     granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
   } else if (relativeFromDate) {
     // Dependent on other event
@@ -242,7 +242,8 @@ export function getDateRangeFromEDTFRegexMatch(
           },
           context,
           cache
-        )
+        ),
+        { setZone: true, zone: context.timezone }
       );
     }
   }
@@ -256,7 +257,8 @@ export function getDateRangeFromEDTFRegexMatch(
         },
         context,
         cache
-      )
+      ),
+      { setZone: true, zone: context.timezone }
     );
   }
 

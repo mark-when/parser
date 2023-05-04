@@ -421,7 +421,10 @@ export function roundDateUp(
     return s;
   };
 
-  const dt = DateTime.fromISO(granularDateTime.dateTimeIso);
+  const dt = DateTime.fromISO(granularDateTime.dateTimeIso, {
+    setZone: true,
+    zone: context.timezone,
+  });
   if (!dt.isValid) {
     return cacheAndReturn(granularDateTime.dateTimeIso);
   }

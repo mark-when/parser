@@ -71,7 +71,7 @@ describe("timezones", () => {
   describe("zones via tags", () => {
     test.each(sp())("zone via tag is parsed correctly", (p) => {
       const mw = `
-timezone: America/New_York
+timezone: +5
 #generalGrievous:
   timezone: +0
   
@@ -89,13 +89,14 @@ timezone: America/New_York
       const uk = DateTime.fromISO(
         nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
       );
-      expect(+ny.minus({ hours: 5 })).toBe(+uk);
+      const diff = ny.diff(uk).as("hours");
+      expect(diff).toBe(-5);
     });
   });
 
-  test.only.each(sp())("zone via group tag is parsed correctly", (p) => {
+  test.each(sp())("zone via group tag", (p) => {
     const mw = `
-timezone: America/New_York
+timezone: +5
 #generalGrievous:
   timezone: +0
 
@@ -108,12 +109,65 @@ endGroup
 
     const timelines = p(mw);
 
-    const ny = DateTime.fromISO(
+    const uk1 = DateTime.fromISO(
       firstEvent(timelines).dateRangeIso.fromDateTimeIso
     );
-    const uk = DateTime.fromISO(
+    const uk2 = DateTime.fromISO(
       nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
     );
-    expect(+ny.minus({ hours: 5 })).toBe(+uk);
+    const diff = uk1.diff(uk2).as("hours");
+    expect(diff).toBe(0);
+  });
+
+  test.each(sp())("nested zones via group tag", (p) => {
+    const mw = `
+timezone: +5
+
+#generalGrievous:
+  timezone: +0
+
+#t:
+  timezone: -5
+
+group #generalGrievous
+
+group #t
+
+2023-05-01: this is an event in asia or something
+
+2023-05-01: this is an event in the  uk timezone
+#generalGrievous
+
+endGroup
+
+endGroup
+
+2023-05-01: this is an event in the UK timezone
+
+#generalGrievous
+
+
+2023-05-01: this `;
+
+    const timelines = p(mw);
+
+    const asia = DateTime.fromISO(
+      firstEvent(timelines).dateRangeIso.fromDateTimeIso
+    );
+    const uk1 = DateTime.fromISO(
+      nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
+    );
+    const uk2 = DateTime.fromISO(
+      nthEvent(timelines, 2).dateRangeIso.fromDateTimeIso
+    );
+    const diff = uk1.diff(uk2).as("hours");
+    expect(diff).toBe(0);
+
+    expect(asia.diff(uk1).as("hours")).toBe(5);
+
+    const ny = DateTime.fromISO(
+      nthEvent(timelines, 3).dateRangeIso.fromDateTimeIso
+    );
+    expect(asia.diff(ny).as("hours")).toBe(10);
   });
 });

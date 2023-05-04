@@ -148,8 +148,8 @@ export function getDateRangeFromCasualRegexMatch(
       context.ranges.push(colonRange(RangeType.DateRangeColon));
     }
     const dateRange = new DateRangePart(
-      DateTime.fromISO(cached.fromDateTimeIso),
-      DateTime.fromISO(cached.toDateTimeIso),
+      DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
+      DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
       datePart,
       dateRangeInText,
       eventStartLineRegexMatch[eventTextMatchIndex],
@@ -214,6 +214,7 @@ export function getDateRangeFromCasualRegexMatch(
     granularity = "instant";
   } else if (fromCasual) {
     fromDateTime = DateTime.fromISO(fromCasual.dateTimeIso, {
+      setZone: true,
       zone: context.timezone,
     });
     granularity = fromCasual.granularity;
@@ -239,6 +240,7 @@ export function getDateRangeFromCasualRegexMatch(
         const timePart = getTimeFromSlashDateFrom(eventStartLineRegexMatch);
         const timePartDateTime = DateTime.fromISO(timePart.dateTimeIso);
         fromDateTime = DateTime.fromISO(parsed.dateTimeIso, {
+          setZone: true,
           zone: context.timezone,
         }).set({
           hour: timePartDateTime.hour,
@@ -247,6 +249,7 @@ export function getDateRangeFromCasualRegexMatch(
         granularity = timePart.granularity;
       } else {
         fromDateTime = DateTime.fromISO(parsed.dateTimeIso, {
+          setZone: true,
           zone: context.timezone,
         });
         granularity = parsed.granularity;
@@ -271,6 +274,7 @@ export function getDateRangeFromCasualRegexMatch(
     );
     const priorEventDate = getPriorEventToDateTime(context) || DateTime.now();
     const timeFromIso = DateTime.fromISO(timeFrom.dateTimeIso, {
+      setZone: true,
       zone: context.timezone,
     });
     let priorEventWithParsedTime = priorEventDate.set({
@@ -289,7 +293,10 @@ export function getDateRangeFromCasualRegexMatch(
     fromDateTime = context.now.setZone(context.timezone);
     granularity = "instant";
   } else {
-    fromDateTime = DateTime.fromISO(eventStartDate, { zone: context.timezone });
+    fromDateTime = DateTime.fromISO(eventStartDate, {
+      zone: context.timezone,
+      setZone: true,
+    });
     granularity = "instant";
   }
 
@@ -314,7 +321,10 @@ export function getDateRangeFromCasualRegexMatch(
       }
       endDateTime = RelativeDate.from(eventEndDate, relativeTo);
     } else if (toCasual) {
-      endDateTime = DateTime.fromISO(roundDateUp(toCasual, context, cache));
+      endDateTime = DateTime.fromISO(roundDateUp(toCasual, context, cache), {
+        setZone: true,
+        zone: context.timezone,
+      });
     } else if (slashDateTo) {
       const timeComponent =
         eventStartLineRegexMatch[to_slashDateTimeMatchIndex];
@@ -334,9 +344,15 @@ export function getDateRangeFromCasualRegexMatch(
       );
       if (parsed) {
         if (timeComponent) {
-          const parsedFromIso = DateTime.fromISO(parsed.dateTimeIso);
+          const parsedFromIso = DateTime.fromISO(parsed.dateTimeIso, {
+            setZone: true,
+            zone: context.timezone,
+          });
           const timePart = getTimeFromSlashDateTo(eventStartLineRegexMatch);
-          const timePartFromIso = DateTime.fromISO(timePart.dateTimeIso);
+          const timePartFromIso = DateTime.fromISO(timePart.dateTimeIso, {
+            setZone: true,
+            zone: context.timezone,
+          });
           endDateTime = parsedFromIso.set({
             hour: timePartFromIso.hour,
             minute: timePartFromIso.minute,
@@ -349,10 +365,14 @@ export function getDateRangeFromCasualRegexMatch(
               },
               context,
               cache
-            )
+            ),
+            { setZone: true, zone: context.timezone }
           );
         } else {
-          endDateTime = DateTime.fromISO(roundDateUp(parsed, context, cache));
+          endDateTime = DateTime.fromISO(roundDateUp(parsed, context, cache), {
+            setZone: true,
+            zone: context.timezone,
+          });
         }
 
         // Something non-ISO has come up, assume they want that
@@ -369,7 +389,10 @@ export function getDateRangeFromCasualRegexMatch(
         to_timeOnly24HourHourMatchIndex,
         to_timeOnly24HourMinuteMatchIndex
       );
-      const timeToIso = DateTime.fromISO(timeTo.dateTimeIso);
+      const timeToIso = DateTime.fromISO(timeTo.dateTimeIso, {
+        setZone: true,
+        zone: context.timezone,
+      });
       let eventStartWithTimeTo = fromDateTime.set({
         hour: timeToIso.hour,
         minute: timeToIso.minute,
@@ -391,7 +414,8 @@ export function getDateRangeFromCasualRegexMatch(
           },
           context,
           cache
-        )
+        ),
+        { setZone: true, zone: context.timezone }
       );
     }
   }
@@ -404,7 +428,8 @@ export function getDateRangeFromCasualRegexMatch(
         },
         context,
         cache
-      )
+      ),
+      { setZone: true, zone: context.timezone }
     );
   }
 

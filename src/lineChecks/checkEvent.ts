@@ -20,6 +20,7 @@ import { Caches } from "../Cache.js";
 import { Node } from "../Node.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
+import { parseZone } from "../zones/parseZone.js";
 
 function updateParseMetadata(
   event: Event,
@@ -158,6 +159,28 @@ export function checkEvent(
     matchedListItems,
     completed
   );
+
+  // See if we need to adjust things based on our timezone
+  const headerTagDef =
+    eventDescription.tags.length &&
+    context.header[
+      `)${eventDescription.tags[eventDescription.tags.length - 1]}`
+    ];
+  if (
+    typeof headerTagDef === "object" &&
+    typeof headerTagDef.timezone !== "undefined"
+  ) {
+    const zone = parseZone(headerTagDef.timezone, cache);
+    if (zone) {
+      dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
+        keepLocalTime: true,
+      });
+      dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
+        keepLocalTime: true,
+      });
+    }
+  }
+
   const event = new Event(
     line,
     dateRange,
