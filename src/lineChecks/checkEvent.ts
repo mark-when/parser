@@ -67,14 +67,6 @@ function checkCompletion(
       type: RangeType.CheckboxItemIndicator,
       from: dateRange.dateRangeInText.from + from,
       to: dateRange.dateRangeInText.from + to,
-      lineFrom: {
-        line: dateRange.dateRangeInText.lineFrom.line,
-        index: from,
-      },
-      lineTo: {
-        line: dateRange.dateRangeInText.lineFrom.line,
-        index: to,
-      },
       content: completed,
     };
     context.ranges.push(indicator);
@@ -141,14 +133,6 @@ export function checkEvent(
     from: dateRange.dateRangeInText.from,
     to: lengthAtIndex[end],
     type: RangeType.Event,
-    lineFrom: {
-      line: dateRange.dateRangeInText.lineFrom.line,
-      index: dateRange.dateRangeInText.lineFrom.index,
-    },
-    lineTo: {
-      line: i,
-      index: line.length,
-    },
   };
 
   const completed = checkCompletion(dateRange, line, context);

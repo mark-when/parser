@@ -102,9 +102,7 @@ export const checkEdtfRecurrence = (
     type: RangeType.Recurrence,
     from: lengthAtIndex[i] + indexInString,
     to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
-    lineFrom: { line: i, index: indexInString },
-    lineTo: { line: i, index: indexInString + recurrenceMatch.length },
-    content: recurrenceMatch
+    content: recurrenceMatch,
   };
 
   let recurrenceCount: number;
@@ -209,9 +207,7 @@ export const checkRecurrence = (
     type: RangeType.Recurrence,
     from: lengthAtIndex[i] + indexInString,
     to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
-    lineFrom: { line: i, index: indexInString },
-    lineTo: { line: i, index: indexInString + recurrenceMatch.length },
-    content: recurrenceMatch
+    content: recurrenceMatch,
   };
 
   let recurrenceCount: number;

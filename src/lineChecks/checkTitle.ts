@@ -16,14 +16,6 @@ export function checkTitle(
       type: RangeType.Title,
       from: lengthAtIndex[i] + titleTagIndex,
       to: lengthAtIndex[i] + titleTagIndex + titleMatch[1].length,
-      lineFrom: {
-        line: i,
-        index: titleTagIndex,
-      },
-      lineTo: {
-        line: i,
-        index: titleTagIndex + titleMatch[1].length,
-      },
     });
     return true;
   }

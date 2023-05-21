@@ -62,14 +62,6 @@ export function parseHeader(
         type: RangeType.FrontmatterDelimiter,
         from: lengthAtIndex[headerEndLineIndex],
         to: lengthAtIndex[headerEndLineIndex] + 4,
-        lineFrom: {
-          line: headerEndLineIndex,
-          index: 0,
-        },
-        lineTo: {
-          line: headerEndLineIndex,
-          index: 4,
-        },
       };
       threeDashRanges.push(range);
       if (!hasThreeDashStart) {
@@ -101,27 +93,11 @@ export function parseHeader(
           type: RangeType.HeaderKey,
           from: lengthAtIndex[headerEndLineIndex],
           to: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length,
-          lineFrom: {
-            line: headerEndLineIndex,
-            index: 0,
-          },
-          lineTo: {
-            line: headerEndLineIndex,
-            index: keyMatch[1].length,
-          },
         });
         headerRanges.push({
           type: RangeType.HeaderKeyColon,
           from: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length,
           to: lengthAtIndex[headerEndLineIndex] + keyMatch[1].length + 1,
-          lineFrom: {
-            line: headerEndLineIndex,
-            index: keyMatch[1].length,
-          },
-          lineTo: {
-            line: headerEndLineIndex,
-            index: keyMatch[1].length + 1,
-          },
         });
       }
       const valueMatch = line.match(headerValueRegex);
@@ -131,14 +107,6 @@ export function parseHeader(
           type: RangeType.HeaderValue,
           from: lengthAtIndex[headerEndLineIndex] + index,
           to: lengthAtIndex[headerEndLineIndex] + index + valueMatch[0].length,
-          lineFrom: {
-            line: headerEndLineIndex,
-            index,
-          },
-          lineTo: {
-            line: headerEndLineIndex,
-            index: index + valueMatch[0].length,
-          },
         });
       }
     }

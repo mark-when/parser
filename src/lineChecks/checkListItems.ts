@@ -18,14 +18,7 @@ export function checkListItems(
       type: RangeType.CheckboxItemIndicator,
       from,
       to,
-      lineFrom: {
-        line: i,
-        index: 0,
-      },
-      lineTo: {
-        line: i,
-        index: indexInLine,
-      },
+
       content:
         checklistItemMatch.includes("x") || checklistItemMatch.includes("X"),
     };
@@ -33,14 +26,6 @@ export function checkListItems(
       type: RangeType.ListItemContents,
       from: to,
       to: from + line.length - 1,
-      lineFrom: {
-        line: i,
-        index: indexInLine + 1,
-      },
-      lineTo: {
-        line: i,
-        index: line.length,
-      },
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];
@@ -50,27 +35,11 @@ export function checkListItems(
       type: RangeType.listItemIndicator,
       from: lengthAtIndex[i],
       to: from + 1,
-      lineFrom: {
-        line: i,
-        index: 0,
-      },
-      lineTo: {
-        line: i,
-        index: 1,
-      },
     };
     const contents = {
       type: RangeType.ListItemContents,
       from: from,
       to: from + line.length - 1,
-      lineFrom: {
-        line: i,
-        index: 1,
-      },
-      lineTo: {
-        line: 1,
-        index: line.length,
-      },
     };
     context.ranges.push(...[indicator, contents]);
     return [indicator, contents];

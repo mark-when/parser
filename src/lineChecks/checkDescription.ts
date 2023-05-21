@@ -16,14 +16,6 @@ export function checkDescription(
       type: RangeType.Description,
       from: lengthAtIndex[i] + descriptionTagIndex,
       to: lengthAtIndex[i] + descriptionTagIndex + descriptionMatch[1].length,
-      lineFrom: {
-        line: i,
-        index: descriptionTagIndex,
-      },
-      lineTo: {
-        line: i,
-        index: descriptionTagIndex + descriptionMatch[1].length,
-      },
     });
     return true;
   }

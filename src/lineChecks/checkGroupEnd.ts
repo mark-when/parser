@@ -18,14 +18,6 @@ export function checkGroupEnd(
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + line.length,
       type: RangeType.Section,
-      lineFrom: {
-        line: i,
-        index: 0,
-      },
-      lineTo: {
-        line: i,
-        index: line.length,
-      },
     });
     context.endCurrentGroup(
       lengthAtIndex[i] + line.length,

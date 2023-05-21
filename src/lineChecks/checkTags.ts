@@ -23,17 +23,9 @@ export function checkHeaderTags(
         type: RangeType.Tag,
         from,
         to: from + tagName.length + 1,
-        lineFrom: {
-          line: i,
-          index: offset + preHashWhitespace.length,
-        },
-        lineTo: {
-          line: i,
-          index: offset + preHashWhitespace.length + 1 + tagName.length,
-        },
         content: {
-          tag: tagName
-        }
+          tag: tagName,
+        },
       });
     }
 
@@ -59,21 +51,13 @@ export function checkTags(
         type: RangeType.Tag,
         from,
         to: from + m[1].length + 1,
-        lineFrom: {
-          line: i,
-          index: indexOfTag,
-        },
-        lineTo: {
-          line: i,
-          index: indexOfTag + m[1].length + 1,
-        },
         content: { tag: m[1] },
       });
 
       // Add it to the header as a tag, that is, with a right paren
       // instead of hash
-      if (!context.header[')' + m[1]]) {
-        context.header[')' + m[1]] = undefined;
+      if (!context.header[")" + m[1]]) {
+        context.header[")" + m[1]] = undefined;
       }
     }
   }

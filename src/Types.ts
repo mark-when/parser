@@ -319,18 +319,11 @@ export enum RangeType {
   HeaderValue = "headerValue",
 }
 
-export interface Line {
-  line: number;
-  index: number;
-}
-
 export type Range = {
   from: number;
   to: number;
   type: RangeType;
   content?: any;
-  lineFrom: Line;
-  lineTo: Line;
 };
 
 export interface DateRangeIso {

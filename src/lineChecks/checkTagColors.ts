@@ -29,14 +29,6 @@ export function checkTagColors(
       type: RangeType.Tag,
       from,
       to: from + tagName.length + 1,
-      lineFrom: {
-        line: i,
-        index: indexOfTag - 1,
-      },
-      lineTo: {
-        line: i,
-        index: indexOfTag + tagName.length,
-      },
       content: { tag: tagName },
     });
 
@@ -45,14 +37,6 @@ export function checkTagColors(
       type: RangeType.tagDefinition,
       from,
       to: from + indexOfColorDefPlusLength,
-      lineFrom: {
-        line: i,
-        index: indexOfTag - 1,
-      },
-      lineTo: {
-        line: i,
-        index: indexOfTag - 1 + indexOfColorDefPlusLength,
-      },
       content: { tag: tagName },
     });
     return true;

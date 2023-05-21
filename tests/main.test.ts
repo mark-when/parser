@@ -19,7 +19,13 @@ import {
   iterate,
   toArray,
 } from "../src/Noder";
-import { currentYear, firstEvent, nthEvent, sameParse, sp } from "./testUtilities";
+import {
+  currentYear,
+  firstEvent,
+  nthEvent,
+  sameParse,
+  sp,
+} from "./testUtilities";
 
 describe("parsing", () => {
   test.each(sameParse(DateTime.fromISO("2022-05-01T12:13:14.00Z")))(
@@ -1301,7 +1307,9 @@ now - 10 years: an event #1
 1 year: event #2
 3 years: event #third`);
 
-      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(k => k.startsWith(')'));
+      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+        (k) => k.startsWith(")")
+      );
       expect(tagLiterals).toHaveLength(1);
       expect(tagLiterals).toContainEqual(")third");
     });
@@ -1313,10 +1321,12 @@ now - 10 years: an event #1 #3342 #098
 1 year: event #2 #another #tag
 3 years: event #third #fourth #fifth #332334b #5`);
 
-      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(k => k.startsWith(')'));
+      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+        (k) => k.startsWith(")")
+      );
       expect(tagLiterals).toHaveLength(6);
       ["another", "tag", "third", "fourth", "fifth", "332334b"].forEach((i) =>
-        expect(tagLiterals).toContain(')' + i)
+        expect(tagLiterals).toContain(")" + i)
       );
     });
 
@@ -1333,7 +1343,9 @@ now - 10 years: an event #1 #3342 #098
 #fifth #332334b #5
 #other`);
 
-        const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(k => k.startsWith(')'));
+        const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+          (k) => k.startsWith(")")
+        );
         [
           "another",
           "tag",
@@ -1342,7 +1354,7 @@ now - 10 years: an event #1 #3342 #098
           "fifth",
           "332334b",
           "other",
-        ].forEach((i) => expect(tagLiterals).toContain(')' + i));
+        ].forEach((i) => expect(tagLiterals).toContain(")" + i));
       }
     );
   });
@@ -1802,8 +1814,6 @@ describe("ranges", () => {
       (r) => r.type === RangeType.ListItemContents
     );
     expect(listItemContents.length).toBe(3);
-    expect(listItemContents[0].lineFrom.line).toBe(1);
-    expect(listItemContents[0].lineFrom.index).toBe(6);
     expect(listItemContents[0].from).toBe(28);
     expect(listItemContents[0].to).toBe(52);
 
@@ -1856,19 +1866,13 @@ now:  [] some item
     expect(ranges[0].from).toBe(5);
     expect(ranges[0].to).toBe(9);
     expect(ranges[0].content).toBe(false);
-    expect(ranges[0].lineFrom.line).toBe(1);
-    expect(ranges[0].lineFrom.index).toBe(4);
 
     expect(ranges[1].from).toBe(28);
     expect(ranges[1].to).toBe(31);
-    expect(ranges[1].lineFrom.line).toBe(3);
-    expect(ranges[1].lineFrom.index).toBe(7);
     expect(ranges[1].content).toBe(false);
 
     expect(ranges[2].from).toBe(73);
     expect(ranges[2].to).toBe(77);
-    expect(ranges[2].lineFrom.line).toBe(7);
-    expect(ranges[2].lineFrom.index).toBe(7);
     expect(ranges[2].content).toBe(true);
   });
 });

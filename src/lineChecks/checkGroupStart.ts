@@ -20,14 +20,6 @@ export function checkGroupStart(
       from: lengthAtIndex[i],
       to: lengthAtIndex[i] + groupStart[0].length,
       type: RangeType.Section,
-      lineFrom: {
-        line: i,
-        index: 0,
-      },
-      lineTo: {
-        line: i,
-        index: groupStart[0].length,
-      },
     };
     context.ranges.push(range);
 

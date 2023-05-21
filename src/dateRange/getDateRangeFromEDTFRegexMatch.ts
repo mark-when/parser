@@ -80,14 +80,6 @@ export function getDateRangeFromEDTFRegexMatch(
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length,
-    lineFrom: {
-      line: i,
-      index: indexOfDateRange,
-    },
-    lineTo: {
-      line: i,
-      index: indexOfDateRange + datePart.length,
-    },
   };
   context.ranges.push(dateRangeInText);
 
@@ -96,14 +88,6 @@ export function getDateRangeFromEDTFRegexMatch(
     type: rangeType,
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
-    lineFrom: {
-      line: i,
-      index: colonIndex,
-    },
-    lineTo: {
-      line: i,
-      index: colonIndex + 1,
-    },
   });
   const cached = cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
@@ -136,7 +120,10 @@ export function getDateRangeFromEDTFRegexMatch(
   let canCacheRange = true;
 
   if (edtfFrom) {
-    fromDateTime = DateTime.fromISO(edtfFrom, { setZone: true, zone: context.timezone });
+    fromDateTime = DateTime.fromISO(edtfFrom, {
+      setZone: true,
+      zone: context.timezone,
+    });
     granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
   } else if (relativeFromDate) {
     // Dependent on other event

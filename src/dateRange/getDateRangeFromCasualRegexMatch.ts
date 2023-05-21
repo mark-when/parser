@@ -108,14 +108,6 @@ export function getDateRangeFromCasualRegexMatch(
     type: RangeType.DateRange,
     from: lengthAtIndex[i] + indexOfDateRange,
     to: lengthAtIndex[i] + indexOfDateRange + datePart.length,
-    lineFrom: {
-      line: i,
-      index: indexOfDateRange,
-    },
-    lineTo: {
-      line: i,
-      index: indexOfDateRange + datePart.length,
-    },
   };
   context.ranges.push(dateRangeInText);
 
@@ -124,14 +116,6 @@ export function getDateRangeFromCasualRegexMatch(
     type: rangeType,
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
-    lineFrom: {
-      line: i,
-      index: colonIndex,
-    },
-    lineTo: {
-      line: i,
-      index: colonIndex + 1,
-    },
   });
 
   const cached = cache?.zone(context.timezone).ranges.get(datePart);

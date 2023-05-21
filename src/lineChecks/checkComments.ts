@@ -15,14 +15,6 @@ export function checkComments(
       type: RangeType.Comment,
       from,
       to,
-      lineFrom: {
-        line: i,
-        index: 0,
-      },
-      lineTo: {
-        line: i,
-        index: line.length,
-      },
     });
 
     const currentFoldableComment = context.currentFoldableComment();
