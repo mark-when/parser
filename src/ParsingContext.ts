@@ -3,10 +3,8 @@ import { NodeArray, SomeNode, Node } from "./Node.js";
 import { get, isEventNode, push } from "./Noder.js";
 import {
   Path,
-  Tags,
   IdedEvents,
   AMERICAN_DATE_FORMAT,
-  Line,
   Timeline,
   Range,
 } from "./Types.js";
@@ -122,7 +120,11 @@ export class ParsingContext {
     this.currentPath = path;
   }
 
-  endCurrentGroup(to: number, lineTo: Line, cache?: Caches) {
+  endCurrentGroup(
+    to: number,
+    lineTo: { line: number; index: number },
+    cache?: Caches
+  ) {
     this.currentPath.pop();
     // Pop timezone if necessary
     if (this.timezoneStack.length > 1) {

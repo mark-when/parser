@@ -1,3 +1,6 @@
+## 0.9.0
+- Remove lineFrom & lineTo in ranges
+
 ## 0.8.8
 - Add support for timezone specification via the header
 
