@@ -49,11 +49,18 @@ export function parse(
   if (cache === true) {
     cache = new Caches();
   }
+  const parser = {
+    version: "0.9.1",
+  };
   if (!timelineString) {
-    return { timelines: [emptyTimeline()], cache };
+    return { timelines: [emptyTimeline()], cache, parser };
   }
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
-  return { timelines: [parseTimeline(lines, lengthAtIndex, cache)], cache };
+  return {
+    timelines: [parseTimeline(lines, lengthAtIndex, cache)],
+    cache,
+    parser,
+  };
 }
 
 export function parseHeader(timelineString: string) {

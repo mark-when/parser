@@ -409,6 +409,9 @@ export function emptyTimeline(): Timeline {
 export interface Timelines {
   timelines: Timeline[];
   cache?: Caches;
+  parser: {
+    version: string
+  }
 }
 
 export interface EventGroup extends Array<Event | EventGroup> {
