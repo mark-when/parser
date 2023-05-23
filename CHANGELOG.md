@@ -1,3 +1,6 @@
+## 0.9.1
+Add parser version as part of output
+
 ## 0.9.0
 - Remove lineFrom & lineTo in ranges
 
