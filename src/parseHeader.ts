@@ -19,7 +19,10 @@ const stringEmailListToArray = (s: string) =>
   s
     .trim()
     .split(/ |,/)
-    .filter((email) => !!email && email.includes("@"));
+    .filter(
+      (email) =>
+        (!!email && email.includes("@")) || email === "*" || email === "\\*"
+    );
 
 const headerKeyRegex = /^([^:]+)(:)(?:\s|$)/;
 const headerValueRegex = /[^:]+$/;

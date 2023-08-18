@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/mark-when/parser#readme",
   "dependencies": {
+    "ical.js": "^1.5.0",
     "lru-cache": "^7.14.1",
     "luxon": "^3.3.0",
     "yaml": "^2.2.1"

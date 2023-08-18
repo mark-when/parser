@@ -6,6 +6,13 @@ import { checkEvent } from "./lineChecks/checkEvent.js";
 import { ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader as _parseHeader } from "./parseHeader.js";
+import ICAL from "ical.js";
+import { DateTime } from "luxon";
+import {
+  DateFormap,
+  ISOMap,
+  dateRangeToString,
+} from "./utilities/dateRangeToString.js";
 
 export function parseDateRange(
   dateRangeString: string
@@ -99,4 +106,53 @@ export function parseTimeline(
     // As this is the last timeline, return the length of the whole string
     lengthAtIndex[lines.length - 1] + lines[lines.length - 1].length
   );
+}
+
+export function parseICal(
+  ical: string,
+  options?: {
+    output?: "markwhen" | "json";
+    formap?: DateFormap;
+  }
+) {
+  let markwhenText = "";
+  const icalParse = ICAL.parse(ical);
+  const component = new ICAL.Component(icalParse);
+  const vevents = component.getAllSubcomponents("vevent");
+  for (const vevent of vevents) {
+    const event = new ICAL.Event(vevent);
+
+    const timezone =
+      component
+        .getFirstSubcomponent("vtimezone")
+        ?.getFirstPropertyValue<string>("tzid") || "";
+
+    const fromDateTime = timezone
+      ? DateTime.fromISO(event.startDate.toString(), { zone: timezone })
+      : DateTime.fromMillis(event.startDate.toUnixTime() * 1000);
+
+    const toDateTime = timezone
+      ? DateTime.fromISO(event.endDate.toString(), { zone: timezone })
+      : DateTime.fromMillis(event.endDate.toUnixTime() * 1000);
+
+    markwhenText += `${dateRangeToString(
+      {
+        fromDateTime,
+        toDateTime,
+      },
+      options?.formap ?? ISOMap
+    )}: ${event.summary}\n`;
+    if (event.description) {
+      const adjustedDescription = event.description
+        .split("\n")
+        .map((line) => (line.startsWith(". ") ? line : `. ${line}`))
+        .join("\n");
+      markwhenText += `${adjustedDescription}\n\n`;
+    }
+  }
+  if (options?.output === "json") {
+    const result = parse(markwhenText);
+    return result;
+  }
+  return markwhenText;
 }
