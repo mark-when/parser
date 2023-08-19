@@ -145,7 +145,12 @@ export function parseICal(
     if (event.description) {
       const adjustedDescription = event.description
         .split("\n")
-        .map((line) => (line.startsWith(". ") ? line : `. ${line}`))
+        .map((line) => {
+          if (parseDateRange(line)) {
+            return `. ${line}`;
+          }
+          return line;
+        })
         .join("\n");
       markwhenText += `${adjustedDescription}\n\n`;
     }
