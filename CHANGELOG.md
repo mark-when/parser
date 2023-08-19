@@ -1,3 +1,7 @@
+## 0.9.3
+
+- Only prefix lines in descriptions if they would have otherwise been parsed as a date or date range
+
 ## 0.9.2
 
 - Rudimentary ical parsing via [`parseICal`](src/index.ts)
