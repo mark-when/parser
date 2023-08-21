@@ -70,7 +70,19 @@ export function getTimeFromRegExpMatch(
 ): GranularDateTime {
   const timeMeridiemHour = eventStartMatches[meridiemHourIndex];
   const timeMeridiemMinute = eventStartMatches[meridiemMinuteIndex] || ":00";
-  const timeMeridiem = eventStartMatches[meridiemIndex] || "am";
+  let timeMeridiem = eventStartMatches[meridiemIndex];
+  if (!timeMeridiem) {
+    // We're going to do our best guess here
+    const int = parseInt(timeMeridiemHour);
+    if (isNaN(int)) {
+      timeMeridiem = "am";
+    }
+    if (int < 9 || int === 12) {
+      timeMeridiem = "pm";
+    } else {
+      timeMeridiem = "am";
+    }
+  }
 
   if (timeMeridiemHour) {
     return {

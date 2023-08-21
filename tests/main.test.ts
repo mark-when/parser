@@ -1969,6 +1969,17 @@ describe("recurrence", () => {
   });
 });
 
+describe.only("premature year parsing", () => {
+  test.each(sp())("two digits aren't parsed as a year", (p) => {
+    const string = "12: this should be noon";
+    const mw = p(string);
+    const first = nthEvent(mw, 0);
+    const fromDt = DateTime.fromISO(first.dateRangeIso.fromDateTimeIso);
+    expect(fromDt.hour).toBe(12);
+    expect(fromDt.year).toBe(DateTime.now().year);
+  });
+});
+
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)
