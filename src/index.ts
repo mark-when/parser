@@ -14,6 +14,8 @@ import {
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
 
+import * as pack from "../package.json"
+
 export function parseDateRange(
   dateRangeString: string
 ): DateRangePart | undefined {
@@ -57,7 +59,7 @@ export function parse(
     cache = new Caches();
   }
   const parser = {
-    version: "0.9.5",
+    version: pack.version,
   };
   if (!timelineString) {
     return { timelines: [emptyTimeline()], cache, parser };

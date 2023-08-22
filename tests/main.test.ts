@@ -26,6 +26,8 @@ import {
   sameParse,
   sp,
 } from "./testUtilities";
+import { readFileSync } from "fs";
+import path from "path";
 
 describe("parsing", () => {
   test.each(sameParse(DateTime.fromISO("2022-05-01T12:13:14.00Z")))(
@@ -1986,6 +1988,14 @@ describe("premature year parsing", () => {
     const fromDt = DateTime.fromISO(first.dateRangeIso.fromDateTimeIso);
     expect(fromDt.hour).toBe(20);
     expect(fromDt.year).toBe(DateTime.now().year);
+  });
+});
+
+describe("version", () => {
+  test("outputs the right version", () => {
+    const pack = readFileSync(path.resolve("./", "package.json"), "utf-8");
+    const version = JSON.parse(pack).version;
+    expect(parse("").parser.version).toBe(version);
   });
 });
 
