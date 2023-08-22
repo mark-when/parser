@@ -95,7 +95,7 @@ export function getTimeFromRegExpMatch(
   }
 
   const time24HourHour = eventStartMatches[time24HourHourIndex];
-  const time24HourMinute = eventStartMatches[time24HourMinuteIndex];
+  const time24HourMinute = eventStartMatches[time24HourMinuteIndex] || ":00";
   return {
     dateTimeIso: DateTime.fromFormat(
       `${time24HourHour}${time24HourMinute}`,

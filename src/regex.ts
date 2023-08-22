@@ -36,7 +36,7 @@ export const MONTH_FIRST_MONTH_REGEX = new RegExp(
   `(${HUMAN_MONTH_REGEX.source}\\s+([0-3]?[0-9](?!\\d)))`
 );
 export const TIME_REGEX =
-  /((1|2|3|4|5|6|7|8|9|10|11|12)(:\d{2})?([ap]m)?|([012]?[0-9])(:\d{2}))/;
+  /((1|2|3|4|5|6|7|8|9|10|11|12)(:\d{2})?([ap]m)|([012]?[0-9])(:\d{2})?)/;
 export const CASUAL_MONTH_REGEX = new RegExp(
   `(?:(?:${DAY_FIRST_MONTH_REGEX.source}|${MONTH_FIRST_MONTH_REGEX.source}),?(?:\\s+(\\d{4}),?)?(?:\\s+${TIME_REGEX.source})?)|(${HUMAN_MONTH_REGEX.source}(?:\\s+(\\d{1,4}))?)`
 );

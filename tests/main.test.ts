@@ -1969,13 +1969,22 @@ describe("recurrence", () => {
   });
 });
 
-describe.only("premature year parsing", () => {
+describe("premature year parsing", () => {
   test.each(sp())("two digits aren't parsed as a year", (p) => {
     const string = "12: this should be noon";
     const mw = p(string);
     const first = nthEvent(mw, 0);
     const fromDt = DateTime.fromISO(first.dateRangeIso.fromDateTimeIso);
     expect(fromDt.hour).toBe(12);
+    expect(fromDt.year).toBe(DateTime.now().year);
+  });
+
+  test.each(sp())("two digits > 24 aren't parsed as a year", (p) => {
+    const string = "20: this should be 8pm";
+    const mw = p(string);
+    const first = nthEvent(mw, 0);
+    const fromDt = DateTime.fromISO(first.dateRangeIso.fromDateTimeIso);
+    expect(fromDt.hour).toBe(20);
     expect(fromDt.year).toBe(DateTime.now().year);
   });
 });
