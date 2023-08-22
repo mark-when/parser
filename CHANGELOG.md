@@ -1,3 +1,7 @@
+## 0.9.4
+
+- Fix for two digit numbers being parsed as years
+
 ## 0.9.3
 
 - Only prefix lines in descriptions if they would have otherwise been parsed as a date or date range
