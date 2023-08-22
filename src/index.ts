@@ -57,7 +57,7 @@ export function parse(
     cache = new Caches();
   }
   const parser = {
-    version: "0.9.4",
+    version: "0.9.5",
   };
   if (!timelineString) {
     return { timelines: [emptyTimeline()], cache, parser };

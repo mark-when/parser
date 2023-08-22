@@ -1,3 +1,7 @@
+## 0.9.5
+
+- Return the right version
+
 ## 0.9.4
 
 - Fix for two digit numbers being parsed as years
