@@ -1,9 +1,18 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Markwhen parser",
   "type": "module",
   "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./ColorUtils": "./lib/ColorUtils.js",
+    "./Node": "./lib/Node.js",
+    "./Noder": "./lib/Noder.js",
+    "./parseHeader": "./lib/parseHeader.js",
+    "./Sort": "./lib/Sort.js",
+    "./Types": "./lib/Types.js"
+  },
   "scripts": {
     "test": "jest",
     "test:profile": "node --inspect-brk ./node_modules/jest/bin/jest.js",

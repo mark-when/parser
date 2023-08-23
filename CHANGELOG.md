@@ -1,3 +1,7 @@
+## 0.9.7
+
+- Add exports to package.json
+
 ## 0.9.5
 
 - Return the right version
