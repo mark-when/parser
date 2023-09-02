@@ -53,9 +53,12 @@ import {
   toDateRangeIso,
   Timelines,
   Timeline,
-  Range
+  Range,
+  MarkdownBlock
 } from "./Types.js";
 import { expand } from "./utilities/recurrence.js";
+import { COMPLETION_REGEX } from "./regex.js";
+import { Recurrence } from "./dateRange/checkRecurrence.js";
 
 export {
   parse,
@@ -118,5 +121,8 @@ export {
   Timelines,
   Timeline,
   Range,
-  expand
+  expand,
+  COMPLETION_REGEX,
+  Recurrence,
+  MarkdownBlock
 };
