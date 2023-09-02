@@ -1,3 +1,11 @@
+## 0.10.1
+
+- Missed some exports from 0.10.0
+
+## 0.10.0
+
+- Merge all exports to be from index.js
+
 ## 0.9.8
 
 - Fixed bug where some events with times did not have the correct timezone
