@@ -1,3 +1,7 @@
+## 0.10.2
+
+- Missed some exports from 0.10.1
+- 
 ## 0.10.1
 
 - Missed some exports from 0.10.0

@@ -51,7 +51,11 @@ import {
   emptyTimeline,
   toDateRange,
   toDateRangeIso,
+  Timelines,
+  Timeline,
+  Range
 } from "./Types.js";
+import { expand } from "./utilities/recurrence.js";
 
 export {
   parse,
@@ -111,4 +115,8 @@ export {
   DateRange,
   DateRangeIso,
   DateTimeIso,
+  Timelines,
+  Timeline,
+  Range,
+  expand
 };
