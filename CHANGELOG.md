@@ -1,3 +1,7 @@
+## 0.9.8
+
+- Fixed bug where some events with times did not have the correct timezone
+
 ## 0.9.7
 
 - Add exports to package.json
