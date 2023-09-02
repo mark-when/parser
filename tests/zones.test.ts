@@ -1,8 +1,22 @@
-import { DateTime, IANAZone, SystemZone } from "luxon";
+import {
+  DateTime,
+  FixedOffsetZone,
+  IANAZone,
+  Settings,
+  SystemZone,
+} from "luxon";
 import { toDateRange } from "../src/Types";
 import { firstEvent, nthEvent, sp } from "./testUtilities";
 
 describe("timezones", () => {
+  beforeAll(() => {
+    Settings.defaultZone = "utc";
+  });
+
+  afterAll(() => {
+    Settings.defaultZone = new SystemZone();
+  });
+
   test.each(sp())("timezone works", (p) => {
     const nyt = `timezone: +5
     2023-05-01: event`;
@@ -169,5 +183,32 @@ endGroup
       nthEvent(timelines, 3).dateRangeIso.fromDateTimeIso
     );
     expect(asia.diff(ny).as("hours")).toBe(10);
+  });
+
+  test.each(sp())("specific times", (p) => {
+    const mw = `timezone: America/New_York
+Sep 1 2023 21:49: hi`;
+    const timelines = p(mw);
+    const first = firstEvent(timelines).dateRangeIso.fromDateTimeIso;
+
+    expect(
+      +DateTime.fromISO("2023-09-01T21:49:00.000Z").plus({ hours: 4 })
+    ).toBe(+DateTime.fromISO(first));
+  });
+
+  test.each(sp())("casual dates with times", (p) => {
+    const mw = `timezone: America/New_York
+Sep 1 2023 21:49 - Sep 1 2023 21:50: hi`;
+    const timelines = p(mw);
+    const firstFrom = firstEvent(timelines).dateRangeIso.fromDateTimeIso;
+    const firstTo = firstEvent(timelines).dateRangeIso.toDateTimeIso;
+
+    expect(
+      +DateTime.fromISO("2023-09-01T21:49:00.000Z").plus({ hours: 4 })
+    ).toBe(+DateTime.fromISO(firstFrom));
+
+    expect(
+      +DateTime.fromISO("2023-09-01T21:50:00.000Z").plus({ hours: 4 })
+    ).toBe(+DateTime.fromISO(firstTo));
   });
 });

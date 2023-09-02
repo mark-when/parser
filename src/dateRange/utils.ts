@@ -58,7 +58,6 @@ import {
   DateTimeGranularity,
 } from "../Types.js";
 import { Caches } from "../Cache.js";
-import { parseZone } from "../zones/parseZone.js";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -174,7 +173,8 @@ export function getTimeFromCasualMonthTo(eventStartMatches: RegExpMatchArray) {
 }
 
 export function fromCasualDateFrom(
-  eventStartMatches: RegExpMatchArray
+  eventStartMatches: RegExpMatchArray,
+  context: ParsingContext
 ): GranularDateTime | undefined {
   let month = eventStartMatches[from_monthFirstCasualMonthMonthFullMatchIndex];
   let day = eventStartMatches[from_monthFirstCasualMonthDayMatchIndex];
@@ -189,14 +189,14 @@ export function fromCasualDateFrom(
   let date =
     month &&
     day &&
-    parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`);
+    parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context);
 
   month = eventStartMatches[from_monthFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
       day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   day = eventStartMatches[from_dayFirstCasualMonthDayMatchIndex];
   month = eventStartMatches[from_dayFirstCasualMonthMonthFullMatchIndex];
@@ -204,19 +204,25 @@ export function fromCasualDateFrom(
     date ||
     (month &&
       day &&
-      parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   month = eventStartMatches[from_dayFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
       day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   if (date) {
     if (timeMatch) {
-      const dt = DateTime.fromISO(date.dateTimeIso);
-      const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso);
+      const dt = DateTime.fromISO(date.dateTimeIso, {
+        setZone: true,
+        zone: context.timezone,
+      });
+      const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso, {
+        setZone: true,
+        zone: context.timezone,
+      });
       date.dateTimeIso = dt
         .set({
           hour: timeMatchIso.hour,
@@ -234,21 +240,28 @@ export function fromCasualDateFrom(
   month = eventStartMatches[from_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM").toISO(),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM", {
+        setZone: true,
+        zone: context.timezone,
+      }).toISO(),
       granularity: "month",
     };
   }
   month = eventStartMatches[from_casualMonthMonthAbbrMatchIndex];
   if (month) {
     return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM").toISO(),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM", {
+        setZone: true,
+        zone: context.timezone,
+      }).toISO(),
       granularity: "month",
     };
   }
 }
 
 export function fromCasualDateTo(
-  eventStartMatches: RegExpMatchArray
+  eventStartMatches: RegExpMatchArray,
+  context: ParsingContext
 ): GranularDateTime | undefined {
   let month = eventStartMatches[to_monthFirstCasualMonthMonthFullMatchIndex];
   let day = eventStartMatches[to_monthFirstCasualMonthDayMatchIndex];
@@ -263,14 +276,14 @@ export function fromCasualDateTo(
   let date =
     month &&
     day &&
-    parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`);
+    parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context);
 
   month = eventStartMatches[to_monthFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
       day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   day = eventStartMatches[to_dayFirstCasualMonthDayMatchIndex];
   month = eventStartMatches[to_dayFirstCasualMonthMonthFullMatchIndex];
@@ -278,20 +291,26 @@ export function fromCasualDateTo(
     date ||
     (month &&
       day &&
-      parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   month = eventStartMatches[to_dayFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
       day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`));
+      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
 
   if (date) {
     if (timeMatch) {
       if (timeMatch) {
-        const dt = DateTime.fromISO(date.dateTimeIso);
-        const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso);
+        const dt = DateTime.fromISO(date.dateTimeIso, {
+          setZone: true,
+          zone: context.timezone,
+        });
+        const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso, {
+          setZone: true,
+          zone: context.timezone,
+        });
         date.dateTimeIso = dt
           .set({
             hour: timeMatchIso.hour,
@@ -309,29 +328,47 @@ export function fromCasualDateTo(
   month = eventStartMatches[to_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM").toISO(),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM", {
+        setZone: true,
+        zone: context.timezone,
+      }).toISO(),
       granularity: "month",
     };
   }
   month = eventStartMatches[to_casualMonthMonthAbbrMatchIndex];
   if (month) {
     return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM").toISO(),
+      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM", {
+        setZone: true,
+        zone: context.timezone,
+      }).toISO(),
       granularity: "month",
     };
   }
 }
 
-export function parseAsCasualDayFullMonth(s: string): GranularDateTime {
+export function parseAsCasualDayFullMonth(
+  s: string,
+  context: ParsingContext
+): GranularDateTime {
   return {
-    dateTimeIso: DateTime.fromFormat(s, "y MMMM d").toISO(),
+    dateTimeIso: DateTime.fromFormat(s, "y MMMM d", {
+      setZone: true,
+      zone: context.timezone,
+    }).toISO(),
     granularity: "day",
   };
 }
 
-export function parseAsCasualDayAbbrMonth(s: string): GranularDateTime {
+export function parseAsCasualDayAbbrMonth(
+  s: string,
+  context: ParsingContext
+): GranularDateTime {
   return {
-    dateTimeIso: DateTime.fromFormat(s, "y MMM d").toISO(),
+    dateTimeIso: DateTime.fromFormat(s, "y MMM d", {
+      setZone: true,
+      zone: context.timezone,
+    }).toISO(),
     granularity: "day",
   };
 }

@@ -86,8 +86,8 @@ export function getDateRangeFromCasualRegexMatch(
     ? "before"
     : "after";
 
-  const fromCasual = fromCasualDateFrom(eventStartLineRegexMatch);
-  const toCasual = fromCasualDateTo(eventStartLineRegexMatch);
+  const fromCasual = fromCasualDateFrom(eventStartLineRegexMatch, context);
+  const toCasual = fromCasualDateTo(eventStartLineRegexMatch, context);
 
   const slashDateFrom = eventStartLineRegexMatch[from_slashDateFullMatchIndex];
   const slashDateTo = eventStartLineRegexMatch[to_slashDateFullMatchIndex];
