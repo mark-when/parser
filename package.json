@@ -1,17 +1,11 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.9.8",
+  "version": "0.10.0",
   "description": "Markwhen parser",
   "type": "module",
-  "main": "lib/index.js",
+  "main": "lib/src/index.js",
   "exports": {
-    ".": "./lib/index.js",
-    "./ColorUtils": "./lib/ColorUtils.js",
-    "./Node": "./lib/Node.js",
-    "./Noder": "./lib/Noder.js",
-    "./parseHeader": "./lib/parseHeader.js",
-    "./Sort": "./lib/Sort.js",
-    "./Types": "./lib/Types.js"
+    ".": "./lib/src/index.js"
   },
   "scripts": {
     "test": "jest",
