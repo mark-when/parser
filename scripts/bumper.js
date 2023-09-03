@@ -30,9 +30,12 @@ function bump(which) {
 function bumpParser(newVersion) {
   const parser = readFileSync("src/parse.ts", "utf-8");
   const updated = parser.replace(
-    /^const version = ".*";?$/,
+    /const version = ".*";?/,
     `const version = "${newVersion}";`
   );
+  if (updated === parser) {
+    throw new Error("Replacement not found in parser")
+  }
   writeFileSync("src/parse.ts", updated);
 }
 

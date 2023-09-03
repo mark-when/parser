@@ -14,7 +14,7 @@ import {
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
 
-const version = "0.10.3";
+const version = "0.10.4";
 
 export function parseDateRange(
   dateRangeString: string

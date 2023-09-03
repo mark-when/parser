@@ -1,6 +1,6 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "Markwhen parser",
   "type": "module",
   "main": "lib/src/index.js",
@@ -12,7 +12,11 @@
     "test:profile": "node --inspect-brk ./node_modules/jest/bin/jest.js",
     "build": "tsc",
     "prepublish": "tsc && jest",
-    "watch": "tsc-watch --onSuccess \"yalc push --update\""
+    "watch": "tsc-watch --onSuccess \"yalc push --update\"",
+    "bump": "node scripts/bumper.js patch",
+    "bump:major": "node scripts/bumper.js major",
+    "bump:minor": "node scripts/bumper.js minor",
+    "bump:patch": "node scripts/bumper.js patch"
   },
   "repository": {
     "type": "git",
