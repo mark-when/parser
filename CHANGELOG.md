@@ -1,7 +1,10 @@
+## 0.10.4
+
+- Manually bump version in parse.ts instead of importing package.json
+
 ## 0.10.3
 
-- Missed some exports from 0.10.2
-  
+- Missed some exports from 0.10.2  
 
 ## 0.10.2
 
