@@ -54,10 +54,10 @@ import {
   Timelines,
   Timeline,
   Range,
-  MarkdownBlock
+  MarkdownBlock,
 } from "./Types.js";
 import { expand } from "./utilities/recurrence.js";
-import { COMPLETION_REGEX } from "./regex.js";
+import { COMPLETION_REGEX, RECURRENCE_AMOUNT_REGEX } from "./regex.js";
 import { Recurrence } from "./dateRange/checkRecurrence.js";
 
 export {
@@ -124,5 +124,6 @@ export {
   expand,
   COMPLETION_REGEX,
   Recurrence,
-  MarkdownBlock
+  MarkdownBlock,
+  RECURRENCE_AMOUNT_REGEX,
 };
