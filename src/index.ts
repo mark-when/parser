@@ -57,7 +57,12 @@ import {
   MarkdownBlock,
 } from "./Types.js";
 import { expand } from "./utilities/recurrence.js";
-import { COMPLETION_REGEX, RECURRENCE_AMOUNT_REGEX } from "./regex.js";
+import {
+  COMPLETION_REGEX,
+  RECURRENCE_AMOUNT_REGEX,
+  RELATIVE_TIME_REGEX,
+  EVENT_ID_REGEX,
+} from "./regex.js";
 import { Recurrence } from "./dateRange/checkRecurrence.js";
 
 export {
@@ -126,4 +131,6 @@ export {
   Recurrence,
   MarkdownBlock,
   RECURRENCE_AMOUNT_REGEX,
+  RELATIVE_TIME_REGEX,
+  EVENT_ID_REGEX,
 };
