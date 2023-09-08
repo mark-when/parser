@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, DurationLike, DurationLikeObject } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
 import { Node, NodeArray, SomeNode } from "./Node.js";
@@ -34,6 +34,45 @@ export const DATE_TIME_FORMAT_MONTH_YEAR = "M/y";
 export const DATE_TIME_FORMAT_YEAR = "y";
 
 export class RelativeDate {
+  /**
+   * Note that this does not accurately work for week days as
+   * we would otherwise need to know the date that this is
+   * being diffed from.
+   * @param raw
+   */
+  static diffFromString(raw: string) {
+    const matches = raw.matchAll(AMOUNT_REGEX);
+    let match = matches.next();
+    const diffObj = {} as DurationLikeObject;
+    while (match.value) {
+      const value = match.value as RegExpMatchArray;
+      const amount = parseInt(value[1]);
+      if (value[3]) {
+        diffObj["milliseconds"] = (diffObj["milliseconds"] ?? 0) + amount;
+      } else if (value[4]) {
+        diffObj["seconds"] = (diffObj["seconds"] ?? 0) + amount;
+      } else if (value[5]) {
+        diffObj["minutes"] = (diffObj["minutes"] ?? 0) + amount;
+      } else if (value[6]) {
+        diffObj["hours"] = (diffObj["hours"] ?? 0) + amount;
+      } else if (value[7]) {
+        // priorDate = before
+        //   ? removeWeekdays(amount, priorDate)
+        //   : addWeekdays(amount, priorDate);
+      } else if (value[8]) {
+        diffObj["days"] = (diffObj["days"] ?? 0) + amount;
+      } else if (value[9]) {
+        diffObj["weeks"] = (diffObj["weeks"] ?? 0) + amount;
+      } else if (value[10]) {
+        diffObj["months"] = (diffObj["months"] ?? 0) + amount;
+      } else if (value[11]) {
+        diffObj["years"] = (diffObj["years"] ?? 0) + amount;
+      }
+      match = matches.next();
+    }
+    return diffObj
+  }
+
   static from(
     raw: string,
     priorDate: DateTime,
@@ -410,8 +449,8 @@ export interface Timelines {
   timelines: Timeline[];
   cache?: Caches;
   parser: {
-    version: string
-  }
+    version: string;
+  };
 }
 
 export interface EventGroup extends Array<Event | EventGroup> {

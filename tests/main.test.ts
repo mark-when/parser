@@ -7,6 +7,7 @@ import {
   Image,
   toDateRange,
   RangeType,
+  RelativeDate,
 } from "../src/Types";
 import { DateTime } from "luxon";
 import { SomeNode, Node } from "../src/Node";
@@ -1996,6 +1997,19 @@ describe("version", () => {
     const pack = readFileSync(path.resolve("./", "package.json"), "utf-8");
     const version = JSON.parse(pack).version;
     expect(parse("").parser.version).toBe(version);
+  });
+});
+
+describe("relative dates", () => {
+  test("diff obj matches diff string 1", () => {
+    const diffOb = RelativeDate.diffFromString("1 day 6 hours");
+    expect(diffOb.days).toBe(1);
+    expect(diffOb.hours).toBe(6);
+  });
+  test("diff obj matches diff string 2", () => {
+    const diffOb = RelativeDate.diffFromString("now - 3 months 12 seconds");
+    expect(diffOb.months).toBe(3);
+    expect(diffOb.seconds).toBe(12);
   });
 });
 
