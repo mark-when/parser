@@ -1,3 +1,7 @@
+## 0.10.8
+
+- export dateRangeToString
+
 ## 0.10.5
 
 - additional export
