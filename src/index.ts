@@ -64,6 +64,7 @@ import {
   EVENT_ID_REGEX,
 } from "./regex.js";
 import { Recurrence } from "./dateRange/checkRecurrence.js";
+import { dateRangeToString } from "./utilities/dateRangeToString.js";
 
 export {
   parse,
@@ -118,6 +119,7 @@ export {
   emptyTimeline,
   toDateRange,
   toDateRangeIso,
+  dateRangeToString,
   DateTimeGranularity,
   DateFormat,
   DateRange,
