@@ -239,13 +239,14 @@ export const TITLE_REGEX = /^\s*(title:)\s*(.+)\s*$/i;
 export const VIEWERS_REGEX = /^\s*(view:)\s*(.*)$/i;
 export const EDITORS_REGEX = /^\s*(edit:)\s*(.*)$/i;
 export const DESCRIPTION_REGEX = /^\s*(description:)\s*(.+)\s*$/i;
+
 export const DATE_FORMAT_REGEX = /dateFormat:\s*d\/M\/y/;
 
 // Edited so that number only tags are excluded - #1, #21, etc.
 // A negative lookbehind would have worked... if it was supported in safari: /(?: |^)#(\w+)(?<!\d+)/
 export const TAG_REGEX = /(?:^|\s)#(?!\d+(?:\s|$))(\w+)/g;
 export const GROUP_START_REGEX = /^(\s*)(group|section)(?:\s|$)/i;
-export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)/i;
+export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)?/i;
 export const LIST_ITEM_REGEX = /^- .*/;
 export const CHECKLIST_ITEM_REGEX = /^- (\[(x|X| )?\]).*/;
 export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
