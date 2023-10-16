@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
-import { SomeNode, Node } from "../Node";
-import { walk, isEventNode } from "../Noder";
-import { Path, EventDescription, DateTimeIso, Event } from "../Types";
+import { SomeNode, Node } from "../Node.js";
+import { walk, isEventNode } from "../Noder.js";
+import { Path, EventDescription, DateTimeIso, Event } from "../Types.js";
 
 const disallowedCharacters = /[^A-Za-z0-9_-]/g;
 
