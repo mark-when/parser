@@ -65,6 +65,7 @@ import {
 } from "./regex.js";
 import { Recurrence } from "./dateRange/checkRecurrence.js";
 import { dateRangeToString } from "./utilities/dateRangeToString.js";
+import { mapUrls } from "./utilities/urls.js";
 
 export {
   parse,
@@ -135,4 +136,5 @@ export {
   RECURRENCE_AMOUNT_REGEX,
   RELATIVE_TIME_REGEX,
   EVENT_ID_REGEX,
+  mapUrls,
 };
