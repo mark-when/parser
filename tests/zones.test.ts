@@ -211,4 +211,41 @@ Sep 1 2023 21:49 - Sep 1 2023 21:50: hi`;
       +DateTime.fromISO("2023-09-01T21:50:00.000Z").plus({ hours: 4 })
     ).toBe(+DateTime.fromISO(firstTo));
   });
+
+  test.only.each(sp())("specific case", (p) => {
+    const mw = `---
+Something:
+re:
+  description: |
+    mostly [markwhen](https://markwhen.com) stuff
+    [Github](https://github.com/kochrt)
+  author:
+    name: Rob Koch
+    avatar: https://media.markwhen.com/7mGszd2clHRHudsf0lLX4Kb1ChI3/0bc5-25f1-db6a-3706.jpg 
+  
+#london:
+  timezone: Europe/London
+  color: #227766
+
+timezone: America/New_York
+
+ranges: [1 day, 30 days, 6 months]
+
+#reminderTest:
+  reminders: 1 hour
+---
+
+10/27/2023 1:56pm: This is a reminder #reminderTest 
+
+Oct 6 2023 19:00: testing things out
+
+#reminderTest
+`;
+
+    const timelines = p(mw);
+    const firstFrom = DateTime.fromISO(
+      firstEvent(timelines).dateRangeIso.fromDateTimeIso
+    );
+    expect(+DateTime.fromISO("2023-10-27T17:56:00.000Z")).toBe(+firstFrom);
+  });
 });

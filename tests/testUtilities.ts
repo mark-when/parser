@@ -45,9 +45,9 @@ const logTimingData = () => {
 };
 
 const time = <T>(fn: () => T, timeKey: keyof typeof timers) => {
-  const start = performance.now();
+  const start = DateTime.now();
   const result = fn();
-  timers[timeKey].push(performance.now() - start);
+  timers[timeKey].push(+DateTime.now() - +start);
   return result;
 };
 

@@ -442,7 +442,10 @@ export function parseSlashDate(
   ] as [string, DateTimeGranularity][];
 
   for (const f of formatsAndGranularities) {
-    let dateTime = DateTime.fromFormat(s, f[0]);
+    let dateTime = DateTime.fromFormat(s, f[0], {
+      setZone: true,
+      zone: context.timezone,
+    });
     if (dateTime.isValid) {
       const gdt = {
         dateTimeIso: dateTime.toISO(),
