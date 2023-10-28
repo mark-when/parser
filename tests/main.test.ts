@@ -2013,6 +2013,24 @@ describe("relative dates", () => {
   });
 });
 
+describe("edtf casual times", () => {
+  test.each(sp())("no range", (p) => {
+    const mw = p(`2023-10-30 9am: yes of course`);
+    expect(
+      DateTime.fromISO(firstEvent(mw).dateRangeIso.fromDateTimeIso).hour
+    ).toBe(9);
+  });
+
+  test.each(sp())("range", (p) => {
+    const mw = p(`2023-10-30 9pm / 2023-11-11 13:00: yes of course`);
+    const e = firstEvent(mw);
+    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso)
+    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso)
+    expect(from.hour).toBe(21);
+    expect(to.hour).toBe(13)
+  });
+});
+
 function getDateRanges(m: Timelines): DateRange[] {
   return flat(m.timelines[0].events).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)

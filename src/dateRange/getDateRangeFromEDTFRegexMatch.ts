@@ -20,6 +20,16 @@ import {
   from_edtfRelativeEventIdMatchIndex,
   to_edtfRelativeEventIdMatchIndex,
   edtfEventTextMatchIndex,
+  from_edtfDateTimePartMatchIndex,
+  from_edtfDateTime24HourMinuteMatchIndex,
+  from_edtfDateTimeMeridiemMeridiemMatchIndex,
+  from_edtfDateTime24HourHourMatchIndex,
+  from_edtfDateTimeMeridiemHourMatchIndex,
+  to_edtfDateTimePartMatchIndex,
+  to_edtfDateTime24HourHourMatchIndex,
+  to_edtfDateTime24HourMinuteMatchIndex,
+  to_edtfDateTimeMeridiemHourMatchIndex,
+  to_edtfDateTimeMeridiemMeridiemMatchIndex,
 } from "../regex.js";
 import {
   DateRangePart,
@@ -29,7 +39,7 @@ import {
   Range,
   toDateRange,
 } from "../Types.js";
-import { getPriorEvent, roundDateUp } from "./utils.js";
+import { getPriorEvent, getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
 
 export function getDateRangeFromEDTFRegexMatch(
@@ -49,10 +59,17 @@ export function getDateRangeFromEDTFRegexMatch(
   const edtfFromHasMonth = !!eventStartLineRegexMatch[from_edtfDateMonthPart];
   const edtfFromHasDay = !!eventStartLineRegexMatch[from_edtfDateDayPart];
 
+  const edtfFromHasTime =
+    !!eventStartLineRegexMatch[from_edtfDateTimePartMatchIndex];
+
   const eventEndDate = eventStartLineRegexMatch[to_edtfIndex];
   const edtfTo = eventStartLineRegexMatch[to_edtfDateIndex];
   const edtfToHasMonth = !!eventStartLineRegexMatch[to_edtfDateMonthPart];
   const edtfToHasDay = !!eventStartLineRegexMatch[to_edtfDateDayPart];
+
+  const edtfToHasTime =
+    !!eventStartLineRegexMatch[to_edtfDateTimePartMatchIndex];
+
   const relativeFromBeforeOrAfter =
     eventStartLineRegexMatch[from_edtfBeforeOrAfterMatchIndex];
   const relativeToBeforeOrAfter =
@@ -120,11 +137,33 @@ export function getDateRangeFromEDTFRegexMatch(
   let canCacheRange = true;
 
   if (edtfFrom) {
-    fromDateTime = DateTime.fromISO(edtfFrom, {
-      setZone: true,
-      zone: context.timezone,
-    });
-    granularity = edtfFromHasDay ? "day" : edtfFromHasMonth ? "month" : "year";
+    if (edtfFromHasTime) {
+      const time = getTimeFromRegExpMatch(
+        eventStartLineRegexMatch,
+        from_edtfDateTimeMeridiemHourMatchIndex,
+        from_edtfDateTime24HourMinuteMatchIndex,
+        from_edtfDateTimeMeridiemMeridiemMatchIndex,
+        from_edtfDateTime24HourHourMatchIndex,
+        from_edtfDateTime24HourMinuteMatchIndex
+      );
+      const timeDateTime = DateTime.fromISO(time.dateTimeIso);
+      fromDateTime = DateTime.fromISO(edtfFrom.substring(0, 10), {
+        zone: context.timezone,
+      }).set({
+        hour: timeDateTime.hour,
+        minute: timeDateTime.minute,
+      });
+      granularity = time.granularity;
+    } else {
+      fromDateTime = DateTime.fromISO(edtfFrom, {
+        zone: context.timezone,
+      });
+      granularity = edtfFromHasDay
+        ? "day"
+        : edtfFromHasMonth
+        ? "month"
+        : "year";
+    }
   } else if (relativeFromDate) {
     // Dependent on other event
     canCacheRange = false;
@@ -217,21 +256,39 @@ export function getDateRangeFromEDTFRegexMatch(
       endDateTime = context.now.setZone(context.timezone);
       granularity = "instant";
     } else if (edtfTo) {
-      endDateTime = DateTime.fromISO(
-        roundDateUp(
-          {
-            dateTimeIso: edtfTo,
-            granularity: edtfToHasDay
-              ? "day"
-              : edtfToHasMonth
-              ? "month"
-              : "year",
-          },
-          context,
-          cache
-        ),
-        { setZone: true, zone: context.timezone }
-      );
+      if (edtfToHasTime) {
+        const time = getTimeFromRegExpMatch(
+          eventStartLineRegexMatch,
+          to_edtfDateTimeMeridiemHourMatchIndex,
+          to_edtfDateTime24HourMinuteMatchIndex,
+          to_edtfDateTimeMeridiemMeridiemMatchIndex,
+          to_edtfDateTime24HourHourMatchIndex,
+          to_edtfDateTime24HourMinuteMatchIndex
+        );
+        const timeDateTime = DateTime.fromISO(time.dateTimeIso);
+        endDateTime = DateTime.fromISO(edtfFrom.substring(0, 10), {
+          zone: context.timezone,
+        }).set({
+          hour: timeDateTime.hour,
+          minute: timeDateTime.minute,
+        });
+      } else {
+        endDateTime = DateTime.fromISO(
+          roundDateUp(
+            {
+              dateTimeIso: edtfTo,
+              granularity: edtfToHasDay
+                ? "day"
+                : edtfToHasMonth
+                ? "month"
+                : "year",
+            },
+            context,
+            cache
+          ),
+          { setZone: true, zone: context.timezone }
+        );
+      }
     }
   }
 
