@@ -2029,6 +2029,16 @@ describe("edtf casual times", () => {
     expect(from.hour).toBe(21);
     expect(to.hour).toBe(13)
   });
+
+  test.only.each(sp())("minute", (p) => {
+    const mw = p(`2023-10-30 9:19pm / 2023-11-11 13:00: yes of course`);
+    const e = firstEvent(mw);
+    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso)
+    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso)
+    expect(from.hour).toBe(21);
+    expect(from.minute).toBe(19)
+    expect(to.hour).toBe(13)
+  });
 });
 
 function getDateRanges(m: Timelines): DateRange[] {

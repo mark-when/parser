@@ -30,6 +30,8 @@ import {
   to_edtfDateTime24HourMinuteMatchIndex,
   to_edtfDateTimeMeridiemHourMatchIndex,
   to_edtfDateTimeMeridiemMeridiemMatchIndex,
+  from_edtfDateTimeMeridiemMinuteMatchIndex,
+  to_edtfDateTimeMeridiemMinuteMatchIndex,
 } from "../regex.js";
 import {
   DateRangePart,
@@ -141,7 +143,7 @@ export function getDateRangeFromEDTFRegexMatch(
       const time = getTimeFromRegExpMatch(
         eventStartLineRegexMatch,
         from_edtfDateTimeMeridiemHourMatchIndex,
-        from_edtfDateTime24HourMinuteMatchIndex,
+        from_edtfDateTimeMeridiemMinuteMatchIndex,
         from_edtfDateTimeMeridiemMeridiemMatchIndex,
         from_edtfDateTime24HourHourMatchIndex,
         from_edtfDateTime24HourMinuteMatchIndex
@@ -260,7 +262,7 @@ export function getDateRangeFromEDTFRegexMatch(
         const time = getTimeFromRegExpMatch(
           eventStartLineRegexMatch,
           to_edtfDateTimeMeridiemHourMatchIndex,
-          to_edtfDateTime24HourMinuteMatchIndex,
+          to_edtfDateTimeMeridiemMinuteMatchIndex,
           to_edtfDateTimeMeridiemMeridiemMatchIndex,
           to_edtfDateTime24HourHourMatchIndex,
           to_edtfDateTime24HourMinuteMatchIndex
