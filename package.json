@@ -1,6 +1,6 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.10.13",
+  "version": "0.10.14",
   "description": "Markwhen parser",
   "type": "module",
   "main": "lib/index.js",
