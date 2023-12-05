@@ -16,7 +16,7 @@ export const toArray = (node: SomeNode | undefined, cutoff: DateTime) => {
         array.push({ path, node: n });
       }
     }
-    if (array.length === 1000) {
+    if (array.length === 10000) {
       return true;
     }
   });

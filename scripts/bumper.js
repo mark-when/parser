@@ -1,4 +1,4 @@
-import { readFile, readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { argv } from "process";
 
 function bump(which) {
