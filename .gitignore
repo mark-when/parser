@@ -2,3 +2,4 @@ node_modules/
 lib/
 tests/big.mw
 cache-test.cpuprofile
+cjs/
