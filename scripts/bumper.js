@@ -2,9 +2,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { argv } from "process";
 
 function bump(which) {
-  if (!["major", "minor", "patch"].includes(which)) {
-    throw new Error(`${which} not one of 'major', 'minor', or 'patch`);
-  }
+  which = ["major", "minor", "patch"].includes(which) ? which : 'patch'
 
   const pck = readFileSync("package.json", "utf-8");
   const pack = JSON.parse(pck);
