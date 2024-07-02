@@ -1,6 +1,6 @@
 {
   "name": "@markwhen/parser",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Markwhen parser",
   "type": "module",
   "main": "cjs/index.cjs",
