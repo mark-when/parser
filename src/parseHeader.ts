@@ -1,5 +1,5 @@
 import { Foldable, ParsingContext } from "./ParsingContext.js";
-import YAML from "yaml";
+import * as YAML from "yaml";
 import {
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,

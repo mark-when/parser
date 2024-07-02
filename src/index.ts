@@ -6,7 +6,13 @@ import {
   hexToRgb,
   rgbStringToHex,
 } from "./ColorUtils.js";
-import { SomeNode, NodeArray, NodeValue, GroupRange, Node } from "./Node.js";
+import {
+  type SomeNode,
+  type NodeArray,
+  type NodeValue,
+  type GroupRange,
+  Node,
+} from "./Node.js";
 import {
   arrayValue,
   blankClone,
@@ -24,17 +30,17 @@ import {
   walk2,
   iterate,
 } from "./Noder.js";
-import { Foldable, ParsingContext } from "./ParsingContext.js";
+import { type Foldable, ParsingContext } from "./ParsingContext.js";
 import {
   AMERICAN_DATE_FORMAT,
   AT_REGEX,
   Block,
   BlockType,
-  DateTimeIso,
-  DateTimeGranularity,
-  DateFormat,
-  DateRange,
-  DateRangeIso,
+  type DateTimeIso,
+  type DateTimeGranularity,
+  type DateFormat,
+  type DateRange,
+  type DateRangeIso,
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
   DateRangePart,
@@ -51,10 +57,10 @@ import {
   emptyTimeline,
   toDateRange,
   toDateRangeIso,
-  Timelines,
-  Timeline,
-  Range,
-  MarkdownBlock,
+  type Timelines,
+  type Timeline,
+  type Range,
+  type MarkdownBlock,
 } from "./Types.js";
 import { expand } from "./utilities/recurrence.js";
 import {
@@ -63,7 +69,7 @@ import {
   RELATIVE_TIME_REGEX,
   EVENT_ID_REGEX,
 } from "./regex.js";
-import { Recurrence } from "./dateRange/checkRecurrence.js";
+import type { Recurrence } from "./dateRange/checkRecurrence.js";
 import { dateRangeToString } from "./utilities/dateRangeToString.js";
 import { mapUrls, toArray as toArraySorted } from "./utilities/urls.js";
 
