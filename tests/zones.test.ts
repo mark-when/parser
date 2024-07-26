@@ -212,7 +212,7 @@ Sep 1 2023 21:49 - Sep 1 2023 21:50: hi`;
     ).toBe(+DateTime.fromISO(firstTo));
   });
 
-  test.only.each(sp())("specific case", (p) => {
+  test.each(sp())("specific case", (p) => {
     const mw = `---
 Something:
 re:

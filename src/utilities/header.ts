@@ -24,6 +24,30 @@ const objFromKeysAndValue = (keys: string[], value: any) => {
   return obj;
 };
 
+const parenReplacer = (s: string) =>
+  s.replace(
+    /(^|\W+)\)(\w+)/g,
+    (
+      match: string,
+      preHashWhitespace: string,
+      tagName: string,
+      offset: number,
+      str: string
+    ) => `${preHashWhitespace}#${tagName}`
+  );
+
+const hashReplacer = (s: string) =>
+  s.replace(
+    /(^|\W+)#(\w+)/g,
+    (
+      match: string,
+      preHashWhitespace: string,
+      tagName: string,
+      offset: number,
+      str: string
+    ) => `${preHashWhitespace})${tagName}`
+  );
+
 // tags.education.color -> blue
 export function set(
   mw: string,
@@ -75,15 +99,27 @@ export function set(
     const key = path[i];
 
     const stringToInsert = () =>
-      stringify(objFromKeysAndValue(path.slice(i), value))
+      stringify(
+        objFromKeysAndValue(
+          path.slice(i),
+          typeof value === "string" ? hashReplacer(value) : value
+        )
+      )
         .split("\n")
-        .map((line) => (!!line ? "  ".repeat(indentation) + line : ""))
+        .map((line: string) =>
+          !!line ? "  ".repeat(indentation) + parenReplacer(line) : ""
+        )
         .join("\n");
 
     if (obj[key]) {
       const from = findLine(
         headerlines,
-        new RegExp(`^\\s{${indentation * 2}}${key}`),
+        new RegExp(
+          `^\\s{${indentation * 2}}(${key.replace(")", "\\)")}|${key.replace(
+            ")",
+            "#"
+          )})`
+        ),
         searchRange
       );
       const to = findLine(
@@ -102,18 +138,26 @@ export function set(
       // Either this is the last or the current entry does not have children and
       // so we should replace the whole thing
       if (i === path.length - 1 || typeof obj[key] !== "object") {
+        let additionalNewlines = 0;
+        for (let j = searchRange.endLine - 1; j >= searchRange.startLine; j--) {
+          if (/^\s*$/.test(headerlines[j])) {
+            additionalNewlines++;
+          } else {
+            break;
+          }
+        }
         return {
-          insert: stringToInsert(),
-          from: lengthAtIndex[searchRange.startLine],
-          to: lengthAtIndex[searchRange.endLine],
+          insert: stringToInsert() + "\n".repeat(additionalNewlines),
+          from: lengthAtIndex[searchRange.startLine] || 0,
+          to: lengthAtIndex[searchRange.endLine] || 0,
         };
       }
     } else {
       // Insert object here
       return {
         insert: stringToInsert(),
-        from: lengthAtIndex[searchRange.endLine],
-        to: lengthAtIndex[searchRange.endLine],
+        from: lengthAtIndex[searchRange.endLine] || 0,
+        to: lengthAtIndex[searchRange.endLine] || 0,
       };
     }
     obj = obj[key];

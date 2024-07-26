@@ -1,10 +1,10 @@
 import { parse } from "../src/index";
 import { nthEvent } from "./testUtilities";
-import path from "path";
+import { resolve } from "path";
 import { readFileSync } from "fs";
 import { set } from "../src/utilities/header";
 
-const small = () => readFileSync(path.resolve("./", "tests/big.mw"), "utf-8");
+const small = () => readFileSync(resolve("./", "tests/big.mw"), "utf-8");
 
 describe("editors", () => {
   test("single editor", () => {
@@ -220,6 +220,7 @@ objectAsValue:
 description: This is the description
 objectAsValue:
   neato: cool
+
 `);
   });
 

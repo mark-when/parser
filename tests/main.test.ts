@@ -28,7 +28,7 @@ import {
   sp,
 } from "./testUtilities";
 import { readFileSync } from "fs";
-import path from "path";
+import { resolve } from "path";
 
 describe("parsing", () => {
   test.each(sameParse(DateTime.fromISO("2022-05-01T12:13:14.00Z")))(
@@ -1994,7 +1994,7 @@ describe("premature year parsing", () => {
 
 describe("version", () => {
   test("outputs the right version", () => {
-    const pack = readFileSync(path.resolve("./", "package.json"), "utf-8");
+    const pack = readFileSync(resolve("./", "package.json"), "utf-8");
     const version = JSON.parse(pack).version;
     expect(parse("").parser.version).toBe(version);
   });
@@ -2024,20 +2024,20 @@ describe("edtf casual times", () => {
   test.each(sp())("range", (p) => {
     const mw = p(`2023-10-30 9pm / 2023-11-11 13:00: yes of course`);
     const e = firstEvent(mw);
-    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso)
-    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso)
+    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso);
+    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso);
     expect(from.hour).toBe(21);
-    expect(to.hour).toBe(13)
+    expect(to.hour).toBe(13);
   });
 
-  test.only.each(sp())("minute", (p) => {
+  test.each(sp())("minute", (p) => {
     const mw = p(`2023-10-30 9:19pm / 2023-11-11 13:00: yes of course`);
     const e = firstEvent(mw);
-    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso)
-    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso)
+    const from = DateTime.fromISO(e.dateRangeIso.fromDateTimeIso);
+    const to = DateTime.fromISO(e.dateRangeIso.toDateTimeIso);
     expect(from.hour).toBe(21);
-    expect(from.minute).toBe(19)
-    expect(to.hour).toBe(13)
+    expect(from.minute).toBe(19);
+    expect(to.hour).toBe(13);
   });
 });
 
