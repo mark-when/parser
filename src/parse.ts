@@ -16,7 +16,7 @@ import {
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
-const version = "0.11.3";
+const version = "0.11.4";
 
 export function parseDateRange(
   dateRangeString: string
