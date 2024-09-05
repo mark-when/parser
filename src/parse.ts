@@ -1,4 +1,4 @@
-import { Timeline, DateRangePart, Timelines, emptyTimeline } from "./Types.js";
+import { Timeline, DateRangePart, ParseResult, emptyTimeline } from "./Types.js";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch.js";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch.js";
 import { Caches } from "./Cache.js";
@@ -16,7 +16,7 @@ import {
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
-const version = "0.11.4";
+const version = "0.12.0";
 
 export function parseDateRange(
   dateRangeString: string
@@ -56,7 +56,7 @@ const linesAndLengths = (timelineString: string) => {
 export function parse(
   timelineString?: string,
   cache?: Caches | true
-): Timelines {
+): ParseResult {
   if (cache === true) {
     cache = new Caches();
   }
@@ -64,11 +64,11 @@ export function parse(
     version,
   };
   if (!timelineString) {
-    return { timelines: [emptyTimeline()], cache, parser };
+    return { ...emptyTimeline(), cache, parser };
   }
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
   return {
-    timelines: [parseTimeline(lines, lengthAtIndex, cache)],
+    ...parseTimeline(lines, lengthAtIndex, cache),
     cache,
     parser,
   };

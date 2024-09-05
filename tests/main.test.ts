@@ -1,6 +1,6 @@
 import { parse, parseDateRange } from "../src/index";
 import {
-  Timelines,
+  ParseResult,
   Event,
   DateRange,
   Block,
@@ -1310,7 +1310,7 @@ now - 10 years: an event #1
 1 year: event #2
 3 years: event #third`);
 
-      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+      const tagLiterals = Object.keys(markwhen.header).filter(
         (k) => k.startsWith(")")
       );
       expect(tagLiterals).toHaveLength(1);
@@ -1324,7 +1324,7 @@ now - 10 years: an event #1 #3342 #098
 1 year: event #2 #another #tag
 3 years: event #third #fourth #fifth #332334b #5`);
 
-      const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+      const tagLiterals = Object.keys(markwhen.header).filter(
         (k) => k.startsWith(")")
       );
       expect(tagLiterals).toHaveLength(6);
@@ -1346,7 +1346,7 @@ now - 10 years: an event #1 #3342 #098
 #fifth #332334b #5
 #other`);
 
-        const tagLiterals = Object.keys(markwhen.timelines[0].header).filter(
+        const tagLiterals = Object.keys(markwhen.header).filter(
           (k) => k.startsWith(")")
         );
         [
@@ -1418,7 +1418,7 @@ now - 10 years: an event #1 #3342 #098
 description: my description
 now - 10 years: an event`);
 
-      expect(markwhen.timelines[0].header.view).toBeFalsy();
+      expect(markwhen.header.view).toBeFalsy();
     });
 
     test.each(sp())("Single viewer", (p) => {
@@ -1429,7 +1429,7 @@ view: example@example.com
 description: my description
 now - 10 years: an event`);
 
-      const viewers = markwhen.timelines[0].header.view;
+      const viewers = markwhen.header.view;
       expect(typeof viewers).toBe("object"); // array
       expect(viewers.length).toBe(1);
       expect(viewers).toContain("example@example.com");
@@ -1443,7 +1443,7 @@ view: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const viewers = markwhen.timelines[0].header.view;
+      const viewers = markwhen.header.view;
       [
         "example@example.com",
         "example2@example.com",
@@ -1456,7 +1456,7 @@ now - 10 years: an event`);
 description: my description
 now - 10 years: an event`);
 
-      expect(markwhen.timelines[0].header.edit).toBeFalsy();
+      expect(markwhen.header.edit).toBeFalsy();
     });
 
     test.each(sp())("Single editor", (p) => {
@@ -1467,7 +1467,7 @@ edit: example@example.com
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].header.edit;
+      const editors = markwhen.header.edit;
       expect(typeof editors).toBe("object");
       expect(editors.length).toBe(1);
       expect(editors).toContain("example@example.com");
@@ -1481,7 +1481,7 @@ edit: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].header.edit;
+      const editors = markwhen.header.edit;
       [
         "example@example.com",
         "example2@example.com",
@@ -1498,13 +1498,13 @@ edit: example@example.com, example2@example.com someoneelse@g.co
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].header.edit;
+      const editors = markwhen.header.edit;
       [
         "example@example.com",
         "example2@example.com",
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
-      const viewers = markwhen.timelines[0].header.view;
+      const viewers = markwhen.header.view;
       ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
         expect(viewers).toContain(e)
       );
@@ -1519,13 +1519,13 @@ view: me@example.com, someone@google.com b@g.i
 description: my description
 now - 10 years: an event`);
 
-      const editors = markwhen.timelines[0].header.edit;
+      const editors = markwhen.header.edit;
       [
         "example@example.com",
         "example2@example.com",
         "someoneelse@g.co",
       ].forEach((e) => expect(editors).toContain(e));
-      const viewers = markwhen.timelines[0].header.view;
+      const viewers = markwhen.header.view;
       ["me@example.com", "someone@google.com", "b@g.i"].forEach((e) =>
         expect(viewers).toContain(e)
       );
@@ -1588,7 +1588,7 @@ now: 9
 
 `);
 
-    let head: SomeNode = mw.timelines[0].events;
+    let head: SomeNode = mw.entries;
     const flt = flat(head);
     expect(flt).toHaveLength(9);
   });
@@ -1647,8 +1647,8 @@ endGroup
     const numNodes = 16;
     let i = 0;
     let s = ``;
-    const asArray = toArray(mw.timelines[0].events);
-    for (const { path, node } of iterate(mw.timelines[0].events)) {
+    const asArray = toArray(mw.entries);
+    for (const { path, node } of iterate(mw.entries)) {
       expect(JSON.stringify(asArray[i].path)).toEqual(JSON.stringify(path));
       expect(JSON.stringify(asArray[i].node.value)).toEqual(
         JSON.stringify(node.value)
@@ -1656,18 +1656,6 @@ endGroup
       i++;
     }
     expect(i).toEqual(numNodes);
-  });
-
-  test.each(sp())("entirely empty has no head", (p) => {
-    const mw = p(`
-group 1
-group 2
-group 3
-group 4
-group 5
-`);
-
-    expect(mw.timelines[0].head).toBeFalsy();
   });
 
   test.each(sp())("deeply nested path", (p) => {
@@ -1685,31 +1673,12 @@ group 10
 2021: an event
 `);
 
-    for (const { path, node } of iterate(mw.timelines[0].events)) {
+    for (const { path, node } of iterate(mw.entries)) {
       if (isEventNode(node)) {
         // The path of the node with an actual event
         expect(path).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
     }
-
-    expect(
-      (mw.timelines[0].head?.value as Event).eventDescription.eventDescription
-    ).toBe("an event");
-  });
-
-  test.each(sp())("deeply nested has head", (p) => {
-    const mw = p(`
-group 1
-group 2
-group 3
-group 4
-group 5
-2021: an event
-`);
-
-    expect(
-      (mw.timelines[0].head?.value as Event).eventDescription.eventDescription
-    ).toBe("an event");
   });
 
   test.each(sp())("group foldables", (p) => {
@@ -1728,7 +1697,7 @@ endGroup
 
 2022: last event`);
 
-    const foldables = mw.timelines[0].foldables;
+    const foldables = mw.foldables;
     expect(Object.keys(foldables).length).toBe(5);
   });
 });
@@ -1742,7 +1711,7 @@ now: hello ![](example.com/image)
     `);
 
     const supplemental = eventValue(
-      get(mw.timelines[0].events, [0]) as Node<Event>
+      get(mw.entries, [0]) as Node<Event>
     ).eventDescription.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
@@ -1758,7 +1727,7 @@ now: hello ![](example.com/image)
     `);
 
     const firstEvent = eventValue(
-      get(mw.timelines[0].events, [0]) as Node<Event>
+      get(mw.entries, [0]) as Node<Event>
     );
     expect(firstEvent?.eventDescription.eventDescription).toBe("hello ");
   });
@@ -1769,7 +1738,7 @@ now: hello ![](example.com/image)
     );
 
     const firstEvent = eventValue(
-      get(mw.timelines[0].events, [0]) as Node<Event>
+      get(mw.entries, [0]) as Node<Event>
     );
     expect(firstEvent?.eventDescription.eventDescription).toBe(
       "Barn built across the street "
@@ -1791,7 +1760,7 @@ other middle text
 some text after`);
 
     const firstEvent = eventValue(
-      get(mw.timelines[0].events, [0]) as Node<Event>
+      get(mw.entries, [0]) as Node<Event>
     );
     const supplemental = firstEvent?.eventDescription.supplemental;
     expect(supplemental).toBeTruthy();
@@ -1813,7 +1782,7 @@ describe("ranges", () => {
 - [x] And this
 - [ ] This one is extra
 `);
-    const listItemContents = mw.timelines[0].ranges.filter(
+    const listItemContents = mw.ranges.filter(
       (r) => r.type === RangeType.ListItemContents
     );
     expect(listItemContents.length).toBe(3);
@@ -1861,7 +1830,7 @@ now:  [] some item
 
 6 days: [x] last item`);
     let event = nthEvent(mw, 0);
-    const ranges = mw.timelines[0].ranges.filter(
+    const ranges = mw.ranges.filter(
       (r) => r.type === RangeType.CheckboxItemIndicator
     );
     expect(ranges.length).toBe(3);
@@ -1963,7 +1932,7 @@ describe("recurrence", () => {
     expect(first.recurrenceRangeInText?.to).toBe(30);
     expect(first.eventDescription.eventDescription).toBe("event title");
 
-    const colonRange = mw.timelines[0].ranges.find(
+    const colonRange = mw.ranges.find(
       (range) => range.to - range.from === 1
     );
     expect(colonRange).toBeTruthy();
@@ -2041,14 +2010,14 @@ describe("edtf casual times", () => {
   });
 });
 
-function getDateRanges(m: Timelines): DateRange[] {
-  return flat(m.timelines[0].events).map((n) =>
+function getDateRanges(m: ParseResult): DateRange[] {
+  return flat(m.entries).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)
   );
 }
 
-function getEvents(m: Timelines) {
-  return flatMap(m.timelines[0].events, (n) => n.value as Event);
+function getEvents(m: ParseResult) {
+  return flatMap(m.entries, (n) => n.value as Event);
 }
 
 function checkDate(

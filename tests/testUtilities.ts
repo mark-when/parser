@@ -2,16 +2,16 @@ import { DateTime } from "luxon";
 import { parse } from "../src";
 import { Caches } from "../src/Cache";
 import { iterate, isEventNode } from "../src/Noder";
-import { Timelines, Event } from "../src/Types";
+import { ParseResult, Event } from "../src/Types";
 
-export const firstEvent = (markwhen: Timelines) => nthEvent(markwhen, 0);
+export const firstEvent = (markwhen: ParseResult) => nthEvent(markwhen, 0);
 
-export const nthEvent = (markwhen: Timelines, n: number) =>
+export const nthEvent = (markwhen: ParseResult, n: number) =>
   nthNode(markwhen, n).value as Event;
 
-const nthNode = (markwhen: Timelines, n: number) => {
+const nthNode = (markwhen: ParseResult, n: number) => {
   let i = 0;
-  for (const { path, node } of iterate(markwhen.timelines[0].events)) {
+  for (const { path, node } of iterate(markwhen.entries)) {
     if (isEventNode(node)) {
       if (i === n) {
         return node;
@@ -65,6 +65,6 @@ const p = () => {
 };
 
 export const sameParse = <T>(expected: T) =>
-  p().map((parse) => [parse, expected] as [(s: string) => Timelines, T]);
+  p().map((parse) => [parse, expected] as [(s: string) => ParseResult, T]);
 
 export const sp = () => sameParse([]);

@@ -12,7 +12,7 @@ describe("editors", () => {
 title: this is the title
 edit: email@example.com`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     expect(header.title).toBe("this is the title");
     expect(typeof header.edit).toBe("object");
     expect(header.edit.length).toBe(1);
@@ -24,7 +24,7 @@ edit: email@example.com`);
 title: this is the title
 edit: email@example.com, other@example.com`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     expect(header.title).toBe("this is the title");
     expect(typeof header.edit).toBe("object");
     expect(header.edit.length).toBe(2);
@@ -39,7 +39,7 @@ edit:
   - email@example.com
   - other@example.com`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     expect(header.title).toBe("this is the title");
     expect(typeof header.edit).toBe("object");
     expect(header.edit.length).toBe(2);
@@ -55,7 +55,7 @@ edit:
   - other@example.com
   - another@email.com`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     expect(header.title).toBe("this is the title");
     expect(typeof header.edit).toBe("object");
     expect(header.edit.length).toBe(3);
@@ -75,7 +75,7 @@ thirdKey:
   fourthKey:
     fifthKey: value`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     expect(header.key).toBe("value");
     expect(header.otherKey).toBe("otherValue");
     expect(header.thirdKey.fourthKey.fifthKey).toBe("value");
@@ -84,7 +84,7 @@ thirdKey:
   test("small header", () => {
     const mw = parse(small());
 
-    expect(Object.keys(mw.timelines[0].header).length).toBe(46);
+    expect(Object.keys(mw.header).length).toBe(46);
   });
 });
 
@@ -102,11 +102,11 @@ arbitraryThing:
 
 now: event`);
 
-    expect(mw.timelines[0].header.title).toBe("Title");
-    expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
-    expect(mw.timelines[0].header[")tag1"]).toBe(")abc");
-    expect(mw.timelines[0].header[")tag2"]).toBe("red");
-    expect(mw.timelines[0].header[")education"]).toBe("white");
+    expect(mw.header.title).toBe("Title");
+    expect(mw.header.arbitraryThing).toStrictEqual(["one", "two"]);
+    expect(mw.header[")tag1"]).toBe(")abc");
+    expect(mw.header[")tag2"]).toBe("red");
+    expect(mw.header[")education"]).toBe("white");
     expect(nthEvent(mw, 0).dateText).toBe("now");
   });
 
@@ -125,11 +125,11 @@ arbitraryThing:
 
 now: event`);
 
-    const header = mw.timelines[0].header;
+    const header = mw.header;
     // 5 plus dateFormat
     expect(Object.keys(header).length).toBe(6);
-    expect(mw.timelines[0].header.title).toBe("Title");
-    expect(mw.timelines[0].header.arbitraryThing).toStrictEqual(["one", "two"]);
+    expect(mw.header.title).toBe("Title");
+    expect(mw.header.arbitraryThing).toStrictEqual(["one", "two"]);
     expect(nthEvent(mw, 0).dateText).toBe("now");
   });
 });
@@ -145,7 +145,7 @@ arbitraryThing:
 
 now: event`);
 
-    const headerFoldable = mw.timelines[0].foldables[2];
+    const headerFoldable = mw.foldables[2];
     expect(headerFoldable).toBeTruthy();
     expect(headerFoldable.type).toBe("header");
     expect(headerFoldable.endIndex).toBe(46);
@@ -171,7 +171,7 @@ arbEntry: value
 ---
 now: event`);
 
-    let headerFoldable = mw.timelines[0].foldables[2];
+    let headerFoldable = mw.foldables[2];
     expect(headerFoldable).toBeTruthy();
     expect(headerFoldable.type).toBe("header");
     expect(headerFoldable.foldStartIndex).toBe(5);
