@@ -2,28 +2,18 @@ import { LRUCache } from "lru-cache";
 import { DateRangeIso, GranularDateTime } from "./Types.js";
 import { Zone } from "luxon";
 
-const newLru = <K, V>() => new LRUCache<K, V>({ max: 1000 });
+const newLru = <K, V>() => new LRUCache<string, V>({ max: 1000 });
 
 export class Cache {
-  slashDate: LRUCache<string, GranularDateTime>;
-  roundDateUp: LRUCache<string, string>;
-  ranges: LRUCache<string, DateRangeIso>;
-
-  constructor() {
-    this.slashDate = newLru();
-    this.roundDateUp = newLru();
-    this.ranges = newLru();
-  }
+  slashDate: LRUCache<string, GranularDateTime> = newLru();
+  roundDateUp: LRUCache<string, string> = newLru();
+  ranges: LRUCache<string, DateRangeIso> = newLru();
 }
 
 export class Caches {
-  zones: LRUCache<string, Zone>;
-
+  zones: LRUCache<string, Zone> = newLru();
+  yaml: LRUCache<string, any> = newLru();
   caches: { [zoneName: string]: Cache } = {};
-
-  constructor() {
-    this.zones = newLru();
-  }
 
   zone(timezone: Zone) {
     const name = timezone.name;
