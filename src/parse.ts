@@ -101,9 +101,6 @@ export function parseTimeline(
     i = checkEvent(line, lines, i, lengthAtIndex, context, cache);
   }
 
-  // if (context.eventSubgroup) {
-  //   context.events.push(context.eventSubgroup);
-  // }
   return context.toTimeline(
     lengthAtIndex,
     lines.length - 1,
