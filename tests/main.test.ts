@@ -524,11 +524,11 @@ after !firstEvent 3 years 8 days 1 month: third event
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event"
     );
     const first = firstEvent(markwhen);
-    expect(first.eventDescription.eventDescription).toBe("event");
+    expect(first.firstLine.restTrimmed).toBe("event");
     const second = nthEvent(markwhen, 1);
-    expect(second.eventDescription.eventDescription).toBe("next event");
+    expect(second.firstLine.restTrimmed).toBe("next event");
     const third = nthEvent(markwhen, 2);
-    expect(third.eventDescription.eventDescription).toBe("third event");
+    expect(third.firstLine.restTrimmed).toBe("third event");
   });
 
   test.each(sameParse([]))("event title", (p) => {
@@ -536,19 +536,19 @@ after !firstEvent 3 years 8 days 1 month: third event
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\ndec 1 1989 every day for 10 days: recurring event"
     );
     const first = firstEvent(markwhen);
-    expect(first.eventDescription.eventDescription).toBe("event");
+    expect(first.firstLine.restTrimmed).toBe("event");
     const second = nthEvent(markwhen, 1);
-    expect(second.eventDescription.eventDescription).toBe("next event");
+    expect(second.firstLine.restTrimmed).toBe("next event");
     const third = nthEvent(markwhen, 2);
-    expect(third.eventDescription.eventDescription).toBe("third event");
+    expect(third.firstLine.restTrimmed).toBe("third event");
     const last = nthEvent(markwhen, 3);
-    expect(last.eventDescription.eventDescription).toBe("recurring event");
+    expect(last.firstLine.restTrimmed).toBe("recurring event");
   });
 
   test.each(sp())("event title 2", (p) => {
     const mw = p(`03/15/2013-04/2015 every 10 years: China  #Work`);
 
-    expect(nthEvent(mw, 0).eventDescription.eventDescription).toBe("China ");
+    expect(nthEvent(mw, 0).firstLine.restTrimmed).toBe("China ");
   });
 
   test.each(sameParse([]))("supplemental descriptions", (p) => {
@@ -556,13 +556,9 @@ after !firstEvent 3 years 8 days 1 month: third event
       "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\nmore text\neven more text"
     );
     const third = nthEvent(markwhen, 2);
-    expect(third.eventDescription.eventDescription).toBe("third event");
-    expect((third.eventDescription.supplemental[0] as Block).raw).toBe(
-      "more text"
-    );
-    expect((third.eventDescription.supplemental[1] as Block).raw).toBe(
-      "even more text"
-    );
+    expect(third.firstLine.restTrimmed).toBe("third event");
+    expect((third.supplemental[0] as Block).raw).toBe("more text");
+    expect((third.supplemental[1] as Block).raw).toBe("even more text");
   });
 
   test.each(sameParse([]))("list items", (p) => {
@@ -579,25 +575,17 @@ after !firstEvent 3 years 8 days 1 month: third event
 - item 4`);
 
     const [first, second, third] = getEvents(markwhen);
-    expect(second.eventDescription.supplemental.length).toBe(2);
-    expect(second.eventDescription.supplemental[0].type).toBe("listItem");
-    expect((second.eventDescription.supplemental[0] as Block).raw).toBe(
-      "item 1"
-    );
-    expect(second.eventDescription.supplemental[1].type).toBe("listItem");
-    expect((second.eventDescription.supplemental[1] as Block).raw).toBe(
-      "item 2"
-    );
+    expect(second.supplemental.length).toBe(2);
+    expect(second.supplemental[0].type).toBe("listItem");
+    expect((second.supplemental[0] as Block).raw).toBe("item 1");
+    expect(second.supplemental[1].type).toBe("listItem");
+    expect((second.supplemental[1] as Block).raw).toBe("item 2");
 
-    expect(third.eventDescription.supplemental.length).toBe(2);
-    expect(third.eventDescription.supplemental[0].type).toBe("listItem");
-    expect((third.eventDescription.supplemental[0] as Block).raw).toBe(
-      "item 3"
-    );
-    expect(third.eventDescription.supplemental[1].type).toBe("listItem");
-    expect((third.eventDescription.supplemental[1] as Block).raw).toBe(
-      "item 4"
-    );
+    expect(third.supplemental.length).toBe(2);
+    expect(third.supplemental[0].type).toBe("listItem");
+    expect((third.supplemental[0] as Block).raw).toBe("item 3");
+    expect(third.supplemental[1].type).toBe("listItem");
+    expect((third.supplemental[1] as Block).raw).toBe("item 4");
   });
 
   test.each(sameParse([]))("checkbox items", (p) => {
@@ -614,33 +602,21 @@ after !firstEvent 3 years 8 days 1 month: third event
 - [x] item 4`);
 
     const [first, second, third] = getEvents(markwhen);
-    expect(second.eventDescription.supplemental.length).toBe(2);
-    expect(second.eventDescription.supplemental[0].type).toBe("checkbox");
-    expect((second.eventDescription.supplemental[0] as Block).raw).toBe(
-      "item 1"
-    );
-    expect((second.eventDescription.supplemental[0] as Block).value).toBe(
-      false
-    );
-    expect(second.eventDescription.supplemental[1].type).toBe("checkbox");
-    expect((second.eventDescription.supplemental[1] as Block).raw).toBe(
-      "item 2"
-    );
-    expect((second.eventDescription.supplemental[1] as Block).value).toBe(
-      false
-    );
+    expect(second.supplemental.length).toBe(2);
+    expect(second.supplemental[0].type).toBe("checkbox");
+    expect((second.supplemental[0] as Block).raw).toBe("item 1");
+    expect((second.supplemental[0] as Block).value).toBe(false);
+    expect(second.supplemental[1].type).toBe("checkbox");
+    expect((second.supplemental[1] as Block).raw).toBe("item 2");
+    expect((second.supplemental[1] as Block).value).toBe(false);
 
-    expect(third.eventDescription.supplemental.length).toBe(2);
-    expect(third.eventDescription.supplemental[0].type).toBe("checkbox");
-    expect((third.eventDescription.supplemental[0] as Block).raw).toBe(
-      "item 3"
-    );
-    expect((third.eventDescription.supplemental[0] as Block).value).toBe(true);
-    expect(third.eventDescription.supplemental[1].type).toBe("checkbox");
-    expect((third.eventDescription.supplemental[1] as Block).raw).toBe(
-      "item 4"
-    );
-    expect((third.eventDescription.supplemental[1] as Block).value).toBe(true);
+    expect(third.supplemental.length).toBe(2);
+    expect(third.supplemental[0].type).toBe("checkbox");
+    expect((third.supplemental[0] as Block).raw).toBe("item 3");
+    expect((third.supplemental[0] as Block).value).toBe(true);
+    expect(third.supplemental[1].type).toBe("checkbox");
+    expect((third.supplemental[1] as Block).raw).toBe("item 4");
+    expect((third.supplemental[1] as Block).value).toBe(true);
   });
 
   test.each(sp())("to now", (p) => {
@@ -1310,8 +1286,8 @@ now - 10 years: an event #1
 1 year: event #2
 3 years: event #third`);
 
-      const tagLiterals = Object.keys(markwhen.header).filter(
-        (k) => k.startsWith(")")
+      const tagLiterals = Object.keys(markwhen.header).filter((k) =>
+        k.startsWith(")")
       );
       expect(tagLiterals).toHaveLength(1);
       expect(tagLiterals).toContainEqual(")third");
@@ -1324,8 +1300,8 @@ now - 10 years: an event #1 #3342 #098
 1 year: event #2 #another #tag
 3 years: event #third #fourth #fifth #332334b #5`);
 
-      const tagLiterals = Object.keys(markwhen.header).filter(
-        (k) => k.startsWith(")")
+      const tagLiterals = Object.keys(markwhen.header).filter((k) =>
+        k.startsWith(")")
       );
       expect(tagLiterals).toHaveLength(6);
       ["another", "tag", "third", "fourth", "fifth", "332334b"].forEach((i) =>
@@ -1346,8 +1322,8 @@ now - 10 years: an event #1 #3342 #098
 #fifth #332334b #5
 #other`);
 
-        const tagLiterals = Object.keys(markwhen.header).filter(
-          (k) => k.startsWith(")")
+        const tagLiterals = Object.keys(markwhen.header).filter((k) =>
+          k.startsWith(")")
         );
         [
           "another",
@@ -1712,7 +1688,7 @@ now: hello ![](example.com/image)
 
     const supplemental = eventValue(
       get(mw.entries, [0]) as Node<Event>
-    ).eventDescription.supplemental;
+    ).supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
     expect(supplemental?.[0].type).toBe("image");
@@ -1726,10 +1702,8 @@ now: hello ![](example.com/image)
 
     `);
 
-    const firstEvent = eventValue(
-      get(mw.entries, [0]) as Node<Event>
-    );
-    expect(firstEvent?.eventDescription.eventDescription).toBe("hello ");
+    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    expect(firstEvent?.firstLine.restTrimmed).toBe("hello ");
   });
 
   test.each(sp())("images 3", (p) => {
@@ -1737,10 +1711,8 @@ now: hello ![](example.com/image)
       `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
     );
 
-    const firstEvent = eventValue(
-      get(mw.entries, [0]) as Node<Event>
-    );
-    expect(firstEvent?.eventDescription.eventDescription).toBe(
+    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    expect(firstEvent?.firstLine.restTrimmed).toBe(
       "Barn built across the street "
     );
   });
@@ -1759,10 +1731,8 @@ other middle text
 - [] checkbox
 some text after`);
 
-    const firstEvent = eventValue(
-      get(mw.entries, [0]) as Node<Event>
-    );
-    const supplemental = firstEvent?.eventDescription.supplemental;
+    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    const supplemental = firstEvent?.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(7);
     expect(supplemental![0].type).toBe("image");
@@ -1807,16 +1777,16 @@ now: [] some item
 
 6 days: [x] last item`);
       let event = nthEvent(mw, 0);
-      expect(event.eventDescription.completed).toBe(false);
+      expect(event.completed).toBe(false);
 
       event = nthEvent(mw, 1);
-      expect(event.eventDescription.completed).toBe(false);
+      expect(event.completed).toBe(false);
 
       event = nthEvent(mw, 2);
-      expect(event.eventDescription.completed).toBe(undefined);
+      expect(event.completed).toBe(undefined);
 
       event = nthEvent(mw, 3);
-      expect(event.eventDescription.completed).toBe(true);
+      expect(event.completed).toBe(true);
     }
   );
 
@@ -1910,16 +1880,16 @@ describe("recurrence", () => {
     const mw = p(`Dec 1 every 40 days for 1 second: event title`);
 
     const first = nthEvent(mw, 0);
-    expect(first.recurrenceRangeInText?.from).toBe(5);
-    expect(first.recurrenceRangeInText?.to).toBe(32);
+    expect(first.textRanges.recurrence?.from).toBe(5);
+    expect(first.textRanges.recurrence?.to).toBe(32);
   });
 
   test.each(sp())("recurrence range 2", (p) => {
     const mw = p(`2022-08-07 every 12 months x30: event title`);
 
     const first = nthEvent(mw, 0);
-    expect(first.recurrenceRangeInText?.from).toBe(10);
-    expect(first.recurrenceRangeInText?.to).toBe(30);
+    expect(first.textRanges.recurrence?.from).toBe(10);
+    expect(first.textRanges.recurrence?.to).toBe(30);
   });
 
   test.each(sp())("recurrence with space between colon", (p) => {
@@ -1928,13 +1898,11 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrenceRangeInText?.from).toBe(10);
-    expect(first.recurrenceRangeInText?.to).toBe(30);
-    expect(first.eventDescription.eventDescription).toBe("event title");
+    expect(first.textRanges.recurrence?.from).toBe(10);
+    expect(first.textRanges.recurrence?.to).toBe(30);
+    expect(first.firstLine.restTrimmed).toBe("event title");
 
-    const colonRange = mw.ranges.find(
-      (range) => range.to - range.from === 1
-    );
+    const colonRange = mw.ranges.find((range) => range.to - range.from === 1);
     expect(colonRange).toBeTruthy();
     expect(colonRange?.from).toBe(32);
     expect(colonRange?.type).toBe(RangeType.DateRangeColon);

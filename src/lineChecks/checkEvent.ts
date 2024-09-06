@@ -21,14 +21,15 @@ import { Node } from "../Node.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
+import { parseProperties } from "../parseHeader.js";
 
 function updateParseMetadata(
   event: Event,
   dateRange: DateRangePart,
   context: ParsingContext
 ) {
-  if (event.eventDescription.id && !context.ids[event.eventDescription.id]) {
-    context.ids[event.eventDescription.id] = event;
+  if (event.id && !context.ids[event.id]) {
+    context.ids[event.id] = event;
   }
 
   if (!context.earliest || dateRange.fromDateTime < context.earliest) {
@@ -102,10 +103,18 @@ export function checkEvent(
     return i;
   }
 
-  let end = i;
-  let nextLine;
+  const { properties, i: from } = parseProperties(
+    lines,
+    lengthAtIndex,
+    i + 1,
+    context,
+    cache
+  );
 
   const matchedListItems = [];
+  let end = from - 1;
+  let nextLine;
+
   while (true) {
     nextLine = lines[++end];
     if (
@@ -167,6 +176,7 @@ export function checkEvent(
 
   const event = new Event(
     line,
+    properties,
     dateRange,
     eventRange,
     dateRange.dateRangeInText,

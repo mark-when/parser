@@ -52,12 +52,9 @@ export function mapUrls(events: { path: Path; node: Node<Event> }[]): {
   const linkRegex =
     /(?<preceding>^|\s)\[(?<title>[^\]]*)\]\((?<url>\S+\.\S+)\)/g;
 
-  const getUrl = (
-    eventDescription: EventDescription,
-    fromDateTimeIso: DateTimeIso
-  ): string => {
-    if (eventDescription.eventDescription) {
-      const titleFromFirstLine = eventDescription.eventDescription
+  const getUrl = (event: Event, fromDateTimeIso: DateTimeIso): string => {
+    if (event.firstLine.rest) {
+      const titleFromFirstLine = event.firstLine.rest
         .trim()
         .replaceAll(linkRegex, (orig, preceding, title) => title)
         .split(" ")
@@ -71,7 +68,7 @@ export function mapUrls(events: { path: Path; node: Node<Event> }[]): {
       }
     }
 
-    const { supplemental } = eventDescription;
+    const { supplemental } = event;
     if (supplemental.length && supplemental[0].type === "text") {
       // @ts-ignore
       const titleFromFirstBlock = (supplemental[0].raw as string)
@@ -96,10 +93,7 @@ export function mapUrls(events: { path: Path; node: Node<Event> }[]): {
       return {
         path,
         node,
-        url: getUrl(
-          node.value.eventDescription,
-          node.value.dateRangeIso.fromDateTimeIso
-        ),
+        url: getUrl(node.value, node.value.dateRangeIso.fromDateTimeIso),
       };
     })
     .reverse();

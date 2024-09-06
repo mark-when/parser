@@ -70,7 +70,7 @@ export class RelativeDate {
       }
       match = matches.next();
     }
-    return diffObj
+    return diffObj;
   }
 
   static from(
@@ -381,33 +381,56 @@ export const toDateRange = (dr: DateRangeIso) => ({
 });
 
 export class Event {
-  eventString: string;
-  eventText: string;
+  firstLine: {
+    full: string;
+    datePart?: string;
+    rest: string;
+    restTrimmed: string;
+  };
+  textRanges: {
+    whole: Range;
+    datePart: Range;
+    recurrence?: Range;
+  };
+  properties: Record<string, any>;
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
-  recurrenceRangeInText?: Range;
-  rangeInText: Range;
-  eventDescription: EventDescription;
-  dateText?: string;
-  dateRangeInText: Range;
+  tags: string[];
+  supplemental: MarkdownBlock[];
+  matchedListItems: Range[];
+  id?: string;
+  percent?: number;
+  completed?: boolean;
 
   constructor(
-    eventString: string,
+    firstLine: string,
+    properties: Record<string, any>,
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
-    event: EventDescription,
+    eventDescription: EventDescription,
     dateText?: string
   ) {
-    this.eventString = eventString;
-    this.eventText = dateRange.eventText;
+    this.firstLine = {
+      full: firstLine,
+      datePart: dateText,
+      rest: dateRange.eventText,
+      restTrimmed: eventDescription.eventDescription,
+    };
+    this.properties = properties;
+    this.textRanges = {
+      whole: rangeInText,
+      datePart: dateRangeInText,
+      recurrence: dateRange.recurrenceRangeInText,
+    };
     this.dateRangeIso = toDateRangeIso(dateRange);
     this.recurrence = dateRange.recurrence;
-    this.recurrenceRangeInText = dateRange.recurrenceRangeInText;
-    this.rangeInText = rangeInText;
-    this.eventDescription = event;
-    this.dateText = dateText;
-    this.dateRangeInText = dateRangeInText;
+    this.tags = eventDescription.tags;
+    this.supplemental = eventDescription.supplemental;
+    this.matchedListItems = eventDescription.matchedListItems;
+    this.id = eventDescription.id;
+    this.percent = eventDescription.percent;
+    this.completed = eventDescription.completed;
   }
 }
 
@@ -448,7 +471,7 @@ export type ParseResult = Timeline & {
   parser: {
     version: string;
   };
-}
+};
 
 export interface EventGroup extends Array<Event | EventGroup> {
   tags?: string[];

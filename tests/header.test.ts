@@ -107,7 +107,7 @@ now: event`);
     expect(mw.header[")tag1"]).toBe(")abc");
     expect(mw.header[")tag2"]).toBe("red");
     expect(mw.header[")education"]).toBe("white");
-    expect(nthEvent(mw, 0).dateText).toBe("now");
+    expect(nthEvent(mw, 0).firstLine.datePart).toBe("now");
   });
 
   test("can use three dashes", () => {
@@ -130,7 +130,7 @@ now: event`);
     expect(Object.keys(header).length).toBe(6);
     expect(mw.header.title).toBe("Title");
     expect(mw.header.arbitraryThing).toStrictEqual(["one", "two"]);
-    expect(nthEvent(mw, 0).dateText).toBe("now");
+    expect(nthEvent(mw, 0).firstLine.datePart).toBe("now");
   });
 });
 
