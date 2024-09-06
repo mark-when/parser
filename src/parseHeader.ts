@@ -27,6 +27,155 @@ const stringEmailListToArray = (s: string) =>
 const headerKeyRegex = /^([^:]+)(:)(?:\s|$)/;
 const headerValueRegex = /[^:]+$/;
 
+const eventsStarted = (line: string) =>
+  !!line.match(EDTF_START_REGEX) ||
+  !!line.match(EVENT_START_REGEX) ||
+  !!line.match(GROUP_START_REGEX);
+
+const threeDashRegex = /^---/;
+
+export function parseProperties(
+  lines: string[],
+  lengthAtIndex: number[],
+  i: number,
+  context: ParsingContext,
+  cache?: Caches
+) {
+  let propertiesStartLineIndex = i;
+  let propertiesEndLineIndex = propertiesStartLineIndex;
+
+  let firstPropertiesLineIndexWithText = -1;
+  let lastPropertiesLineIndexWithText = -1;
+
+  const propertyRanges = [];
+  const propertyLines = [];
+
+  let hasThreeDashStart = false;
+  const threeDashRanges = [];
+
+  let line = lines[propertiesStartLineIndex];
+
+  const propertyKeyRegex = /^(?!-)([^:]+)(:)(?:\s|$)/;
+  while (typeof line !== "undefined") {
+    if (!hasThreeDashStart && eventsStarted(line)) {
+      break;
+    }
+
+    const isThreeDash = line.match(threeDashRegex);
+    if (isThreeDash) {
+      const range = {
+        type: RangeType.FrontmatterDelimiter,
+        from: lengthAtIndex[propertiesEndLineIndex],
+        to: lengthAtIndex[propertiesEndLineIndex] + 4,
+      };
+      threeDashRanges.push(range);
+      if (!hasThreeDashStart) {
+        propertiesStartLineIndex = propertiesEndLineIndex;
+        hasThreeDashStart = true;
+      } else {
+        if (threeDashRanges.length === 2) {
+          context.ranges.push(threeDashRanges[0]);
+          context.ranges.push(threeDashRanges[1]);
+        }
+        break;
+      }
+    }
+
+    const isComment = checkComments(
+      line,
+      propertiesEndLineIndex,
+      lengthAtIndex,
+      context
+    );
+
+    if (!isComment && !isThreeDash) {
+      const keyMatch = line.match(propertyKeyRegex);
+      if (keyMatch) {
+        propertyRanges.push({
+          type: RangeType.HeaderKey,
+          from: lengthAtIndex[propertiesEndLineIndex],
+          to: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length,
+        });
+        propertyRanges.push({
+          type: RangeType.HeaderKeyColon,
+          from: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length,
+          to: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length + 1,
+        });
+      } else if (!hasThreeDashStart) {
+        break;
+      }
+      const valueMatch = line.match(headerValueRegex);
+      if (valueMatch) {
+        const index = line.indexOf(valueMatch[0]);
+        propertyRanges.push({
+          type: RangeType.HeaderValue,
+          from: lengthAtIndex[propertiesEndLineIndex] + index,
+          to:
+            lengthAtIndex[propertiesEndLineIndex] +
+            index +
+            valueMatch[0].length,
+        });
+      }
+
+      if (keyMatch) {
+        // A key match is what determines if this is a set of properties
+        // We do this here so valueMatch still has access to the line
+        propertyLines.push(line);
+        if (firstPropertiesLineIndexWithText === -1) {
+          firstPropertiesLineIndexWithText = propertiesEndLineIndex;
+        }
+        propertiesEndLineIndex++;
+
+        line = lines[propertiesEndLineIndex];
+      }
+    } else if (!hasThreeDashStart) {
+      break;
+    }
+  }
+
+  let properties = {};
+  if (propertyLines.length) {
+    console.log(propertyLines.join("\n"));
+    try {
+      properties = YAML.parse(propertyLines.join("\n"));
+      context.ranges.push(...propertyRanges);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  if (threeDashRanges.length === 2) {
+    const index = lengthAtIndex[propertiesStartLineIndex];
+    context.foldables[index] = {
+      startLine: propertiesStartLineIndex,
+      startIndex: index,
+      endIndex: lengthAtIndex[propertiesEndLineIndex] - 1,
+      type: "header",
+      foldStartIndex: threeDashRanges.length === 2 ? index + 3 : index,
+    };
+  } else if (firstPropertiesLineIndexWithText >= 0) {
+    if (
+      lastPropertiesLineIndexWithText >= 0 &&
+      lastPropertiesLineIndexWithText !== firstPropertiesLineIndexWithText
+    ) {
+      const index = lengthAtIndex[firstPropertiesLineIndexWithText];
+      const foldable: Foldable = {
+        startLine: firstPropertiesLineIndexWithText,
+        startIndex: index,
+        endIndex: lengthAtIndex[lastPropertiesLineIndexWithText + 1] - 1,
+        type: "header",
+        foldStartIndex: index,
+      };
+      context.foldables[index] = foldable;
+    }
+  }
+
+  return {
+    properties,
+    i: propertiesEndLineIndex,
+  };
+}
+
 export function parseHeader(
   lines: string[],
   lengthAtIndex: number[],
@@ -39,12 +188,6 @@ export function parseHeader(
   let firstHeaderLineIndexWithText = -1;
   let lastHeaderLineIndexWithText = -1;
 
-  const eventsStarted = (line: string) =>
-    !!line.match(EDTF_START_REGEX) ||
-    !!line.match(EVENT_START_REGEX) ||
-    !!line.match(GROUP_START_REGEX);
-
-  const threeDashRegex = /^---/;
   let hasThreeDashStart = false;
   const headerLines = [];
   const headerRanges = [];
