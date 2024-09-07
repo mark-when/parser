@@ -46,7 +46,7 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex.js";
-import { Node, NodeArray } from "../Node.js";
+import { NodeGroup } from "../Node.js";
 import {
   GranularDateTime,
   Event,
@@ -377,8 +377,8 @@ export function parseGroupFromStartTag(
   s: string,
   regexMatch: RegExpMatchArray,
   range: Range
-): Node<NodeArray> {
-  const group: Node<NodeArray> = new Node([]);
+): NodeGroup {
+  const group: NodeGroup = new NodeGroup([]);
   group.tags = [];
   group.style = "group";
   group.rangeInText = range;

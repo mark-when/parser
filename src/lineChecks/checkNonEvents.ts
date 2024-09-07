@@ -12,7 +12,7 @@ export function checkNonEvents(
   context: ParsingContext,
   cache?: Caches
 ): boolean {
-  return [checkComments, checkTags, checkGroupStart, checkGroupEnd].some((f) =>
+  return [checkComments, checkTags, checkGroupEnd].some((f) =>
     f(line, i, lengthAtIndex, context, cache)
   );
 }

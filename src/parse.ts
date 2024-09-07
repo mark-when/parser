@@ -1,4 +1,9 @@
-import { Timeline, DateRangePart, ParseResult, emptyTimeline } from "./Types.js";
+import {
+  Timeline,
+  DateRangePart,
+  ParseResult,
+  emptyTimeline,
+} from "./Types.js";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch.js";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch.js";
 import { Caches } from "./Cache.js";
@@ -13,6 +18,7 @@ import {
   ISOMap,
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
+import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
@@ -89,17 +95,36 @@ export function parseTimeline(
   const context = new ParsingContext();
 
   const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
-
-  for (let i = headerEndLineIndex; i < lines.length; i++) {
+  let i = headerEndLineIndex;
+  while (i < lines.length) {
     const line = lines[i];
     if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
+      i++;
       continue;
     }
-
-    // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
-    // but also breaks folding of comments under events
-    i = checkEvent(line, lines, i, lengthAtIndex, context, cache);
+    const possibleGroup = checkGroupStart(
+      lines,
+      i,
+      lengthAtIndex,
+      context,
+      cache
+    );
+    if (possibleGroup) {
+      i = possibleGroup.end;
+      continue;
+    }
+    i = checkEvent(line, lines, i, lengthAtIndex, context, cache) + 1;
   }
+  // for (let i = headerEndLineIndex; i < lines.length; i++) {
+  //   const line = lines[i];
+  //   if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
+  //     continue;
+  //   }
+
+  //   // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
+  //   // but also breaks folding of comments under events
+  //   i = checkEvent(line, lines, i, lengthAtIndex, context, cache);
+  // }
 
   return context.toTimeline(
     lengthAtIndex,

@@ -135,7 +135,6 @@ export function parseProperties(
 
   let properties = {};
   if (propertyLines.length) {
-    console.log(propertyLines.join("\n"));
     try {
       properties = YAML.parse(propertyLines.join("\n"));
       context.ranges.push(...propertyRanges);

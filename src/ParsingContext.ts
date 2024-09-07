@@ -1,5 +1,5 @@
 import { DateTime, SystemZone, Zone } from "luxon";
-import { NodeArray, SomeNode, Node } from "./Node.js";
+import { NodeArray, SomeNode, Node, NodeGroup } from "./Node.js";
 import { get, isEventNode, push } from "./Noder.js";
 import {
   Path,
@@ -130,9 +130,10 @@ export class ParsingContext {
     if (this.timezoneStack.length > 1) {
       const group = get(this.events, this.currentPath);
       if (group && !isEventNode(group)) {
+        const nodeGroup = group as NodeGroup;
         const lastTagsDefinitionInHeader =
-          group.tags?.length &&
-          this.header[`)${group.tags[group.tags.length - 1]}`];
+          nodeGroup.tags?.length &&
+          this.header[`)${nodeGroup.tags[nodeGroup.tags.length - 1]}`];
         if (
           typeof lastTagsDefinitionInHeader === "object" &&
           typeof lastTagsDefinitionInHeader.timezone !== "undefined"

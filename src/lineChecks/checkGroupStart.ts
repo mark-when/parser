@@ -4,14 +4,16 @@ import { GROUP_START_REGEX } from "../regex.js";
 import { RangeType } from "../Types.js";
 import { Caches } from "../Cache.js";
 import { parseZone } from "../zones/parseZone.js";
+import { parseProperties } from "../parseHeader.js";
 
 export function checkGroupStart(
-  line: string,
+  lines: string[],
   i: number,
   lengthAtIndex: number[],
   context: ParsingContext,
   cache?: Caches
-): boolean {
+): { end: number } | false {
+  const line = lines[i];
   const groupStart = line.match(GROUP_START_REGEX);
   if (groupStart) {
     // We're starting a new group here.
@@ -37,6 +39,16 @@ export function checkGroupStart(
         context.timezoneStack.push(zone);
       }
     }
+
+    const { properties, i: end } = parseProperties(
+      lines,
+      lengthAtIndex,
+      i + 1,
+      context,
+      cache
+    );
+    group.properties = properties;
+
     context.push(group);
     context.startFoldableSection({
       type: RangeType.Section,
@@ -46,7 +58,7 @@ export function checkGroupStart(
       foldStartIndex: lengthAtIndex[i] + line.length,
     });
 
-    return true;
+    return { end };
   }
   return false;
 }
