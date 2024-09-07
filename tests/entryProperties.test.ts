@@ -1,5 +1,4 @@
-import { Event, isEventNode, iterate, parse, walk2 } from "../src";
-import { NodeGroup } from "../src/Node";
+import { Event, isEvent, iter, parse } from "../src";
 import { nthEvent } from "./testUtilities";
 
 const first = (mw: string) => nthEvent(parse(mw), 0);
@@ -73,21 +72,20 @@ abc: 123
 1995: another event`;
 
     const events = parse(mw);
-    for (const { node } of walk2(events.events)) {
-      if (!node) {
+    for (const { eventy } of iter(events.events)) {
+      if (!eventy) {
         break;
       }
-      if (isEventNode(node)) {
+      if (isEvent(eventy)) {
         continue;
       } else {
-        const group = node as NodeGroup;
-        if (group.title === "Happy events") {
-          expect(group.properties).toEqual({
+        if (eventy.title === "Happy events") {
+          expect(eventy.properties).toEqual({
             someKey: "some value",
             otherKey: "other value",
           });
-        } else if (group.title === "Sad events") {
-          expect(group.properties).toEqual({
+        } else if (eventy.title === "Sad events") {
+          expect(eventy.properties).toEqual({
             property: "value",
             abc: 123,
           });

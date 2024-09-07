@@ -8,18 +8,15 @@ import {
   toDateRange,
   RangeType,
   RelativeDate,
+  Eventy,
+  flat,
+  toArray,
+  iter,
+  isEvent,
+  get,
+  flatMap,
 } from "../src/Types";
 import { DateTime } from "luxon";
-import { SomeNode, Node } from "../src/Node";
-import {
-  eventValue,
-  flat,
-  flatMap,
-  get,
-  isEventNode,
-  iterate,
-  toArray,
-} from "../src/Noder";
 import {
   currentYear,
   firstEvent,
@@ -1564,7 +1561,7 @@ now: 9
 
 `);
 
-    let head: SomeNode = mw.events;
+    let head: Eventy = mw.events;
     const flt = flat(head);
     expect(flt).toHaveLength(9);
   });
@@ -1624,11 +1621,9 @@ endGroup
     let i = 0;
     let s = ``;
     const asArray = toArray(mw.events);
-    for (const { path, node } of iterate(mw.events)) {
+    for (const { path, eventy } of iter(mw.events)) {
       expect(JSON.stringify(asArray[i].path)).toEqual(JSON.stringify(path));
-      expect(JSON.stringify(asArray[i].node.value)).toEqual(
-        JSON.stringify(node.value)
-      );
+      expect(JSON.stringify(asArray[i].eventy)).toEqual(JSON.stringify(eventy));
       i++;
     }
     expect(i).toEqual(numNodes);
@@ -1649,8 +1644,8 @@ group 10
 2021: an event
 `);
 
-    for (const { path, node } of iterate(mw.events)) {
-      if (isEventNode(node)) {
+    for (const { path, eventy } of iter(mw.events)) {
+      if (isEvent(eventy)) {
         // The path of the node with an actual event
         expect(path).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
       }
@@ -1686,9 +1681,7 @@ now: hello ![](example.com/image)
 
     `);
 
-    const supplemental = eventValue(
-      get(mw.events, [0]) as Node<Event>
-    ).supplemental;
+    const supplemental = (get(mw.events, [0]) as Event)?.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
     expect(supplemental?.[0].type).toBe("image");
@@ -1702,7 +1695,7 @@ now: hello ![](example.com/image)
 
     `);
 
-    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
+    const firstEvent = get(mw.events, [0]) as Event;
     expect(firstEvent?.firstLine.restTrimmed).toBe("hello ");
   });
 
@@ -1711,7 +1704,7 @@ now: hello ![](example.com/image)
       `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
     );
 
-    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
+    const firstEvent = get(mw.events, [0]) as Event;
     expect(firstEvent?.firstLine.restTrimmed).toBe(
       "Barn built across the street "
     );
@@ -1731,7 +1724,7 @@ other middle text
 - [] checkbox
 some text after`);
 
-    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
+    const firstEvent = get(mw.events, [0]) as Event;
     const supplemental = firstEvent?.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(7);
@@ -1979,13 +1972,11 @@ describe("edtf casual times", () => {
 });
 
 function getDateRanges(m: ParseResult): DateRange[] {
-  return flat(m.events).map((n) =>
-    toDateRange((n.value as Event).dateRangeIso)
-  );
+  return flat(m.events).map((n) => toDateRange(n.dateRangeIso));
 }
 
 function getEvents(m: ParseResult) {
-  return flatMap(m.events, (n) => n.value as Event);
+  return flat(m.events)
 }
 
 function checkDate(

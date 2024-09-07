@@ -3,3 +3,7 @@ lib/
 tests/big.mw
 cache-test.cpuprofile
 cjs/
+tests/c.ics
+tests/ical1.ics
+tests/school.ics
+tests/school.mw

@@ -1,20 +1,19 @@
 import { DateTime } from "luxon";
 import { parse } from "../src";
 import { Caches } from "../src/Cache";
-import { iterate, isEventNode } from "../src/Noder";
-import { ParseResult, Event } from "../src/Types";
+import { ParseResult, Event, isEvent, iter } from "../src/Types";
 
 export const firstEvent = (markwhen: ParseResult) => nthEvent(markwhen, 0);
 
 export const nthEvent = (markwhen: ParseResult, n: number) =>
-  nthNode(markwhen, n).value as Event;
+  nthNode(markwhen, n) as Event;
 
 const nthNode = (markwhen: ParseResult, n: number) => {
   let i = 0;
-  for (const { path, node } of iterate(markwhen.events)) {
-    if (isEventNode(node)) {
+  for (const { path, eventy } of iter(markwhen.events)) {
+    if (isEvent(eventy)) {
       if (i === n) {
-        return node;
+        return eventy;
       }
       i++;
     }
