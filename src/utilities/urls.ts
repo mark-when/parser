@@ -8,7 +8,7 @@ export const toArray = (node: Eventy | undefined, cutoff: DateTime) => {
     return [];
   }
   const array = [] as { path: Path; event: Event }[];
-  for (const { path, node: eventy } of iter(node)) {
+  for (const { path, eventy } of iter(node)) {
     if (isEvent(eventy)) {
       if (+DateTime.fromISO(eventy.dateRangeIso.fromDateTimeIso) < +cutoff) {
         array.push({ path, event: eventy });

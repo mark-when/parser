@@ -511,7 +511,7 @@ export class Path extends Array<number> {
 }
 
 export const toArray = (node: Eventy) => {
-  const array = [] as { path: Path; node: Eventy }[];
+  const array = [] as { path: Path; eventy: Eventy }[];
   for (const pathAndNode of iter(node)) {
     array.push(pathAndNode);
   }
@@ -519,13 +519,13 @@ export const toArray = (node: Eventy) => {
 };
 
 export function* iter(
-  node: Eventy,
+  eventy: Eventy,
   path: Path = []
-): Generator<{ node: Eventy; path: number[] }> {
-  yield { node, path };
-  if (node && !isEvent(node)) {
-    for (let i = 0; i < node.children.length; i++) {
-      yield* iter(node.children[i], [...path, i]);
+): Generator<{ eventy: Eventy; path: number[] }> {
+  yield { eventy, path };
+  if (eventy && !isEvent(eventy)) {
+    for (let i = 0; i < eventy.children.length; i++) {
+      yield* iter(eventy.children[i], [...path, i]);
     }
   }
 }
@@ -591,7 +591,7 @@ export const getLast = (node: Eventy): { node: Eventy; path: Path } => {
   };
 };
 
-export const flat = (node: Eventy) => flatMap(node, (n) => n);
+export const flat = (node: Eventy) => flatMap(node, (n) => n) as Array<Event>;
 
 export const flatMap = <T>(
   node: Eventy,
