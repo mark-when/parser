@@ -1,35 +1,33 @@
 import { DateTime } from "luxon";
-import { SomeNode, Node } from "../Node.js";
-import { walk, isEventNode } from "../Noder.js";
-import { Path, EventDescription, DateTimeIso, Event } from "../Types.js";
+import { Path, Eventy, iter, isEvent, DateTimeIso, Event } from "../Types.js";
 
 const disallowedCharacters = /[^A-Za-z0-9_-]/g;
 
-export const toArray = (node: SomeNode | undefined, cutoff: DateTime) => {
+export const toArray = (node: Eventy | undefined, cutoff: DateTime) => {
   if (!node) {
     return [];
   }
-  const array = [] as { path: Path; node: Node<Event> }[];
-  walk(node, [], (n, path) => {
-    if (n && isEventNode(n)) {
-      if (+DateTime.fromISO(n.value.dateRangeIso.fromDateTimeIso) < +cutoff) {
-        array.push({ path, node: n });
+  const array = [] as { path: Path; event: Event }[];
+  for (const { path, node: eventy } of iter(node)) {
+    if (isEvent(eventy)) {
+      if (+DateTime.fromISO(eventy.dateRangeIso.fromDateTimeIso) < +cutoff) {
+        array.push({ path, event: eventy });
       }
     }
     if (array.length === 10000) {
-      return true;
+      return array;
     }
-  });
+  }
   return array.sort(
     (a, b) =>
-      +DateTime.fromISO(b.node.value.dateRangeIso.fromDateTimeIso) -
-      +DateTime.fromISO(a.node.value.dateRangeIso.fromDateTimeIso)
+      +DateTime.fromISO(b.event.dateRangeIso.fromDateTimeIso) -
+      +DateTime.fromISO(a.event.dateRangeIso.fromDateTimeIso)
   );
 };
 
-export function mapUrls(events: { path: Path; node: Node<Event> }[]): {
+export function mapUrls(events: { path: Path; event: Event }[]): {
   path: Path;
-  node: Node<Event>;
+  event: Event;
   url: string;
 }[] {
   const usedUrls = new Set<string>();
@@ -89,11 +87,11 @@ export function mapUrls(events: { path: Path; node: Node<Event> }[]): {
 
   return events
     .reverse()
-    .map(({ path, node }) => {
+    .map(({ path, event }) => {
       return {
         path,
-        node,
-        url: getUrl(node.value, node.value.dateRangeIso.fromDateTimeIso),
+        event,
+        url: getUrl(event, event.dateRangeIso.fromDateTimeIso),
       };
     })
     .reverse();

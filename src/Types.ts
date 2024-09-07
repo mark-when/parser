@@ -1,7 +1,6 @@
 import { DateTime, DurationLike, DurationLikeObject } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
-import { Node, NodeArray, SomeNode } from "./Node.js";
 import { Foldable } from "./ParsingContext.js";
 import {
   AMOUNT_REGEX,
@@ -380,6 +379,25 @@ export const toDateRange = (dr: DateRangeIso) => ({
   toDateTime: DateTime.fromISO(dr.toDateTimeIso),
 });
 
+export type Eventy = Event | EventGroup;
+export function isEvent(eventy: Eventy): eventy is Event {
+  return !(eventy as EventGroup).children;
+}
+export type GroupRange = DateRange & { maxFrom: DateTime };
+export class EventGroup {
+  textRanges?: {
+    whole: Range;
+  };
+  properties: Record<string, any> = {};
+  tags: string[] = [];
+  title: string = "";
+  range?: GroupRange;
+  startExpanded?: boolean;
+  style?: GroupStyle;
+
+  children: Array<Event | EventGroup> = [];
+}
+
 export class Event {
   firstLine: {
     full: string;
@@ -439,7 +457,7 @@ export type IdedEvents = { [id: string]: Event };
 export interface Timeline {
   ranges: Range[];
   foldables: { [index: number]: Foldable };
-  events: Node<NodeArray>;
+  events: EventGroup;
   header: any;
   ids: IdedEvents;
   metadata: TimelineMetadata;
@@ -448,7 +466,7 @@ export interface Timeline {
 export function emptyTimeline(): Timeline {
   const now = DateTime.now();
   return {
-    events: new Node([]),
+    events: new EventGroup(),
     ranges: [],
     foldables: [],
     ids: {},
@@ -473,19 +491,6 @@ export type ParseResult = Timeline & {
   };
 };
 
-export interface EventGroup extends Array<Event | EventGroup> {
-  tags?: string[];
-  title?: string;
-  range?: {
-    min: DateTime;
-    max: DateTime;
-    latest: DateTime;
-  };
-  startExpanded?: boolean;
-  style?: GroupStyle;
-  rangeInText?: Range;
-}
-
 export interface TimelineMetadata {
   earliestTime: DateTimeIso;
   latestTime: DateTimeIso;
@@ -504,3 +509,144 @@ export class Path extends Array<number> {
     return Path.from([0]);
   }
 }
+
+export const toArray = (node: Eventy) => {
+  const array = [] as { path: Path; node: Eventy }[];
+  for (const pathAndNode of iter(node)) {
+    array.push(pathAndNode);
+  }
+  return array;
+};
+
+export function* iter(
+  node: Eventy,
+  path: Path = []
+): Generator<{ node: Eventy; path: number[] }> {
+  yield { node, path };
+  if (node && !isEvent(node)) {
+    for (let i = 0; i < node.children.length; i++) {
+      yield* iter(node.children[i], [...path, i]);
+    }
+  }
+}
+
+export const push = (
+  node: Event | EventGroup,
+  onto: EventGroup,
+  path?: Path,
+  tail?: Event
+): { path: number[]; tail?: Event } => {
+  if (!path || !path.length) {
+    onto.children.push(node);
+    if (!isEvent(node)) {
+      return {
+        path: [onto.children.length - 1, node.children.length],
+        tail,
+      };
+    } else {
+      return {
+        path: [onto.children.length - 1],
+        tail: node,
+      };
+    }
+  } else {
+    const { tail: newTail, path: newPath } = push(
+      node,
+      onto.children[path[0]] as EventGroup,
+      path.slice(1),
+      tail
+    );
+    return {
+      path: [path[0], ...newPath],
+      tail: newTail,
+    };
+  }
+};
+
+export const get = (root: Eventy, path: Path): Eventy | undefined => {
+  if (!path.length) {
+    return root;
+  }
+  // If it wasn't us and we don't have any nodes to offer,
+  // return undefined
+  const arr = root as EventGroup;
+  if (!arr.children.length || arr.children.length - 1 < path[0]) {
+    return undefined;
+  }
+  return get(arr.children[path[0]], path.slice(1));
+};
+
+export const getLast = (node: Eventy): { node: Eventy; path: Path } => {
+  if (isEvent(node)) {
+    return { node, path: [] };
+  }
+  if (!node.children.length) {
+    return { node, path: [] };
+  }
+  const indexOfLast = node.children.length - 1;
+  const result = getLast(node.children[indexOfLast]);
+  return {
+    node: result.node,
+    path: [indexOfLast, ...result.path],
+  };
+};
+
+export const flat = (node: Eventy) => flatMap(node, (n) => n);
+
+export const flatMap = <T>(
+  node: Eventy,
+  mapper: (n: Eventy) => T
+): Array<T> => {
+  if (isEvent(node)) {
+    return [mapper(node)];
+  }
+  return node.children.flatMap((n) => flatMap(n, mapper));
+};
+
+export const eventRange = (e: Event) => toDateRange(e.dateRangeIso);
+
+export const ranges = (root?: Eventy): GroupRange | undefined => {
+  if (!root) {
+    return undefined;
+  }
+
+  if (isEvent(root)) {
+    return {
+      ...eventRange(root),
+      maxFrom: eventRange(root).fromDateTime,
+    };
+  }
+
+  const childRanges: GroupRange | undefined = root.children.reduce(
+    (prev: GroupRange | undefined, curr) => {
+      const currRange = ranges(curr);
+      if (!prev) {
+        return currRange;
+      }
+      if (!currRange) {
+        return currRange;
+      }
+
+      const min =
+        +currRange.fromDateTime < +prev.fromDateTime
+          ? currRange.fromDateTime
+          : prev.fromDateTime;
+      const max =
+        +currRange.toDateTime > +prev.toDateTime
+          ? currRange.toDateTime
+          : prev.toDateTime;
+      const maxFrom =
+        +currRange.maxFrom > +prev.maxFrom ? currRange.maxFrom : prev.maxFrom;
+
+      const range = {
+        fromDateTime: min,
+        toDateTime: max,
+        maxFrom,
+      };
+      return range;
+    },
+    undefined
+  );
+
+  return childRanges;
+};

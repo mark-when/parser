@@ -1,12 +1,16 @@
 import { DateTime, SystemZone, Zone } from "luxon";
-import { NodeArray, SomeNode, Node, NodeGroup } from "./Node.js";
-import { get, isEventNode, push } from "./Noder.js";
 import {
   Path,
   IdedEvents,
   AMERICAN_DATE_FORMAT,
   Timeline,
   Range,
+  EventGroup,
+  Eventy,
+  push,
+  get,
+  isEvent,
+  Event,
 } from "./Types.js";
 import { parseZone } from "./zones/parseZone.js";
 import { Caches } from "./Cache.js";
@@ -22,9 +26,9 @@ export interface Foldable {
 export class ParsingContext {
   now = DateTime.now();
 
-  events: Node<NodeArray>;
-  head?: SomeNode;
-  tail?: SomeNode;
+  events: EventGroup;
+  head?: Eventy;
+  tail?: Event;
   currentPath: Path;
 
   ids: IdedEvents;
@@ -44,7 +48,7 @@ export class ParsingContext {
   timezoneStack: Zone[];
 
   constructor() {
-    this.events = new Node([]);
+    this.events = new EventGroup();
     this.ids = {};
     this.paletteIndex = 0;
     this.earliest = undefined;
@@ -104,7 +108,7 @@ export class ParsingContext {
     }
   }
 
-  push(node: SomeNode) {
+  push(node: Eventy) {
     const { path, tail: newTail } = push(
       node,
       this.events,
@@ -129,11 +133,10 @@ export class ParsingContext {
     // Pop timezone if necessary
     if (this.timezoneStack.length > 1) {
       const group = get(this.events, this.currentPath);
-      if (group && !isEventNode(group)) {
-        const nodeGroup = group as NodeGroup;
+      if (group && !isEvent(group)) {
         const lastTagsDefinitionInHeader =
-          nodeGroup.tags?.length &&
-          this.header[`)${nodeGroup.tags[nodeGroup.tags.length - 1]}`];
+          group.tags?.length &&
+          this.header[`)${group.tags[group.tags.length - 1]}`];
         if (
           typeof lastTagsDefinitionInHeader === "object" &&
           typeof lastTagsDefinitionInHeader.timezone !== "undefined"
@@ -146,7 +149,7 @@ export class ParsingContext {
       }
     }
     // Assign text range
-    // const group = this.events.get(this.currentPath) as Node<NodeArray>;
+    // const group = this.events.get(this.currentPath) as Node<EventGroup>;
     // group.rangeInText!.lineTo = lineTo;
     // group.rangeInText!.to = to;
     this.finishFoldableSection(lineTo.line, to);

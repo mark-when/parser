@@ -17,7 +17,6 @@ import {
 import { checkComments } from "./checkComments.js";
 import { checkListItems } from "./checkListItems.js";
 import { Caches } from "../Cache.js";
-import { Node } from "../Node.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
@@ -185,7 +184,7 @@ export function checkEvent(
   );
 
   if (event) {
-    context.push(new Node(event));
+    context.push(event);
     updateParseMetadata(event, dateRange, context);
     if (end - i > 1) {
       context.foldables[lengthAtIndex[i]] = {

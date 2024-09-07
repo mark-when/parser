@@ -46,7 +46,6 @@ import {
   GROUP_START_REGEX,
   TAG_REGEX,
 } from "../regex.js";
-import { NodeGroup } from "../Node.js";
 import {
   GranularDateTime,
   Event,
@@ -56,6 +55,7 @@ import {
   toDateRange,
   DateTimeIso,
   DateTimeGranularity,
+  EventGroup,
 } from "../Types.js";
 import { Caches } from "../Cache.js";
 
@@ -377,11 +377,11 @@ export function parseGroupFromStartTag(
   s: string,
   regexMatch: RegExpMatchArray,
   range: Range
-): NodeGroup {
-  const group: NodeGroup = new NodeGroup([]);
+): EventGroup {
+  const group: EventGroup = new EventGroup();
   group.tags = [];
   group.style = "group";
-  group.rangeInText = range;
+  group.textRanges = { whole: range };
 
   s = s
     .replace(GROUP_START_REGEX, (match, startToken, groupOrSection) => {
@@ -402,7 +402,7 @@ export function parseGroupFromStartTag(
 }
 
 export function getPriorEvent(context: ParsingContext): Event | undefined {
-  return context.tail?.value as Event;
+  return context.tail;
 }
 
 export function getPriorEventToDateTime(

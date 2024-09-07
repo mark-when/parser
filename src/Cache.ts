@@ -2,7 +2,7 @@ import { LRUCache } from "lru-cache";
 import { DateRangeIso, GranularDateTime } from "./Types.js";
 import { Zone } from "luxon";
 
-const newLru = <K, V>() => new LRUCache<string, V>({ max: 1000 });
+const newLru = <K, V extends {}>() => new LRUCache<string, V>({ max: 1000 });
 
 export class Cache {
   slashDate: LRUCache<string, GranularDateTime> = newLru();
