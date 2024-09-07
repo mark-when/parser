@@ -73,7 +73,7 @@ abc: 123
 1995: another event`;
 
     const events = parse(mw);
-    for (const { node } of walk2(events.entries)) {
+    for (const { node } of walk2(events.events)) {
       if (!node) {
         break;
       }
