@@ -439,7 +439,7 @@ export type IdedEvents = { [id: string]: Event };
 export interface Timeline {
   ranges: Range[];
   foldables: { [index: number]: Foldable };
-  entries: Node<NodeArray>;
+  events: Node<NodeArray>;
   header: any;
   ids: IdedEvents;
   metadata: TimelineMetadata;
@@ -448,7 +448,7 @@ export interface Timeline {
 export function emptyTimeline(): Timeline {
   const now = DateTime.now();
   return {
-    entries: new Node([]),
+    events: new Node([]),
     ranges: [],
     foldables: [],
     ids: {},

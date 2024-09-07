@@ -11,7 +11,7 @@ export const nthEvent = (markwhen: ParseResult, n: number) =>
 
 const nthNode = (markwhen: ParseResult, n: number) => {
   let i = 0;
-  for (const { path, node } of iterate(markwhen.entries)) {
+  for (const { path, node } of iterate(markwhen.events)) {
     if (isEventNode(node)) {
       if (i === n) {
         return node;

@@ -161,7 +161,7 @@ export class ParsingContext {
       ? this.maxDuration / 1000 / 60 / 60 / 24
       : this.now.diff(this.now.minus({ years: 1 })).as("days");
     return {
-      entries: this.events,
+      events: this.events,
       ids: this.ids,
       ranges: this.ranges,
       foldables: this.foldables,

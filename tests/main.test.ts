@@ -1564,7 +1564,7 @@ now: 9
 
 `);
 
-    let head: SomeNode = mw.entries;
+    let head: SomeNode = mw.events;
     const flt = flat(head);
     expect(flt).toHaveLength(9);
   });
@@ -1623,8 +1623,8 @@ endGroup
     const numNodes = 16;
     let i = 0;
     let s = ``;
-    const asArray = toArray(mw.entries);
-    for (const { path, node } of iterate(mw.entries)) {
+    const asArray = toArray(mw.events);
+    for (const { path, node } of iterate(mw.events)) {
       expect(JSON.stringify(asArray[i].path)).toEqual(JSON.stringify(path));
       expect(JSON.stringify(asArray[i].node.value)).toEqual(
         JSON.stringify(node.value)
@@ -1649,7 +1649,7 @@ group 10
 2021: an event
 `);
 
-    for (const { path, node } of iterate(mw.entries)) {
+    for (const { path, node } of iterate(mw.events)) {
       if (isEventNode(node)) {
         // The path of the node with an actual event
         expect(path).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -1687,7 +1687,7 @@ now: hello ![](example.com/image)
     `);
 
     const supplemental = eventValue(
-      get(mw.entries, [0]) as Node<Event>
+      get(mw.events, [0]) as Node<Event>
     ).supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(2);
@@ -1702,7 +1702,7 @@ now: hello ![](example.com/image)
 
     `);
 
-    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
     expect(firstEvent?.firstLine.restTrimmed).toBe("hello ");
   });
 
@@ -1711,7 +1711,7 @@ now: hello ![](example.com/image)
       `10/2010: Barn built across the street ![](https://commons.wikimedia.org/wiki/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg#/media/File:Suzanna_Randall_at_ESO_Headquarters_in_Garching,_Germany.jpg)`
     );
 
-    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
     expect(firstEvent?.firstLine.restTrimmed).toBe(
       "Barn built across the street "
     );
@@ -1731,7 +1731,7 @@ other middle text
 - [] checkbox
 some text after`);
 
-    const firstEvent = eventValue(get(mw.entries, [0]) as Node<Event>);
+    const firstEvent = eventValue(get(mw.events, [0]) as Node<Event>);
     const supplemental = firstEvent?.supplemental;
     expect(supplemental).toBeTruthy();
     expect(supplemental).toHaveLength(7);
@@ -1979,13 +1979,13 @@ describe("edtf casual times", () => {
 });
 
 function getDateRanges(m: ParseResult): DateRange[] {
-  return flat(m.entries).map((n) =>
+  return flat(m.events).map((n) =>
     toDateRange((n.value as Event).dateRangeIso)
   );
 }
 
 function getEvents(m: ParseResult) {
-  return flatMap(m.entries, (n) => n.value as Event);
+  return flatMap(m.events, (n) => n.value as Event);
 }
 
 function checkDate(
