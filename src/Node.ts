@@ -7,16 +7,15 @@ export type NodeValue = NodeArray | Event;
 export type GroupRange = (DateRange & { maxFrom: DateTime }) | undefined;
 
 export class Node<T extends NodeValue> {
-  constructor(value: T) {
-    this.value = value;
-  }
+  constructor(public value: T) {}
+}
 
-  value: T;
-
-  tags?: string[];
-  title?: string;
+export class NodeGroup extends Node<NodeArray> {
+  tags: string[] = [];
+  title: string = "";
   range?: GroupRange;
   startExpanded?: boolean;
   style?: GroupStyle;
   rangeInText?: Range;
+  properties: Record<string, any> = {};
 }

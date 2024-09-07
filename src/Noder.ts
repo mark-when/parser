@@ -1,4 +1,11 @@
-import { GroupRange, NodeArray, SomeNode, Node, NodeValue } from "./Node.js";
+import {
+  GroupRange,
+  NodeArray,
+  SomeNode,
+  Node,
+  NodeValue,
+  NodeGroup,
+} from "./Node.js";
 import { Event, Path, toDateRange } from "./Types.js";
 
 export const toArray = (node: SomeNode) => {
@@ -27,7 +34,7 @@ export const walk = (
 
 export function* walk2(
   node: SomeNode | undefined,
-  path: Path
+  path: Path = []
 ): Generator<{ node: SomeNode | undefined; path: number[] }> {
   yield { node, path };
   if (node && !isEventNode(node)) {
@@ -204,16 +211,20 @@ export const ranges = (root: SomeNode): GroupRange => {
   return childRanges;
 };
 
-export const blankClone = <T extends NodeValue>(node: Node<T>): Node<T> => {
+export const blankClone = <T extends NodeValue>(
+  node: Node<T> | NodeGroup
+): Node<T> => {
   if (!Array.isArray(node.value)) {
     return new Node(node.value!);
   }
-  const clone = new Node([] as NodeArray);
-  clone.startExpanded = node.startExpanded;
-  clone.tags = node.tags;
-  clone.title = node.title;
-  clone.style = node.style;
-  clone.rangeInText = node.rangeInText;
+  const orig = node as NodeGroup;
+  const clone = new NodeGroup([]);
+  clone.startExpanded = orig.startExpanded;
+  clone.tags = orig.tags;
+  clone.title = orig.title;
+  clone.style = orig.style;
+  clone.rangeInText = orig.rangeInText;
+  clone.properties = orig.properties;
   // @ts-ignore
   return clone;
 };
