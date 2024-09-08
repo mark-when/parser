@@ -55,7 +55,7 @@ export function parseProperties(
 
   let line = lines[propertiesStartLineIndex];
 
-  const propertyKeyRegex = /^(?!-)([^:]+)(:)(?:\s|$)/;
+  const propertyKeyRegex = /^(?!-)\s*(\w+)(:)(?:\s|$)/;
   while (typeof line !== "undefined") {
     if (!hasThreeDashStart && eventsStarted(line)) {
       break;

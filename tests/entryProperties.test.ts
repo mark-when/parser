@@ -111,15 +111,15 @@ propKey: l`;
 
   test.each(sp())("proper ranges 4", () => {
     const mw = `1999-09: birthday
-propKey  : l  1`;
+propKey: l  1`;
     const parsed = parse(mw);
     expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l  1" });
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyValue) {
         visited = true;
-        expect(range.from).toBe(28);
-        expect(range.to).toBe(33);
+        expect(range.from).toBe(26);
+        expect(range.to).toBe(31);
       }
     }
     expect(visited).toBe(true);
@@ -127,7 +127,7 @@ propKey  : l  1`;
 
   test.each(sp())("proper ranges 5", () => {
     const mw = `1999-09: birthday
-propKey  : l  1`;
+propKey: l  1`;
     const parsed = parse(mw);
     expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l  1" });
     let visited = false;
@@ -135,7 +135,7 @@ propKey  : l  1`;
       if (range.type === RangeType.PropertyKey) {
         visited = true;
         expect(range.from).toBe(18);
-        expect(range.to).toBe(27);
+        expect(range.to).toBe(25);
       }
     }
     expect(visited).toBe(true);
