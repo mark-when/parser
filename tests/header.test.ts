@@ -1,5 +1,5 @@
-import { parse } from "../src/index";
-import { nthEvent } from "./testUtilities";
+import { parse, RangeType } from "../src/index";
+import { nthEvent, sp } from "./testUtilities";
 import { resolve } from "path";
 import { readFileSync } from "fs";
 import { set } from "../src/utilities/header";
@@ -7,7 +7,7 @@ import { set } from "../src/utilities/header";
 const small = () => readFileSync(resolve("./", "tests/big.mw"), "utf-8");
 
 describe("editors", () => {
-  test("single editor", () => {
+  test.each(sp())("single editor", () => {
     const mw = parse(`
 title: this is the title
 edit: email@example.com`);
@@ -19,7 +19,7 @@ edit: email@example.com`);
     expect(header.edit as string[]).toContain("email@example.com");
   });
 
-  test("Multiple editors separated by commas", () => {
+  test.each(sp())("Multiple editors separated by commas", () => {
     const mw = parse(`
 title: this is the title
 edit: email@example.com, other@example.com`);
@@ -32,7 +32,7 @@ edit: email@example.com, other@example.com`);
     expect(header.edit as string[]).toContain("other@example.com");
   });
 
-  test("Multiple editors via yaml", () => {
+  test.each(sp())("Multiple editors via yaml", () => {
     const mw = parse(`
 title: this is the title
 edit: 
@@ -47,7 +47,7 @@ edit:
     expect(header.edit as string[]).toContain("other@example.com");
   });
 
-  test("More editors via yaml", () => {
+  test.each(sp())("More editors via yaml", () => {
     const mw = parse(`
 title: this is the title
 edit: 
@@ -66,7 +66,7 @@ edit:
 });
 
 describe("Random items in header", () => {
-  test("1", () => {
+  test.each(sp())("1", () => {
     const mw = parse(`
 key: value
 otherKey: otherValue
@@ -81,7 +81,7 @@ thirdKey:
     expect(header.thirdKey.fourthKey.fifthKey).toBe("value");
   });
 
-  test("small header", () => {
+  test.each(sp())("small header", () => {
     const mw = parse(small());
 
     expect(Object.keys(mw.header).length).toBe(46);
@@ -89,7 +89,7 @@ thirdKey:
 });
 
 describe("Tags are correctly parsed", () => {
-  test("1", () => {
+  test.each(sp())("1", () => {
     const mw = parse(`
 title: Title
 arbitraryThing:
@@ -110,7 +110,7 @@ now: event`);
     expect(nthEvent(mw, 0).firstLine.datePart).toBe("now");
   });
 
-  test("can use three dashes", () => {
+  test.each(sp())("can use three dashes", () => {
     const mw = parse(`
 ---
 #tag1: #abc
@@ -135,7 +135,7 @@ now: event`);
 });
 
 describe("Folding and ranges", () => {
-  test("without dashes", () => {
+  test.each(sp())("without dashes", () => {
     const mw = parse(`
 
 title: Title
@@ -151,7 +151,7 @@ now: event`);
     expect(headerFoldable.endIndex).toBe(46);
   });
 
-  test("with dashes", () => {
+  test.each(sp())("with dashes", () => {
     const mw = parse(`
 
 ---
@@ -177,6 +177,38 @@ now: event`);
     expect(headerFoldable.foldStartIndex).toBe(5);
     expect(headerFoldable.endIndex).toBe(148);
   });
+
+  test.each(sp())("overflow header items have correct ranges 1", () => {
+    const mw = parse(`title: |
+  longer title
+  but it should be ok`);
+
+    let visited = false;
+    for (const range of mw.ranges) {
+      if (range.type === RangeType.HeaderKey) {
+        visited = true;
+        expect(range.from).toBe(0);
+        expect(range.to).toBe(5);
+      }
+    }
+    expect(visited).toBe(true);
+  });
+
+  // test.each(sp())("overflow header items have correct ranges 2", () => {
+  //   const mw = parse(`title: |
+  // longer title
+  // but it should be ok`);
+
+  //   let visited = false;
+  //   for (const range of mw.ranges) {
+  //     if (range.type === RangeType.HeaderValue) {
+  //       visited = true;
+  //       expect(range.from).toBe(0);
+  //       expect(range.to).toBe(5);
+  //     }
+  //   }
+  //   expect(visited).toBe(true);
+  // });
 });
 
 const replace = (
@@ -190,7 +222,7 @@ const replace = (
     : originalString;
 
 describe("Programmatic editing", () => {
-  test("can overwrite string", () => {
+  test.each(sp())("can overwrite string", () => {
     const mw = `title: this is the title
 description: This is the description
 objectAsValue:
@@ -207,7 +239,7 @@ objectAsValue:
 `);
   });
 
-  test("can overwrite object with object", () => {
+  test.each(sp())("can overwrite object with object", () => {
     const mw = `title: this is the title
 description: This is the description
 objectAsValue:
@@ -224,7 +256,7 @@ objectAsValue:
 `);
   });
 
-  test("can overwrite interior object with object", () => {
+  test.each(sp())("can overwrite interior object with object", () => {
     const mw = `title: this is the title
 description: This is the description
 objectAsValue:
@@ -246,7 +278,7 @@ key: v
 `);
   });
 
-  test("can overwrite interior object with string", () => {
+  test.each(sp())("can overwrite interior object with string", () => {
     const mw = `title: this is the title
 description: This is the description
 objectAsValue:
@@ -263,7 +295,7 @@ key: v
 `);
   });
 
-  test("can overwrite interior nested object", () => {
+  test.each(sp())("can overwrite interior nested object", () => {
     const mw = `title: this is the title
 description: This is the description
 objectAsValue:
@@ -282,7 +314,7 @@ key: v
 `);
   });
 
-  test("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax", () => {
     const mw = `
 
 ---
@@ -310,7 +342,7 @@ key: v
 `);
   });
 
-  test("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax", () => {
     const mw = `
 
 

@@ -34,13 +34,14 @@ export const currentYear = DateTime.now().year;
 // });
 
 const logTimingData = () => {
+  let log = "";
   for (const key of Object.keys(timers)) {
     const k = key as keyof typeof timers;
-    console.log(
-      `Average ${k} parse`,
+    log += `Average ${k} parse ${
       timers[k].reduce((p, c) => p + c, 0) / timers[k].length
-    );
+    }\n`;
   }
+  console.log(log);
 };
 
 const time = <T>(fn: () => T, timeKey: keyof typeof timers) => {

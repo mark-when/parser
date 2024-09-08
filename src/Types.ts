@@ -355,6 +355,9 @@ export enum RangeType {
   HeaderKey = "headerKey",
   HeaderKeyColon = "headerKeyColon",
   HeaderValue = "headerValue",
+  PropertyKey = "propertyKey",
+  PropertyKeyColon = "propertyKeyColon",
+  PropertyValue = "propertyValue",
 }
 
 export type Range = {

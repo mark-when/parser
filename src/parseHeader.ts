@@ -25,7 +25,7 @@ const stringEmailListToArray = (s: string) =>
     );
 
 const headerKeyRegex = /^([^:]+)(:)(?:\s|$)/;
-const headerValueRegex = /[^:]+$/;
+const headerValueRegex = /(:)\s+(.+)$/;
 
 const eventsStarted = (line: string) =>
   !!line.match(EDTF_START_REGEX) ||
@@ -91,35 +91,22 @@ export function parseProperties(
     if (!isComment && !isThreeDash) {
       const keyMatch = line.match(propertyKeyRegex);
       if (keyMatch) {
+        const from = lengthAtIndex[propertiesEndLineIndex];
         propertyRanges.push({
-          type: RangeType.HeaderKey,
-          from: lengthAtIndex[propertiesEndLineIndex],
-          to: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length,
+          type: RangeType.PropertyKey,
+          from,
+          to: from + keyMatch[1].length,
         });
         propertyRanges.push({
-          type: RangeType.HeaderKeyColon,
-          from: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length,
-          to: lengthAtIndex[propertiesEndLineIndex] + keyMatch[1].length + 1,
+          type: RangeType.PropertyKeyColon,
+          from: from + keyMatch[1].length,
+          to: from + keyMatch[1].length + 1,
         });
-      } else if (!hasThreeDashStart) {
-        break;
-      }
-      const valueMatch = line.match(headerValueRegex);
-      if (valueMatch) {
-        const index = line.indexOf(valueMatch[0]);
         propertyRanges.push({
-          type: RangeType.HeaderValue,
-          from: lengthAtIndex[propertiesEndLineIndex] + index,
-          to:
-            lengthAtIndex[propertiesEndLineIndex] +
-            index +
-            valueMatch[0].length,
+          type: RangeType.PropertyValue,
+          from: from + keyMatch[1].length + 1,
+          to: from + line.length,
         });
-      }
-
-      if (keyMatch) {
-        // A key match is what determines if this is a set of properties
-        // We do this here so valueMatch still has access to the line
         propertyLines.push(line);
         if (firstPropertiesLineIndexWithText === -1) {
           firstPropertiesLineIndexWithText = propertiesEndLineIndex;
@@ -127,6 +114,25 @@ export function parseProperties(
         propertiesEndLineIndex++;
 
         line = lines[propertiesEndLineIndex];
+      } else if (!hasThreeDashStart) {
+        break;
+      }
+      // const valueMatch = line.match(headerValueRegex);
+      // if (valueMatch) {
+      //   const index = line.indexOf(valueMatch[0]);
+      // propertyRanges.push({
+      //   type: RangeType.PropertyValue,
+      //   from: lengthAtIndex[propertiesEndLineIndex] + index,
+      //   to:
+      //     lengthAtIndex[propertiesEndLineIndex] +
+      //     index +
+      //     valueMatch[0].length,
+      // });
+      // }
+
+      if (keyMatch) {
+        // A key match is what determines if this is a set of properties
+        // We do this here so valueMatch still has access to the line
       }
     } else if (!hasThreeDashStart) {
       break;
@@ -136,6 +142,26 @@ export function parseProperties(
   let properties = {};
   if (propertyLines.length) {
     try {
+      const joined = propertyLines.join("\n");
+      const result = YAML.parseDocument(joined);
+      const from = lengthAtIndex[i];
+      // YAML.visit(result, {
+      //   Pair: (_, node, path) => {
+      //     const key = () => node.key as YAML.Node;
+      //     const value = () => node.value as YAML.Node;
+      //     context.ranges.push({
+      //       type: RangeType.PropertyKey,
+      //       from: from + key().range![0],
+      //       to: from + key().range![1],
+      //     });
+      //     context.ranges.push({
+      //       type: RangeType.PropertyValue,
+      //       from: from + value().range![0],
+      //       to: from + value().range![1],
+      //     });
+      //   },
+      // });
+      // result.contents;
       properties = YAML.parse(propertyLines.join("\n"));
       context.ranges.push(...propertyRanges);
     } catch (e) {
@@ -246,12 +272,19 @@ export function parseHeader(
         });
       }
       const valueMatch = line.match(headerValueRegex);
-      if (valueMatch) {
-        const index = line.indexOf(valueMatch[0]);
+      const index = valueMatch
+        ? line.indexOf(valueMatch[2])
+        : keyMatch
+        ? -1
+        : 0;
+      if (index >= 0) {
         headerRanges.push({
           type: RangeType.HeaderValue,
           from: lengthAtIndex[headerEndLineIndex] + index,
-          to: lengthAtIndex[headerEndLineIndex] + index + valueMatch[0].length,
+          to:
+            lengthAtIndex[headerEndLineIndex] +
+            index +
+            (valueMatch ? valueMatch[2].length : line.length),
         });
       }
     }
