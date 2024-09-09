@@ -272,11 +272,18 @@ export function parseHeader(
         });
       }
       const valueMatch = line.match(headerValueRegex);
-      const index = valueMatch
-        ? line.indexOf(valueMatch[2])
-        : keyMatch
-        ? -1
-        : 0;
+      let index
+      if (valueMatch) {
+        if (keyMatch) {
+          index = keyMatch[0].length + line.substring(keyMatch[0].length).indexOf(valueMatch[2])
+        } else {
+          index = line.indexOf(valueMatch[2])
+        }
+      } else if (keyMatch) {
+        index = -1
+      } else {
+        index = 0
+      }
       if (index >= 0) {
         headerRanges.push({
           type: RangeType.HeaderValue,
