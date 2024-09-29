@@ -1,3 +1,11 @@
+## 0.12.0
+
+Support for properties on events and event groups and restructuring of the parser output.
+
+This is a significant and breaking change. Whereas previously the parser would output `Node`s with `.value`s, now `EventGroup`s have `.children` and those children and either `Event`s or `EventGroup`s directly; there is no intermediate `Node`.
+
+The structure of an `Event` has also changed significantly - it has been flattened with some duplicate fields removed.
+
 ## 0.10.8
 
 - export dateRangeToString
@@ -12,12 +20,12 @@
 
 ## 0.10.3
 
-- Missed some exports from 0.10.2  
+- Missed some exports from 0.10.2
 
 ## 0.10.2
 
 - Missed some exports from 0.10.1
-  
+
 ## 0.10.1
 
 - Missed some exports from 0.10.0

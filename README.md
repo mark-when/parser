@@ -23,32 +23,4 @@ group My Group #neat
 `);
 
 console.log(markwhen);
-
-/*
-output:
-{
-  timelines: [
-    {
-      events: [Array],
-      tags: {},
-      ids: {},
-      ranges: [Array],
-      foldables: {},
-      metadata: [Object],
-      header: {
-        title: "this is my title",
-        timezone: "America/New_York"
-        // Note that for compatability with the embedded yaml parser 
-        // as well as how markwhen uses comments (two slashes),
-        // entries in the header that start with a hash `#` will 
-        // replace the hash with a right paren `)`
-        )neat: {
-          color: "blue",
-          timezone: -3
-        }
-      }
-    }
-  ]
-}
-*/
 ```
