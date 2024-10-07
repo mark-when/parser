@@ -138,7 +138,7 @@ export function checkEvent(
   const eventGroup = lines.slice(from - 1, end);
 
   const eventRange: Range = {
-    from: dateRange.dateRangeInText.from,
+    from: lengthAtIndex[i],
     to: lengthAtIndex[end],
     type: RangeType.Event,
   };

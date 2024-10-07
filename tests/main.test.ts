@@ -1755,6 +1755,15 @@ describe("ranges", () => {
     expect(listItemContents[1].from).toBe(59);
     expect(listItemContents[1].to).toBe(67);
   });
+
+  test("event range starts at beginning of line", () => {
+    const mw = parse(`  now: this is an event
+    
+    1834: this is also an event`)
+
+    expect(nthEvent(mw, 0).textRanges.whole.from).toBe(0)
+    expect(nthEvent(mw, 1).textRanges.whole.from).toBe(29)
+  })
 });
 
 describe("completion", () => {
