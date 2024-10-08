@@ -10,6 +10,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:verbose": "jest --verbose false --silent false",
     "test:profile": "node --inspect-brk ./node_modules/jest/bin/jest.js",
     "build": "tsc && vite build && echo '{\"type\": \"commonjs\"}' > cjs/package.json",
     "prepublish": "tsc && jest",

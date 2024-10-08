@@ -6,6 +6,7 @@ import {
 } from "./Types.js";
 import { getDateRangeFromCasualRegexMatch } from "./dateRange/getDateRangeFromCasualRegexMatch.js";
 import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTFRegexMatch.js";
+import { getDateRangeFromBCEDateRegexMatch } from "./dateRange/getDateRangeFromBCEDateRegexMatch.js";
 import { Caches } from "./Cache.js";
 import { checkEvent } from "./lineChecks/checkEvent.js";
 import { ParsingContext } from "./ParsingContext.js";
@@ -40,6 +41,14 @@ export function parseDateRange(
       0,
       [],
       parsingContext
+    );
+  }
+  if (!dateRange) {
+    dateRange = getDateRangeFromBCEDateRegexMatch(
+        dateRangeString,
+        0,
+        [],
+        parsingContext
     );
   }
   return dateRange;

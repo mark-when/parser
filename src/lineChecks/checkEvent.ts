@@ -1,8 +1,10 @@
 import { getDateRangeFromCasualRegexMatch } from "../dateRange/getDateRangeFromCasualRegexMatch.js";
 import { getDateRangeFromEDTFRegexMatch } from "../dateRange/getDateRangeFromEDTFRegexMatch.js";
+import { getDateRangeFromBCEDateRegexMatch } from "../dateRange/getDateRangeFromBCEDateRegexMatch";
 import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
+  BCE_START_REGEX,
   GROUP_START_REGEX,
   GROUP_END_REGEX,
   COMPLETION_REGEX,
@@ -21,6 +23,7 @@ import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
 import { parseProperties } from "../parseHeader.js";
+
 
 function updateParseMetadata(
   event: Event,
@@ -99,6 +102,15 @@ export function checkEvent(
     );
   }
   if (!dateRange) {
+    dateRange = getDateRangeFromBCEDateRegexMatch(
+        line,
+        i,
+        lengthAtIndex,
+        context,
+        cache
+    );
+  }
+  if (!dateRange) {
     return i;
   }
 
@@ -120,6 +132,7 @@ export function checkEvent(
       typeof nextLine !== "string" ||
       nextLine.match(EDTF_START_REGEX) ||
       nextLine.match(EVENT_START_REGEX) ||
+      nextLine.match(BCE_START_REGEX) ||
       nextLine.match(GROUP_START_REGEX) ||
       (context.currentPath.length > 1 && nextLine.match(GROUP_END_REGEX))
     ) {

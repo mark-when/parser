@@ -495,3 +495,23 @@ export function roundDateUp(
       .toISO()
   );
 }
+
+export function getYearNotationToDatetime(
+  year: string|number,
+  yearNotation:string|undefined,
+  context: ParsingContext
+): DateTime | undefined {
+
+  if (typeof year === "string") {
+    year = parseInt(year);
+  }
+
+  if (yearNotation && (yearNotation === "BCE" || yearNotation === "BC")) {
+    /**
+     * It's a negative date and we need to remove 1 year to get the correct year
+     * The reason is that the year 0 does not exist in the Gregorian calendar
+     **/ 
+    year = -(year - 1);
+  }
+  return DateTime.fromObject({ year }, { zone: context.timezone });
+}
