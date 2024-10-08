@@ -13,15 +13,16 @@ export class Cache {
 export class Caches {
   zones: LRUCache<string, Zone> = newLru();
   yaml: LRUCache<string, any> = newLru();
-  caches: { [zoneName: string]: Cache } = {};
+  caches: [Zone, Cache][] = [];
 
-  zone(timezone: Zone) {
-    const name = timezone.name;
-    const existing = this.caches[name];
-    if (existing) {
-      return existing;
+  zone(timezone: Zone): Cache {
+    for (let i = 0; i < this.caches.length; i++) {
+      if (this.caches[i][0].equals(timezone)) {
+        return this.caches[i][1];
+      }
     }
-    this.caches[name] = new Cache();
-    return this.caches[name];
+    const cache = new Cache();
+    this.caches.push([timezone, cache]);
+    return cache;
   }
 }
