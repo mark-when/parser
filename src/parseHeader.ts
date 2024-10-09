@@ -7,6 +7,7 @@ import {
 } from "./Types.js";
 import { checkComments } from "./lineChecks/checkComments.js";
 import {
+  BCE_START_REGEX,
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   GROUP_START_REGEX,
@@ -30,6 +31,7 @@ const headerValueRegex = /(:)\s+(.+)$/;
 const eventsStarted = (line: string) =>
   !!line.match(EDTF_START_REGEX) ||
   !!line.match(EVENT_START_REGEX) ||
+  !!line.match(BCE_START_REGEX) ||
   !!line.match(GROUP_START_REGEX);
 
 const threeDashRegex = /^---/;

@@ -370,3 +370,38 @@ export const recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex =
   ++edtfIndex;
 
 export const edtfEventTextMatchIndex = ++edtfIndex;
+
+
+/**
+ * BCE/CE System:
+ *
+ * Entirely BCE: 300–200 BCE
+ * Entirely CE: 100–200 CE (or simply 100–200 if context is clear)
+ * Crossing BCE to CE: 50 BCE–50 CE
+ *
+ * BC/AD System:
+ *  /!\ Although BC === BCE and AD === CE, official formating isn't the same for AD
+ *  which normally is positioned as prefix of the date: "AD 100", "100 BC-AD 70"
+ *
+ * BUT FOR easier implementation  only this format will be supported:
+ * Entirely BC: 300–200 BC
+ * Entirely AD: 100 AD–200 AD (or simply 100–200 if context is clear)
+ * Crossing BC to AD: 50 BC– 50 AD
+ *
+ * Number of digits: Arbitrary decision to stick to 4 digits
+ * - 4 cover most of the case which cover the Holocene period
+ * - 5,6 digits could be used for paleolithic but its overkill
+ * - we could also not limit... {1,}
+ *
+ */
+export const BCE_START_REGEX = new RegExp(
+    `^\\s*(\\d{1,5})\\s?(BCE|BC|AD|CE)?(?:\\s?[–-]\\s?(\\d{1,5})\\s?(BCE|BC|AD|CE)?)?(?=\\s*:?)(.*)`,
+    "i"
+);
+let BCEIndex = -1;
+export const BCEDatePartMatchIndex = ++BCEIndex;
+export const fromYear_BCEDateIndex = ++BCEIndex;
+export const fromYearNotation_BCEDateIndex = ++BCEIndex;
+export const toYear_BCEDateIndex = ++BCEIndex;
+export const toYearNotation_BCEDateIndex = ++BCEIndex;
+export const BCEEventTextMatchIndex = ++BCEIndex;
