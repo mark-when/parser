@@ -45,10 +45,10 @@ export function parseDateRange(
   }
   if (!dateRange) {
     dateRange = getDateRangeFromBCEDateRegexMatch(
-        dateRangeString,
-        0,
-        [],
-        parsingContext
+      dateRangeString,
+      0,
+      [],
+      parsingContext
     );
   }
   return dateRange;
@@ -124,16 +124,15 @@ export function parseTimeline(
     }
     i = checkEvent(line, lines, i, lengthAtIndex, context, cache) + 1;
   }
-  // for (let i = headerEndLineIndex; i < lines.length; i++) {
-  //   const line = lines[i];
-  //   if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
-  //     continue;
-  //   }
 
-  //   // TODO: Setting i from the result of checkEvent here allows us to not needlessly reparse lines,
-  //   // but also breaks folding of comments under events
-  //   i = checkEvent(line, lines, i, lengthAtIndex, context, cache);
-  // }
+  while (context.currentPath.length > 1) {
+    const lastLineIndex = i - 1;
+    context.endCurrentGroup(
+      lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
+      { line: lastLineIndex, index: lines[lastLineIndex].length },
+      cache
+    );
+  }
 
   return context.toTimeline(
     lengthAtIndex,

@@ -149,9 +149,11 @@ export class ParsingContext {
       }
     }
     // Assign text range
-    // const group = this.events.get(this.currentPath) as Node<EventGroup>;
-    // group.rangeInText!.lineTo = lineTo;
-    // group.rangeInText!.to = to;
+    const group = get(this.events, this.currentPath);
+    group!.textRanges.whole = {
+      ...group!.textRanges.whole,
+      to: to,
+    };
     this.finishFoldableSection(lineTo.line, to);
   }
 
@@ -162,7 +164,7 @@ export class ParsingContext {
   ): Timeline {
     const maxDurationDays = this.maxDuration
       ? this.maxDuration / 1000 / 60 / 60 / 24
-      : this.now.diff(this.now.minus({ years: 1 })).as("days");
+      : 0;
     return {
       events: this.events,
       ids: this.ids,
@@ -170,8 +172,8 @@ export class ParsingContext {
       foldables: this.foldables,
       header: this.header,
       metadata: {
-        earliestTime: (this.earliest || this.now.minus({ years: 5 })).toISO(),
-        latestTime: (this.latest || this.now.plus({ years: 5 })).toISO(),
+        earliestTime: this.earliest?.toISO(),
+        latestTime: this.latest?.toISO(),
         maxDurationDays,
         startLineIndex: 0,
         startStringIndex: lengthAtIndex[0],

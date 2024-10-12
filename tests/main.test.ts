@@ -15,6 +15,7 @@ import {
   isEvent,
   get,
   flatMap,
+  EventGroup,
 } from "../src/Types";
 import { DateTime } from "luxon";
 import {
@@ -1759,11 +1760,58 @@ describe("ranges", () => {
   test("event range starts at beginning of line", () => {
     const mw = parse(`  now: this is an event
     
-    1834: this is also an event`)
+    1834: this is also an event`);
 
-    expect(nthEvent(mw, 0).textRanges.whole.from).toBe(0)
-    expect(nthEvent(mw, 1).textRanges.whole.from).toBe(29)
-  })
+    expect(nthEvent(mw, 0).textRanges.whole.from).toBe(0);
+    expect(nthEvent(mw, 1).textRanges.whole.from).toBe(29);
+  });
+
+  test("section ranges 1", () => {
+    const s = `section Section
+now: this is podracing 
+endSection`;
+    const mw = parse(s);
+
+    expect(mw.events.children[0].textRanges.whole.from).toBe(0);
+    expect(mw.events.children[0].textRanges.whole.to).toBe(s.length);
+  });
+
+  test("section ranges 2", () => {
+    const s = `section Section
+now: this is podracing 
+
+group new group
+2025-01-30: hello
+endGroup
+
+endSection`;
+    const mw = parse(s);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.textRanges.whole.from).toBe(0);
+    expect(section.textRanges.whole.to).toBe(s.length);
+
+    const group = section.children[1] as EventGroup;
+    expect(group.textRanges.whole.from).toBe(41);
+    expect(group.textRanges.whole.to).toBe(83);
+  });
+
+  test("section ranges 2", () => {
+    const s = `section Section
+now: this is podracing 
+
+group new group
+2025-01-30: hello`;
+    const mw = parse(s);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.textRanges.whole.from).toBe(0);
+    expect(section.textRanges.whole.to).toBe(s.length);
+
+    const group = section.children[1] as EventGroup;
+    expect(group.textRanges.whole.from).toBe(41);
+    expect(group.textRanges.whole.to).toBe(s.length);
+  });
 });
 
 describe("completion", () => {
@@ -1985,7 +2033,7 @@ function getDateRanges(m: ParseResult): DateRange[] {
 }
 
 function getEvents(m: ParseResult) {
-  return flat(m.events)
+  return flat(m.events);
 }
 
 function checkDate(

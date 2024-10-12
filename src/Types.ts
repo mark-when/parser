@@ -388,7 +388,7 @@ export function isEvent(eventy: Eventy): eventy is Event {
 }
 export type GroupRange = DateRange & { maxFrom: DateTime };
 export class EventGroup {
-  textRanges?: {
+  textRanges!: {
     whole: Range;
   };
   properties: Record<string, any> = {};
@@ -495,8 +495,8 @@ export type ParseResult = Timeline & {
 };
 
 export interface TimelineMetadata {
-  earliestTime: DateTimeIso;
-  latestTime: DateTimeIso;
+  earliestTime?: DateTimeIso;
+  latestTime?: DateTimeIso;
   startLineIndex: number;
   startStringIndex: number;
   endLineIndex: number;
