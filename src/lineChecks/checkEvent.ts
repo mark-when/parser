@@ -24,7 +24,6 @@ import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
 import { parseProperties } from "../parseHeader.js";
 
-
 function updateParseMetadata(
   event: Event,
   dateRange: DateRangePart,
@@ -103,11 +102,11 @@ export function checkEvent(
   }
   if (!dateRange) {
     dateRange = getDateRangeFromBCEDateRegexMatch(
-        line,
-        i,
-        lengthAtIndex,
-        context,
-        cache
+      line,
+      i,
+      lengthAtIndex,
+      context,
+      cache
     );
   }
   if (!dateRange) {
