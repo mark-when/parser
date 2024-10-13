@@ -395,7 +395,7 @@ export const edtfEventTextMatchIndex = ++edtfIndex;
  *
  */
 export const BCE_START_REGEX = new RegExp(
-    `^\\s*(\\d{1,5})\\s?(BCE|BC|AD|CE)?(?:\\s?[–-]\\s?(\\d{1,5})\\s?(BCE|BC|AD|CE)?)?(?=\\s*:?)(.*)`,
+    `^\\s*(\\d{1,5})\\s?(BCE|BC|AD|CE)?(?:\\s?[–-]\\s?(\\d{1,5})\\s?(BCE|BC|AD|CE)?)?(?=\\s*:)(.*)`,
     "i"
 );
 let BCEIndex = -1;

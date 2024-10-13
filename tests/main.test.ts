@@ -1812,6 +1812,53 @@ group new group
     expect(group.textRanges.whole.from).toBe(41);
     expect(group.textRanges.whole.to).toBe(s.length);
   });
+
+  test("section ranges 3", () => {
+    const s = `:is this an event or is it no
+this does not seem to be as much of an issue with other things going on excefdjksla fjeils a;fjl;eisa 
+section Welcome #welcome
+now: This example timeline showcases some of markwhen's features.
+
+Feel free to delete everything to start making your own timeline #welcome
+
+now: You can also view this example timeline at [markwhen.com/example](https://markwhen.com/example) #welcome
+
+Or you can save this timeline so you can refer to it later, by going to Browser storage & files, and clicking Save current.
+but now if i go over here it's all fucked up
+now: For more information, view the documentation [here](https://docs.markwhen.com) or join the [discord](https://discord.gg/3rTpUD94ac)
+#welcome
+endSection
+
+section All Projects
+group Project 1 #Project1
+// Supports ISO8601
+2023-01/2023-03: Sub task #John
+2023-03/2023-06: Sub task 2 #Michelle
+More info about sub task 2
+
+- [ ] We need to get this done
+- [x] And this
+- [ ] This one is extra
+
+2023-07: Yearly planning
+endGroup
+ group Project 2 #Project2
+2023-04/4 months: Larger sub task #Danielle
+
+// Supports American date formats
+03/2023 - 1 year: Longer ongoing task #Michelle
+
+- [x] Sub task 1
+- [x] Sub task 2
+- [ ] Sub task 3
+- [ ] Sub task 4
+- [ ] so many checkboxes omg
+`;
+    const mw = parse(s);
+    const midSection = get(mw.events, [2]) as EventGroup;
+    expect(midSection.textRanges.whole.from).toBe(738);
+    expect(midSection.textRanges.whole.to).toBe(s.length);
+  });
 });
 
 describe("completion", () => {
@@ -1976,6 +2023,25 @@ describe("premature year parsing", () => {
     const fromDt = DateTime.fromISO(first.dateRangeIso.fromDateTimeIso);
     expect(fromDt.hour).toBe(20);
     expect(fromDt.year).toBe(DateTime.now().year);
+  });
+
+  test.each(sp())("standalone digits aren't parsed as date", (p) => {
+    const s = "9";
+    const mw = p(s);
+    expect(mw.events.children.length).toBe(0);
+  });
+
+  test.each(sp())("standalone digits aren't parsed as date", (p) => {
+    const s = "12 this doesn't work";
+    const mw = p(s);
+    expect(mw.events.children.length).toBe(0);
+  }); 
+
+
+  test.each(sp())("standalone digits aren't parsed as date", (p) => {
+    const s = "1988 this doesn't work";
+    const mw = p(s);
+    expect(mw.events.children.length).toBe(0);
   });
 });
 
