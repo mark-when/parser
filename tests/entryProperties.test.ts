@@ -9,7 +9,7 @@ describe("entry properties", () => {
 key: value
 text down here
 `;
-    expect(first(mw).properties).toEqual({ key: "value" });
+    expect(first(mw).properties).toEqual([["key", "value"]]);
   });
 
   test.each(sp())(
@@ -23,10 +23,10 @@ otherKey: value
 - [] another list item
 `;
       const firstEvent = first(mw);
-      expect(firstEvent.properties).toEqual({
-        properties: true,
-        otherKey: "value",
-      });
+      expect(firstEvent.properties).toEqual([
+        ["properties", true],
+        ["otherKey", "value"],
+      ]);
 
       expect(firstEvent.firstLine.restTrimmed).toBe("a year of events");
       expect(firstEvent.supplemental.length).toBe(2);
@@ -50,12 +50,12 @@ old: yes`;
     const second = nthEvent(events, 1);
     const third = nthEvent(events, 2);
 
-    expect(first.properties).toEqual({
-      thisHasProperties: { indented: "some value with spaces" },
-    });
+    expect(first.properties).toEqual([
+      ["thisHasProperties", [["indented", "some value with spaces"]]],
+    ]);
     expect(first.supplemental.length).toBe(0);
 
-    expect(second.properties).toEqual({});
+    expect(second.properties).toEqual([]);
     expect(second.firstLine.restTrimmed).toBe("future time");
   });
 });
@@ -65,7 +65,7 @@ describe("proper ranges", () => {
     const mw = `1999-09: birthday
 propKey: l`;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l" });
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", "l"]]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyKey) {
@@ -81,7 +81,7 @@ propKey: l`;
     const mw = `1999-09: birthday
 propKey:`;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({ propKey: null });
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", null]]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyKey) {
@@ -97,7 +97,7 @@ propKey:`;
     const mw = `1999-09: birthday
 propKey: l`;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l" });
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", "l"]]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyValue) {
@@ -113,7 +113,7 @@ propKey: l`;
     const mw = `1999-09: birthday
 propKey: l  1`;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l  1" });
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", "l  1"]]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyValue) {
@@ -129,7 +129,7 @@ propKey: l  1`;
     const mw = `1999-09: birthday
 propKey: l  1`;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({ propKey: "l  1" });
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", "l  1"]]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyKey) {
@@ -145,9 +145,9 @@ propKey: l  1`;
     const mw = `1999-09: birthday
 x: something:with colon `;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({
-      x: "something:with colon",
-    });
+    expect(nthEvent(parsed, 0).properties).toEqual([
+      ["x", "something:with colon"],
+    ]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyKey) {
@@ -163,9 +163,9 @@ x: something:with colon `;
     const mw = `1999-09: birthday
 x: something:with colon `;
     const parsed = parse(mw);
-    expect(nthEvent(parsed, 0).properties).toEqual({
-      x: "something:with colon",
-    });
+    expect(nthEvent(parsed, 0).properties).toEqual([
+      ["x", "something:with colon"],
+    ]);
     let visited = false;
     for (const range of parsed.ranges) {
       if (range.type === RangeType.PropertyValue) {
@@ -201,15 +201,15 @@ abc: 123
         continue;
       } else {
         if (eventy.title === "Happy events") {
-          expect(eventy.properties).toEqual({
-            someKey: "some value",
-            otherKey: "other value",
-          });
+          expect(eventy.properties).toEqual([
+            ["someKey", "some value"],
+            ["otherKey", "other value"],
+          ]);
         } else if (eventy.title === "Sad events") {
-          expect(eventy.properties).toEqual({
-            property: "value",
-            abc: 123,
-          });
+          expect(eventy.properties).toEqual([
+            ["property", "value"],
+            ["abc", 123],
+          ]);
         }
       }
     }

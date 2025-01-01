@@ -141,30 +141,13 @@ export function parseProperties(
     }
   }
 
-  let properties = {};
+  let properties: any[] = [];
   if (propertyLines.length) {
     try {
-      const joined = propertyLines.join("\n");
-      const result = YAML.parseDocument(joined);
-      const from = lengthAtIndex[i];
-      // YAML.visit(result, {
-      //   Pair: (_, node, path) => {
-      //     const key = () => node.key as YAML.Node;
-      //     const value = () => node.value as YAML.Node;
-      //     context.ranges.push({
-      //       type: RangeType.PropertyKey,
-      //       from: from + key().range![0],
-      //       to: from + key().range![1],
-      //     });
-      //     context.ranges.push({
-      //       type: RangeType.PropertyValue,
-      //       from: from + value().range![0],
-      //       to: from + value().range![1],
-      //     });
-      //   },
-      // });
-      // result.contents;
-      properties = YAML.parse(propertyLines.join("\n"));
+      const map = YAML.parse(propertyLines.join("\n"), {
+        mapAsMap: true,
+      }) as Map<any, any>;
+      properties = mapToArrays(map);
       context.ranges.push(...propertyRanges);
     } catch (e) {
       console.error(e);
@@ -201,6 +184,18 @@ export function parseProperties(
     properties,
     i: propertiesEndLineIndex,
   };
+}
+
+function mapToArrays(map: Map<any, any>): any[] {
+  let arr: any[] = [];
+  map.forEach((value, key) => {
+    if (value instanceof Map) {
+      arr.push([key, mapToArrays(value)]);
+    } else {
+      arr.push([key, value]);
+    }
+  });
+  return arr;
 }
 
 export function parseHeader(
@@ -274,17 +269,19 @@ export function parseHeader(
         });
       }
       const valueMatch = line.match(headerValueRegex);
-      let index
+      let index;
       if (valueMatch) {
         if (keyMatch) {
-          index = keyMatch[0].length + line.substring(keyMatch[0].length).indexOf(valueMatch[2])
+          index =
+            keyMatch[0].length +
+            line.substring(keyMatch[0].length).indexOf(valueMatch[2]);
         } else {
-          index = line.indexOf(valueMatch[2])
+          index = line.indexOf(valueMatch[2]);
         }
       } else if (keyMatch) {
-        index = -1
+        index = -1;
       } else {
-        index = 0
+        index = 0;
       }
       if (index >= 0) {
         headerRanges.push({
