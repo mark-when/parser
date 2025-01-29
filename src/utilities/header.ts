@@ -1,5 +1,5 @@
 import { stringify } from "yaml";
-import { parseHeader } from "..";
+import { parseHeader } from "../parse";
 
 function findLine(lines: string[], regex: RegExp, searchRange: SearchRange) {
   for (let i = searchRange.startLine; i < searchRange.endLine; i++) {
