@@ -23,7 +23,7 @@ import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
-const version = "0.13.2";
+const version = "0.13.3";
 
 export function parseDateRange(
   dateRangeString: string
