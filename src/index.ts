@@ -61,6 +61,7 @@ import {
 import type { Recurrence } from "./dateRange/checkRecurrence.js";
 import { dateRangeToString } from "./utilities/dateRangeToString.js";
 import { mapUrls, toArray as toArraySorted } from "./utilities/urls.js";
+import { set as headerSet } from "./utilities/header.js";
 
 export {
   parse,
@@ -126,4 +127,5 @@ export {
   EVENT_ID_REGEX,
   mapUrls,
   toArraySorted,
+  headerSet
 };
