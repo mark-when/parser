@@ -391,7 +391,7 @@ export class EventGroup {
   textRanges!: {
     whole: Range;
   };
-  properties: Record<string, any> = {};
+  properties: any[] = []
   tags: string[] = [];
   title: string = "";
   range?: GroupRange;
