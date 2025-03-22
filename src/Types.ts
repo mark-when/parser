@@ -1,4 +1,4 @@
-import { DateTime, DurationLike, DurationLikeObject } from "luxon";
+import { DateTime, DurationLikeObject } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
 import { Foldable } from "./ParsingContext.js";
@@ -413,7 +413,7 @@ export class Event {
     datePart: Range;
     recurrence?: Range;
   };
-  properties: Record<string, any>;
+  properties: any[];
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
   tags: string[];
@@ -425,7 +425,7 @@ export class Event {
 
   constructor(
     firstLine: string,
-    properties: Record<string, any>,
+    properties: any[],
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
