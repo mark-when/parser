@@ -52,10 +52,7 @@ import {
   recurrence_repetitionsMatchIndex,
   edtf_recurrence_untilMatchIndex,
   edtf_recurrence_untilDateIndex,
-  edtf_recurrence_untilDateMonthPart,
-  edtf_recurrence_untilDateDayPart,
   edtf_recurrence_untilDateTimePartMatchIndex,
-  edtf_recurrence_untilBeforeOrAfterMatchIndex,
   edtf_recurrence_untilRelativeMatchIndex,
   edtf_recurrence_untilNowMatchIndex,
   edtf_recurrence_untilDateTimeMeridiemHourMatchIndex,
@@ -64,10 +61,13 @@ import {
   edtf_recurrence_untilDateTime24HourHourMatchIndex,
   edtf_recurrence_untilDateTime24HourMinuteMatchIndex,
   edtf_recurrence_untilRelativeEventIdMatchIndex,
+  recurrence_untilMatchIndex,
+  reccurence_untilDateMatchIndex,
+  reccurence_until_relativeMatchIndex,
 } from "../regex.js";
 import { Range, RangeType, toDateRange } from "../Types.js";
 import { ParsingContext } from "../ParsingContext.js";
-import { Cache, Caches } from "../Cache.js";
+import { Caches } from "../Cache.js";
 import { getPriorEvent, getTimeFromRegExpMatch } from "./utils.js";
 
 export type DurationUnit =
@@ -103,6 +103,92 @@ export const recurrenceDurationUnits = [
   "seconds",
   "milliseconds",
 ] as DurationUnit[];
+
+function getEdtfTil(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  eventStartLineRegexMatch: RegExpMatchArray,
+  context: ParsingContext
+): DateTime | undefined {
+  let til: DateTime | undefined;
+  const tilMatch = eventStartLineRegexMatch[edtf_recurrence_untilMatchIndex];
+  if (!tilMatch) {
+    return til;
+  }
+  const datePart = eventStartLineRegexMatch[edtf_recurrence_untilDateIndex];
+  const hasTime =
+    !!eventStartLineRegexMatch[edtf_recurrence_untilDateTimePartMatchIndex];
+  const relativeDate =
+    eventStartLineRegexMatch[edtf_recurrence_untilRelativeMatchIndex];
+  const now = eventStartLineRegexMatch[edtf_recurrence_untilNowMatchIndex];
+
+  const textRange = (tilSegmentString: string) => {
+    const indexOfDatePart = line.indexOf(
+      tilSegmentString,
+      line.indexOf(tilMatch)
+    );
+    const dateRangeInText: Range = {
+      type: RangeType.RecurrenceTilDate,
+      from: lengthAtIndex[i] + indexOfDatePart,
+      to: lengthAtIndex[i] + indexOfDatePart + tilSegmentString.length,
+    };
+    return dateRangeInText;
+  };
+
+  if (datePart) {
+    if (hasTime) {
+      const time = getTimeFromRegExpMatch(
+        eventStartLineRegexMatch,
+        edtf_recurrence_untilDateTimeMeridiemHourMatchIndex,
+        edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex,
+        edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex,
+        edtf_recurrence_untilDateTime24HourHourMatchIndex,
+        edtf_recurrence_untilDateTime24HourMinuteMatchIndex
+      );
+      const timeDateTime = DateTime.fromISO(time.dateTimeIso);
+      til = DateTime.fromISO(datePart.substring(0, 10), {
+        zone: context.timezone,
+      }).set({
+        hour: timeDateTime.hour,
+        minute: timeDateTime.minute,
+      });
+    } else {
+      til = DateTime.fromISO(datePart, {
+        zone: context.timezone,
+      });
+    }
+    context.ranges.push(textRange(datePart));
+  } else if (relativeDate) {
+    const relativeToEventId =
+      eventStartLineRegexMatch[edtf_recurrence_untilRelativeEventIdMatchIndex];
+    let relativeTo =
+      relativeToEventId && context.ids[relativeToEventId]
+        ? toDateRange(context.ids[relativeToEventId].dateRangeIso).fromDateTime
+        : undefined;
+    if (!relativeTo) {
+      const priorEvent = getPriorEvent(context);
+      if (!priorEvent) {
+        relativeTo = context.zonedNow;
+      } else {
+        relativeTo = toDateRange(priorEvent.dateRangeIso).fromDateTime;
+      }
+    }
+    til = relativeTo;
+    context.ranges.push(textRange(relativeDate));
+  } else if (now) {
+    til = context.zonedNow;
+    context.ranges.push(textRange(now));
+  } else {
+    til = DateTime.fromISO(datePart);
+    context.ranges.push(textRange(datePart));
+  }
+
+  if (!til || !til.isValid) {
+    til = context.zonedNow;
+  }
+  return til;
+}
 
 export const checkEdtfRecurrence = (
   line: string,
@@ -156,84 +242,13 @@ export const checkEdtfRecurrence = (
     [unit]: recurrenceCount,
   } as Duration;
 
-  const tilMatch = eventStartLineRegexMatch[edtf_recurrence_untilMatchIndex];
-  let til: DateTime | undefined;
-  if (tilMatch) {
-    const datePart = eventStartLineRegexMatch[edtf_recurrence_untilDateIndex];
-    const hasTime =
-      !!eventStartLineRegexMatch[edtf_recurrence_untilDateTimePartMatchIndex];
-    const relativeDate =
-      eventStartLineRegexMatch[edtf_recurrence_untilRelativeMatchIndex];
-    const now = eventStartLineRegexMatch[edtf_recurrence_untilNowMatchIndex];
-
-    const textRange = (tilSegmentString: string) => {
-      const indexOfDatePart = line.indexOf(
-        tilSegmentString,
-        line.indexOf(tilMatch)
-      );
-      const dateRangeInText: Range = {
-        type: RangeType.RecurrenceTilDate,
-        from: lengthAtIndex[i] + indexOfDatePart,
-        to: lengthAtIndex[i] + indexOfDatePart + tilSegmentString.length,
-      };
-      return dateRangeInText;
-    };
-
-    if (datePart) {
-      if (hasTime) {
-        const time = getTimeFromRegExpMatch(
-          eventStartLineRegexMatch,
-          edtf_recurrence_untilDateTimeMeridiemHourMatchIndex,
-          edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex,
-          edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex,
-          edtf_recurrence_untilDateTime24HourHourMatchIndex,
-          edtf_recurrence_untilDateTime24HourMinuteMatchIndex
-        );
-        const timeDateTime = DateTime.fromISO(time.dateTimeIso);
-        til = DateTime.fromISO(datePart.substring(0, 10), {
-          zone: context.timezone,
-        }).set({
-          hour: timeDateTime.hour,
-          minute: timeDateTime.minute,
-        });
-      } else {
-        til = DateTime.fromISO(datePart, {
-          zone: context.timezone,
-        });
-      }
-      context.ranges.push(textRange(datePart));
-    } else if (relativeDate) {
-      const relativeToEventId =
-        eventStartLineRegexMatch[
-          edtf_recurrence_untilRelativeEventIdMatchIndex
-        ];
-      let relativeTo =
-        relativeToEventId && context.ids[relativeToEventId]
-          ? toDateRange(context.ids[relativeToEventId].dateRangeIso)
-              .fromDateTime
-          : undefined;
-      if (!relativeTo) {
-        const priorEvent = getPriorEvent(context);
-        if (!priorEvent) {
-          relativeTo = context.zonedNow;
-        } else {
-          relativeTo = toDateRange(priorEvent.dateRangeIso).fromDateTime;
-        }
-      }
-      til = relativeTo;
-      context.ranges.push(textRange(relativeDate));
-    } else if (now) {
-      til = context.zonedNow;
-      context.ranges.push(textRange(now));
-    } else {
-      til = DateTime.fromISO(datePart);
-      context.ranges.push(textRange(datePart));
-    }
-
-    if (!til || !til.isValid) {
-      til = context.zonedNow;
-    }
-  }
+  const til = getEdtfTil(
+    line,
+    i,
+    lengthAtIndex,
+    eventStartLineRegexMatch,
+    context
+  );
 
   if (eventStartLineRegexMatch[edtf_recurrence_repetitionsMatchIndex]) {
     if (
@@ -293,10 +308,30 @@ export const checkEdtfRecurrence = (
   return { recurrence: { every, til }, range };
 };
 
-export const checkRecurrence = (
-  eventStartLineRegexMatch: RegExpMatchArray,
+function getTil(
+  line: string,
+  i: number,
   lengthAtIndex: number[],
-  i: number
+  eventStartLineRegexMatch: RegExpMatchArray,
+  context: ParsingContext
+): DateTime | undefined {
+  const tilMatch = eventStartLineRegexMatch[recurrence_untilMatchIndex];
+  if (!tilMatch) {
+    return;
+  }
+
+  const datePart = eventStartLineRegexMatch[reccurence_untilDateMatchIndex];
+  const relativeDate =
+    eventStartLineRegexMatch[reccurence_until_relativeMatchIndex];
+}
+
+export const checkRecurrence = (
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  eventStartLineRegexMatch: RegExpMatchArray,
+  context: ParsingContext,
+  cache?: Caches
 ): RecurrenceInText | undefined => {
   const recurrenceMatch =
     eventStartLineRegexMatch[recurrence_recurrenceMatchIndex];
@@ -352,6 +387,8 @@ export const checkRecurrence = (
   const every = {
     [unit]: recurrenceCount,
   } as Duration;
+
+  const til = getTil(line, i, lengthAtIndex, eventStartLineRegexMatch, context);
 
   if (eventStartLineRegexMatch[recurrence_repetitionsMatchIndex]) {
     if (eventStartLineRegexMatch[recurrence_repetitionsForAmountMatchIndex]) {
