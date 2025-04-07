@@ -62,6 +62,10 @@ export class ParsingContext {
     this.timezoneStack = [new SystemZone()];
   }
 
+  get zonedNow(): DateTime {
+    return this.now.setZone(this.timezone)
+  }
+
   public get timezone(): Zone {
     return this.timezoneStack[this.timezoneStack.length - 1];
   }
