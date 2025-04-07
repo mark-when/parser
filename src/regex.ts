@@ -60,8 +60,12 @@ export const REPETITIONS_REGEX = new RegExp(
   `((\\s+for\\s+(\\d+\\W*)(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source}|(times)))|(\\s+x\\s*(\\d+)))?`
 );
 
+export const UNTIL_REGEX = new RegExp(
+  `(\\s+(?:(?:(?:un)?til)|(?:to)|(?:\\|))\\s+(${START_OR_END_TIME_REGEX.source}))?`
+);
+
 export const RECURRENCE_REGEX = new RegExp(
-  `\\s*every\\s+${RECURRENCE_AMOUNT_REGEX.source}${REPETITIONS_REGEX.source}`
+  `\\s*every\\s+${RECURRENCE_AMOUNT_REGEX.source}${REPETITIONS_REGEX.source}${UNTIL_REGEX.source}`
 );
 
 export const DATE_RANGE_REGEX = new RegExp(
@@ -232,6 +236,74 @@ export const recurrence_repetitionsForAmountTimesMatchIndex = ++index;
 export const recurrence_recurrenceAmountXNotationMatchIndex = ++index;
 export const recurrence_recurrenceAmountXNotationAmountMatchIndex = ++index;
 
+export const recurrence_untilMatchIndex = ++index;
+export const reccurence_untilDateMatchIndex = ++index;
+
+export const reccurence_until_isoMatchIndex = ++index;
+export const reccurence_until_nowMatchIndex = ++index;
+
+export const reccurence_until_timeOnlyMatchIndex = ++index;
+export const reccurence_until_timeOnlyMeridiemHourMatchIndex = ++index;
+export const reccurence_until_timeOnlyMeridiemMinuteMatchIndex = ++index;
+export const reccurence_until_timeOnlyMeridiemMeridiemMatchIndex = ++index;
+export const reccurence_until_timeOnly24HourHourMatchIndex = ++index;
+export const reccurence_until_timeOnly24HourMinuteMatchIndex = ++index;
+
+export const reccurence_until_slashDateFullMatchIndex = ++index;
+export const reccurence_until_slashDateMatchIndex = ++index;
+export const reccurence_until_slashDateMatchIndex1 = ++index;
+export const reccurence_until_slashDateMatchIndex2 = ++index;
+
+export const reccurence_until_slashDateTimeMatchIndex = ++index;
+export const reccurence_until_slashDateTimeMeridiemHourMatchIndex = ++index;
+export const reccurence_until_slashDateTimeMeridiemMinuteMatchIndex = ++index;
+export const reccurence_until_slashDateTimeMeridiemMeridiemMatchIndex = ++index;
+export const reccurence_until_slashDateTime24HourHourMatchIndex = ++index;
+export const reccurence_until_slashDateTime24HourMinuteMatchIndex = ++index;
+
+export const reccurence_until_relativeMatchIndex = ++index;
+export const reccurence_until_beforeOrAfterMatchIndex = ++index;
+export const reccurence_until_relativeTimeMatchIndex = ++index;
+export const reccurence_until_relativeEventIdMatchIndex = ++index;
+export const reccurence_until_relativeAmountsMatchIndex = ++index;
+export const reccurence_until_relativeAmountMatchIndex = ++index;
+export const reccurence_until_relativeAmountUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountMillisecondsUnitMatchIndex =
+  ++index;
+export const reccurence_until_relativeAmountSecondsUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountMinutesUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountHoursUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountWeekDayMatchIndex = ++index;
+export const reccurence_until_relativeAmountDaysUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountWeeksUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountMonthsUnitMatchIndex = ++index;
+export const reccurence_until_relativeAmountYearsUnitMatchIndex = ++index;
+
+export const reccurence_until_dayFirstCasualMonthMatchIndex = ++index;
+export const reccurence_until_dayFirstCasualMonthDayMatchIndex = ++index;
+export const reccurence_until_dayFirstCasualMonthMonthFullMatchIndex = ++index;
+export const reccurence_until_dayFirstCasualMonthMonthAbbrMatchIndex = ++index;
+export const reccurence_until_monthFirstCasualMonthMatchIndex = ++index;
+export const reccurence_until_monthFirstCasualMonthMonthFullMatchIndex =
+  ++index;
+export const reccurence_until_monthFirstCasualMonthMonthAbbrMatchIndex =
+  ++index;
+export const reccurence_until_monthFirstCasualMonthDayMatchIndex = ++index;
+export const reccurence_until_casualMonthAndDayYearMatchIndex = ++index;
+
+export const reccurence_until_casualMonthTimeMatchIndex = ++index;
+export const reccurence_until_casualMonthTimeMeridiemHourMatchIndex = ++index;
+export const reccurence_until_casualMonthTimeMeridiemMinuteMatchIndex = ++index;
+export const reccurence_until_casualMonthTimeMeridiemMeridiemMatchIndex =
+  ++index;
+export const reccurence_until_casualMonthTime24HourHourMatchIndex = ++index;
+export const reccurence_until_casualMonthTime24HourMinuteMatchIndex = ++index;
+
+export const reccurence_until_casualMonthMatchIndex = ++index;
+export const reccurence_until_casualMonthMonthFullMatchIndex = ++index;
+export const reccurence_until_casualMonthMonthAbbrMatchIndex = ++index;
+export const reccurence_until_casualMonthYearMatchIndex = ++index;
+
 export const eventTextMatchIndex = ++index;
 
 export const COMMENT_REGEX = /^\s*\/\/.*/;
@@ -255,9 +327,23 @@ export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
 export const EDTF_DATE_REGEX = new RegExp(
   `(\\d{4}(-\\d{2}(-\\d{2}(?:\\s+${TIME_REGEX.source})?)?)?)`
 );
-export const EDTF_RANGE_REGEX = new RegExp(
-  `((?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source}))(\\s*/\\s*(?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source})))?)(${RECURRENCE_REGEX.source})?\\s*:`
+
+export const EDTF_START_OR_END_REGEX = new RegExp(
+  `(?:${EDTF_DATE_REGEX.source}|(${RELATIVE_TIME_REGEX.source})|(${NOW_REGEX.source}))`
 );
+
+export const EDTF_UNTIL_REGEX = new RegExp(
+  `(\\s+(?:(?:(?:un)?til)|(?:to)|(?:\\|))\\s+${EDTF_START_OR_END_REGEX.source})?`
+);
+
+export const EDTF_RECURRENCE_REGEX = new RegExp(
+  `\\s*every\\s+${RECURRENCE_AMOUNT_REGEX.source}${REPETITIONS_REGEX.source}${EDTF_UNTIL_REGEX.source}`
+);
+
+export const EDTF_RANGE_REGEX = new RegExp(
+  `(${EDTF_START_OR_END_REGEX.source}(\\s*/\\s*${EDTF_START_OR_END_REGEX.source})?)(${EDTF_RECURRENCE_REGEX.source})?\\s*:`
+);
+
 export const EDTF_START_REGEX = new RegExp(
   `^(\\s*)${EDTF_RANGE_REGEX.source}(.*)`,
   "i"
@@ -328,49 +414,73 @@ export const to_edtfRelativeAmountYearsUnitMatchIndex = ++edtfIndex;
 
 export const to_edtfNowMatchIndex = ++edtfIndex;
 
-export const recurrence_edtfRecurrenceMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountMillisecondsUnitMatchIndex =
+export const edtf_recurrenceMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountMillisecondsUnitMatchIndex =
   ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountSecondsUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountMinutesUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountHoursUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountWeekDayMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountDaysUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountWeeksUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountMonthsUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountYearsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountSecondsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountMinutesUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountHoursUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountWeekDayMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountDaysUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountWeeksUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountMonthsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountYearsUnitMatchIndex = ++edtfIndex;
 
-export const recurrence_edtfRepetitionsMatchIndex = ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountMatchIndex = ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountAmountMatchIndex = ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountUnitMatchIndex = ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountMillisecondsUnitMatchIndex =
+export const edtf_recurrence_repetitionsMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountAmountMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountMillisecondsUnitMatchIndex =
   ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountSecondsUnitMatchIndex =
+export const edtf_recurrence_repetitionsForAmountSecondsUnitMatchIndex =
   ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountMinutesUnitMatchIndex =
+export const edtf_recurrence_repetitionsForAmountMinutesUnitMatchIndex =
   ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountHoursUnitMatchIndex =
-  ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountWeekDayMatchIndex = ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountDaysUnitMatchIndex =
-  ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountWeeksUnitMatchIndex =
-  ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountMonthsUnitMatchIndex =
-  ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountYearsUnitMatchIndex =
-  ++edtfIndex;
-export const recurrence_edtfRepetitionsForAmountTimesMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountHoursUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountWeekDayMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountDaysUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountWeeksUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountMonthsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountYearsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountTimesMatchIndex = ++edtfIndex;
 
-export const recurrence_edtfRecurrenceAmountXNotationMatchIndex = ++edtfIndex;
-export const recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex =
+export const edtf_recurrence_recurrenceAmountXNotationMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountXNotationAmountMatchIndex =
   ++edtfIndex;
+
+export const edtf_recurrence_untilMatchIndex = ++edtfIndex
+export const edtf_recurrence_untilDateIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateMonthPart = ++edtfIndex;
+export const edtf_recurrence_untilDateDayPart = ++edtfIndex;
+
+export const edtf_recurrence_untilDateTimePartMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTimeMeridiemHourMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTime24HourHourMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTime24HourMinuteMatchIndex = ++edtfIndex;
+
+export const edtf_recurrence_untilRelativeMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilBeforeOrAfterMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeTimeMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeEventIdMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountsMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMinutesUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountHoursUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountWeekDayMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountDaysUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountWeeksUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMonthsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountYearsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilNowMatchIndex = ++edtfIndex;
 
 export const edtfEventTextMatchIndex = ++edtfIndex;
-
 
 /**
  * BCE/CE System:
@@ -395,8 +505,8 @@ export const edtfEventTextMatchIndex = ++edtfIndex;
  *
  */
 export const BCE_START_REGEX = new RegExp(
-    `^\\s*(\\d{1,5})\\s?(BCE|BC|AD|CE)?(?:\\s?[–-]\\s?(\\d{1,5})\\s?(BCE|BC|AD|CE)?)?(?=\\s*:)(.*)`,
-    "i"
+  `^\\s*(\\d{1,5})\\s?(BCE|BC|AD|CE)?(?:\\s?[–-]\\s?(\\d{1,5})\\s?(BCE|BC|AD|CE)?)?(?=\\s*:)(.*)`,
+  "i"
 );
 let BCEIndex = -1;
 export const BCEDatePartMatchIndex = ++BCEIndex;
