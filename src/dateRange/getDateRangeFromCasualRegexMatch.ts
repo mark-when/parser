@@ -162,7 +162,7 @@ export function getDateRangeFromCasualRegexMatch(
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
       if (!priorEvent) {
-        relativeTo = context.now;
+        relativeTo = context.zonedNow
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
@@ -256,7 +256,7 @@ export function getDateRangeFromCasualRegexMatch(
       from_timeOnly24HourHourMatchIndex,
       from_timeOnly24HourMinuteMatchIndex
     );
-    const priorEventDate = getPriorEventToDateTime(context) || DateTime.now();
+    const priorEventDate = getPriorEventToDateTime(context) || context.zonedNow
     const timeFromIso = DateTime.fromISO(timeFrom.dateTimeIso, {
       setZone: true,
       zone: context.timezone,
@@ -274,7 +274,7 @@ export function getDateRangeFromCasualRegexMatch(
       granularity = timeFrom.granularity;
     }
   } else if (nowFrom) {
-    fromDateTime = context.now.setZone(context.timezone);
+    fromDateTime = context.zonedNow
     granularity = "instant";
   } else {
     fromDateTime = DateTime.fromISO(eventStartDate, {
@@ -285,7 +285,7 @@ export function getDateRangeFromCasualRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime.isValid) {
-    fromDateTime = context.now.setZone(context.timezone);
+    fromDateTime = context.zonedNow
     granularity = "instant";
   }
 
@@ -387,7 +387,7 @@ export function getDateRangeFromCasualRegexMatch(
       endDateTime = eventStartWithTimeTo;
       granularity = timeTo.granularity;
     } else if (nowTo) {
-      endDateTime = DateTime.now();
+      endDateTime = context.zonedNow
       granularity = "instant";
     } else {
       endDateTime = DateTime.fromISO(

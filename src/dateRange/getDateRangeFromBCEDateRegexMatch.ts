@@ -90,7 +90,7 @@ export function getDateRangeFromBCEDateRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime?.isValid) {
-    fromDateTime = context.now.setZone(context.timezone);
+    fromDateTime = context.zonedNow
     granularity = "instant";
   }
 

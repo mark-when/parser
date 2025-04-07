@@ -1,29 +1,30 @@
+import { DateTime } from "luxon";
 import {
-  recurrence_edtfRecurrenceAmountDaysUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountHoursUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountMatchIndex,
-  recurrence_edtfRecurrenceAmountMillisecondsUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountMinutesUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountMonthsUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountSecondsUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountWeekDayMatchIndex,
-  recurrence_edtfRecurrenceAmountWeeksUnitMatchIndex,
-  recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex,
-  recurrence_edtfRecurrenceAmountYearsUnitMatchIndex,
-  recurrence_edtfRecurrenceMatchIndex,
-  recurrence_edtfRepetitionsForAmountAmountMatchIndex,
-  recurrence_edtfRepetitionsForAmountDaysUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountHoursUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountMatchIndex,
-  recurrence_edtfRepetitionsForAmountMillisecondsUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountMinutesUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountMonthsUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountSecondsUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountTimesMatchIndex,
-  recurrence_edtfRepetitionsForAmountWeekDayMatchIndex,
-  recurrence_edtfRepetitionsForAmountWeeksUnitMatchIndex,
-  recurrence_edtfRepetitionsForAmountYearsUnitMatchIndex,
-  recurrence_edtfRepetitionsMatchIndex,
+  edtf_recurrence_recurrenceAmountDaysUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountHoursUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountMatchIndex,
+  edtf_recurrence_recurrenceAmountMillisecondsUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountMinutesUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountMonthsUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountSecondsUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountWeekDayMatchIndex,
+  edtf_recurrence_recurrenceAmountWeeksUnitMatchIndex,
+  edtf_recurrence_recurrenceAmountXNotationAmountMatchIndex,
+  edtf_recurrence_recurrenceAmountYearsUnitMatchIndex,
+  edtf_recurrenceMatchIndex,
+  edtf_recurrence_repetitionsForAmountAmountMatchIndex,
+  edtf_recurrence_repetitionsForAmountDaysUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountHoursUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountMatchIndex,
+  edtf_recurrence_repetitionsForAmountMillisecondsUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountMinutesUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountMonthsUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountSecondsUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountTimesMatchIndex,
+  edtf_recurrence_repetitionsForAmountWeekDayMatchIndex,
+  edtf_recurrence_repetitionsForAmountWeeksUnitMatchIndex,
+  edtf_recurrence_repetitionsForAmountYearsUnitMatchIndex,
+  edtf_recurrence_repetitionsMatchIndex,
   recurrence_recurrenceAmountDaysUnitMatchIndex,
   recurrence_recurrenceAmountHoursUnitMatchIndex,
   recurrence_recurrenceAmountMatchIndex,
@@ -49,8 +50,25 @@ import {
   recurrence_repetitionsForAmountWeeksUnitMatchIndex,
   recurrence_repetitionsForAmountYearsUnitMatchIndex,
   recurrence_repetitionsMatchIndex,
+  edtf_recurrence_untilMatchIndex,
+  edtf_recurrence_untilDateIndex,
+  edtf_recurrence_untilDateMonthPart,
+  edtf_recurrence_untilDateDayPart,
+  edtf_recurrence_untilDateTimePartMatchIndex,
+  edtf_recurrence_untilBeforeOrAfterMatchIndex,
+  edtf_recurrence_untilRelativeMatchIndex,
+  edtf_recurrence_untilNowMatchIndex,
+  edtf_recurrence_untilDateTimeMeridiemHourMatchIndex,
+  edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex,
+  edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex,
+  edtf_recurrence_untilDateTime24HourHourMatchIndex,
+  edtf_recurrence_untilDateTime24HourMinuteMatchIndex,
+  edtf_recurrence_untilRelativeEventIdMatchIndex,
 } from "../regex.js";
-import { Range, RangeType } from "../Types.js";
+import { Range, RangeType, toDateRange } from "../Types.js";
+import { ParsingContext } from "../ParsingContext.js";
+import { Cache, Caches } from "../Cache.js";
+import { getPriorEvent, getTimeFromRegExpMatch } from "./utils.js";
 
 export type DurationUnit =
   | "years"
@@ -72,6 +90,7 @@ export interface RecurrenceInText {
 export interface Recurrence {
   every: Duration;
   for?: Duration & { times?: number };
+  til?: DateTime;
 }
 export const recurrenceDurationUnits = [
   "years",
@@ -86,12 +105,14 @@ export const recurrenceDurationUnits = [
 ] as DurationUnit[];
 
 export const checkEdtfRecurrence = (
-  eventStartLineRegexMatch: RegExpMatchArray,
+  line: string,
+  i: number,
   lengthAtIndex: number[],
-  i: number
+  eventStartLineRegexMatch: RegExpMatchArray,
+  context: ParsingContext,
+  cache?: Caches
 ): RecurrenceInText | undefined => {
-  const recurrenceMatch =
-    eventStartLineRegexMatch[recurrence_edtfRecurrenceMatchIndex];
+  const recurrenceMatch = eventStartLineRegexMatch[edtf_recurrenceMatchIndex];
 
   if (!recurrenceMatch) {
     return;
@@ -107,7 +128,7 @@ export const checkEdtfRecurrence = (
 
   let recurrenceCount: number;
   const recurrenceAmountString =
-    eventStartLineRegexMatch[recurrence_edtfRecurrenceAmountMatchIndex];
+    eventStartLineRegexMatch[edtf_recurrence_recurrenceAmountMatchIndex];
   if (recurrenceAmountString) {
     if (recurrenceAmountString.trim().toLowerCase() === "other") {
       recurrenceCount = 2;
@@ -119,15 +140,15 @@ export const checkEdtfRecurrence = (
   }
 
   const recurrenceUnitIndex = [
-    recurrence_edtfRecurrenceAmountYearsUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountMonthsUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountWeeksUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountWeekDayMatchIndex,
-    recurrence_edtfRecurrenceAmountDaysUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountHoursUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountMinutesUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountSecondsUnitMatchIndex,
-    recurrence_edtfRecurrenceAmountMillisecondsUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountYearsUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountMonthsUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountWeeksUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountWeekDayMatchIndex,
+    edtf_recurrence_recurrenceAmountDaysUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountHoursUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountMinutesUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountSecondsUnitMatchIndex,
+    edtf_recurrence_recurrenceAmountMillisecondsUnitMatchIndex,
   ].findIndex((regex) => !!eventStartLineRegexMatch[regex])!;
 
   const unit = recurrenceDurationUnits[recurrenceUnitIndex];
@@ -135,13 +156,83 @@ export const checkEdtfRecurrence = (
     [unit]: recurrenceCount,
   } as Duration;
 
-  if (eventStartLineRegexMatch[recurrence_edtfRepetitionsMatchIndex]) {
+  const tilMatch = eventStartLineRegexMatch[edtf_recurrence_untilMatchIndex];
+  let til: DateTime | undefined;
+  if (tilMatch) {
+    const datePart = eventStartLineRegexMatch[edtf_recurrence_untilDateIndex];
+    const hasTime =
+      !!eventStartLineRegexMatch[edtf_recurrence_untilDateTimePartMatchIndex];
+    const relativeDate =
+      eventStartLineRegexMatch[edtf_recurrence_untilRelativeMatchIndex];
+    const now = eventStartLineRegexMatch[edtf_recurrence_untilNowMatchIndex];
+
+    const indexOfDatePart = line.indexOf(datePart, line.indexOf(tilMatch));
+    const dateRangeInText: Range = {
+      type: RangeType.RecurrenceTilDate,
+      from: lengthAtIndex[i] + indexOfDatePart,
+      to: lengthAtIndex[i] + indexOfDatePart + datePart.length,
+    };
+    context.ranges.push(dateRangeInText);
+
+    if (datePart) {
+      if (hasTime) {
+        const time = getTimeFromRegExpMatch(
+          eventStartLineRegexMatch,
+          edtf_recurrence_untilDateTimeMeridiemHourMatchIndex,
+          edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex,
+          edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex,
+          edtf_recurrence_untilDateTime24HourHourMatchIndex,
+          edtf_recurrence_untilDateTime24HourMinuteMatchIndex
+        );
+        const timeDateTime = DateTime.fromISO(time.dateTimeIso);
+        til = DateTime.fromISO(datePart.substring(0, 10), {
+          zone: context.timezone,
+        }).set({
+          hour: timeDateTime.hour,
+          minute: timeDateTime.minute,
+        });
+      } else {
+        til = DateTime.fromISO(datePart, {
+          zone: context.timezone,
+        });
+      }
+    } else if (relativeDate) {
+      const relativeToEventId =
+        eventStartLineRegexMatch[
+          edtf_recurrence_untilRelativeEventIdMatchIndex
+        ];
+      let relativeTo =
+        relativeToEventId && context.ids[relativeToEventId]
+          ? toDateRange(context.ids[relativeToEventId].dateRangeIso)
+              .fromDateTime
+          : undefined;
+      if (!relativeTo) {
+        const priorEvent = getPriorEvent(context);
+        if (!priorEvent) {
+          relativeTo = context.zonedNow;
+        } else {
+          relativeTo = toDateRange(priorEvent.dateRangeIso).fromDateTime;
+        }
+      }
+      til = relativeTo;
+    } else if (now) {
+      til = context.zonedNow;
+    } else {
+      til = DateTime.fromISO(datePart);
+    }
+
+    if (!til || !til.isValid) {
+      til = context.zonedNow;
+    }
+  }
+
+  if (eventStartLineRegexMatch[edtf_recurrence_repetitionsMatchIndex]) {
     if (
-      eventStartLineRegexMatch[recurrence_edtfRepetitionsForAmountMatchIndex]
+      eventStartLineRegexMatch[edtf_recurrence_repetitionsForAmountMatchIndex]
     ) {
       const repetitionCount = parseInt(
         eventStartLineRegexMatch[
-          recurrence_edtfRepetitionsForAmountAmountMatchIndex
+          edtf_recurrence_repetitionsForAmountAmountMatchIndex
         ].trim()
       );
 
@@ -150,16 +241,16 @@ export const checkEdtfRecurrence = (
         | "times"
       )[];
       const repeitionUnitIndex = [
-        recurrence_edtfRepetitionsForAmountYearsUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountMonthsUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountWeeksUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountWeekDayMatchIndex,
-        recurrence_edtfRepetitionsForAmountDaysUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountHoursUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountMinutesUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountSecondsUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountMillisecondsUnitMatchIndex,
-        recurrence_edtfRepetitionsForAmountTimesMatchIndex,
+        edtf_recurrence_repetitionsForAmountYearsUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountMonthsUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountWeeksUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountWeekDayMatchIndex,
+        edtf_recurrence_repetitionsForAmountDaysUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountHoursUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountMinutesUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountSecondsUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountMillisecondsUnitMatchIndex,
+        edtf_recurrence_repetitionsForAmountTimesMatchIndex,
       ].findIndex((regex) => eventStartLineRegexMatch[regex])!;
       const repetitionUnit = units[repeitionUnitIndex];
       return {
@@ -168,13 +259,14 @@ export const checkEdtfRecurrence = (
           for: {
             [repetitionUnit]: repetitionCount,
           },
+          til,
         },
         range,
       };
     } else {
       const repetitionCount = parseInt(
         eventStartLineRegexMatch[
-          recurrence_edtfRecurrenceAmountXNotationAmountMatchIndex
+          edtf_recurrence_recurrenceAmountXNotationAmountMatchIndex
         ].trim()
       );
       return {
@@ -183,12 +275,13 @@ export const checkEdtfRecurrence = (
           for: {
             times: repetitionCount,
           },
+          til,
         },
         range,
       };
     }
   }
-  return { recurrence: { every }, range };
+  return { recurrence: { every, til }, range };
 };
 
 export const checkRecurrence = (

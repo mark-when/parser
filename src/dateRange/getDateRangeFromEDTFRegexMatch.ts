@@ -111,9 +111,12 @@ export function getDateRangeFromEDTFRegexMatch(
   const cached = cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const recurrence = checkEdtfRecurrence(
-      eventStartLineRegexMatch,
+      line,
+      i,
       lengthAtIndex,
-      i
+      eventStartLineRegexMatch,
+      context,
+      cache
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
@@ -186,7 +189,7 @@ export function getDateRangeFromEDTFRegexMatch(
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
       if (!priorEvent) {
-        relativeTo = context.now;
+        relativeTo = context.zonedNow;
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
@@ -226,7 +229,7 @@ export function getDateRangeFromEDTFRegexMatch(
     }
     granularity = "instant";
   } else if (nowFrom) {
-    fromDateTime = context.now.setZone(context.timezone);
+    fromDateTime = context.zonedNow;
     granularity = "instant";
   } else {
     fromDateTime = DateTime.fromISO(edtfFrom, { zone: context.timezone });
@@ -234,7 +237,7 @@ export function getDateRangeFromEDTFRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime?.isValid) {
-    fromDateTime = context.now.setZone(context.timezone);
+    fromDateTime = context.zonedNow;
     granularity = "instant";
   }
 
@@ -255,7 +258,7 @@ export function getDateRangeFromEDTFRegexMatch(
       }
       endDateTime = RelativeDate.from(relativeToDate, relativeTo);
     } else if (nowTo) {
-      endDateTime = context.now.setZone(context.timezone);
+      endDateTime = context.zonedNow;
       granularity = "instant";
     } else if (edtfTo) {
       if (edtfToHasTime) {
@@ -309,9 +312,12 @@ export function getDateRangeFromEDTFRegexMatch(
   }
 
   const recurrence = checkEdtfRecurrence(
-    eventStartLineRegexMatch,
+    line,
+    i,
     lengthAtIndex,
-    i
+    eventStartLineRegexMatch,
+    context,
+    cache
   );
   if (recurrence) {
     context.ranges.push(recurrence.range);

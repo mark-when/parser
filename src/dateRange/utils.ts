@@ -180,7 +180,7 @@ export function fromCasualDateFrom(
   let day = eventStartMatches[from_monthFirstCasualMonthDayMatchIndex];
   let year =
     eventStartMatches[from_casualMonthAndDayYearMatchIndex] ||
-    `${DateTime.now().year}`;
+    `${context.zonedNow.year}`;
 
   let timeMatch =
     eventStartMatches[from_casualMonthTimeMatchIndex] &&
@@ -236,7 +236,7 @@ export function fromCasualDateFrom(
 
   year =
     eventStartMatches[from_casualMonthYearMatchIndex] ||
-    `${DateTime.now().year}`;
+    `${context.zonedNow.year}`;
   month = eventStartMatches[from_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
@@ -267,7 +267,7 @@ export function fromCasualDateTo(
   let day = eventStartMatches[to_monthFirstCasualMonthDayMatchIndex];
   let year =
     eventStartMatches[to_casualMonthAndDayYearMatchIndex] ||
-    `${DateTime.now().year}`;
+    `${context.zonedNow.year}`;
 
   let timeMatch =
     eventStartMatches[to_casualMonthTimeMatchIndex] &&
@@ -324,7 +324,7 @@ export function fromCasualDateTo(
   }
 
   year =
-    eventStartMatches[to_casualMonthYearMatchIndex] || `${DateTime.now().year}`;
+    eventStartMatches[to_casualMonthYearMatchIndex] || `${context.zonedNow.year}`;
   month = eventStartMatches[to_casualMonthMonthFullMatchIndex];
   if (month) {
     return {
@@ -497,11 +497,10 @@ export function roundDateUp(
 }
 
 export function getYearNotationToDatetime(
-  year: string|number,
-  yearNotation:string|undefined,
+  year: string | number,
+  yearNotation: string | undefined,
   context: ParsingContext
 ): DateTime | undefined {
-
   if (typeof year === "string") {
     year = parseInt(year);
   }
@@ -510,7 +509,7 @@ export function getYearNotationToDatetime(
     /**
      * It's a negative date and we need to remove 1 year to get the correct year
      * The reason is that the year 0 does not exist in the Gregorian calendar
-     **/ 
+     **/
     year = -(year - 1);
   }
   return DateTime.fromObject({ year }, { zone: context.timezone });
