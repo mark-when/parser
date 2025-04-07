@@ -172,41 +172,48 @@ export function getTimeFromCasualMonthTo(eventStartMatches: RegExpMatchArray) {
   );
 }
 
-export function fromCasualDateFrom(
+export function fromCasualDate(
   eventStartMatches: RegExpMatchArray,
-  context: ParsingContext
+  context: ParsingContext,
+  monthFirstCasualMonthMonthFullMatchIndex: number,
+  monthFirstCasualMonthDayMatchIndex: number,
+  casualMonthAndDayYearMatchIndex: number,
+  monthFirstCasualMonthMonthAbbrMatchIndex: number,
+  dayFirstCasualMonthDayMatchIndex: number,
+  dayFirstCasualMonthMonthFullMatchIndex: number,
+  dayFirstCasualMonthMonthAbbrMatchIndex: number,
+  casualMonthYearMatchIndex: number,
+  casualMonthMonthFullMatchIndex: number,
+  casualMonthMonthAbbrMatchIndex: number,
+  timeMatch: GranularDateTime | undefined
 ): GranularDateTime | undefined {
-  let month = eventStartMatches[from_monthFirstCasualMonthMonthFullMatchIndex];
-  let day = eventStartMatches[from_monthFirstCasualMonthDayMatchIndex];
+  let month = eventStartMatches[monthFirstCasualMonthMonthFullMatchIndex];
+  let day = eventStartMatches[monthFirstCasualMonthDayMatchIndex];
   let year =
-    eventStartMatches[from_casualMonthAndDayYearMatchIndex] ||
+    eventStartMatches[casualMonthAndDayYearMatchIndex] ||
     `${context.zonedNow.year}`;
-
-  let timeMatch =
-    eventStartMatches[from_casualMonthTimeMatchIndex] &&
-    getTimeFromCasualMonthFrom(eventStartMatches);
 
   let date =
     month &&
     day &&
     parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context);
 
-  month = eventStartMatches[from_monthFirstCasualMonthMonthAbbrMatchIndex];
+  month = eventStartMatches[monthFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
       day &&
       parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
 
-  day = eventStartMatches[from_dayFirstCasualMonthDayMatchIndex];
-  month = eventStartMatches[from_dayFirstCasualMonthMonthFullMatchIndex];
+  day = eventStartMatches[dayFirstCasualMonthDayMatchIndex];
+  month = eventStartMatches[dayFirstCasualMonthMonthFullMatchIndex];
   date =
     date ||
     (month &&
       day &&
       parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context));
 
-  month = eventStartMatches[from_dayFirstCasualMonthMonthAbbrMatchIndex];
+  month = eventStartMatches[dayFirstCasualMonthMonthAbbrMatchIndex];
   date =
     date ||
     (month &&
@@ -235,9 +242,8 @@ export function fromCasualDateFrom(
   }
 
   year =
-    eventStartMatches[from_casualMonthYearMatchIndex] ||
-    `${context.zonedNow.year}`;
-  month = eventStartMatches[from_casualMonthMonthFullMatchIndex];
+    eventStartMatches[casualMonthYearMatchIndex] || `${context.zonedNow.year}`;
+  month = eventStartMatches[casualMonthMonthFullMatchIndex];
   if (month) {
     return {
       dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM", {
@@ -247,95 +253,7 @@ export function fromCasualDateFrom(
       granularity: "month",
     };
   }
-  month = eventStartMatches[from_casualMonthMonthAbbrMatchIndex];
-  if (month) {
-    return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM", {
-        setZone: true,
-        zone: context.timezone,
-      }).toISO(),
-      granularity: "month",
-    };
-  }
-}
-
-export function fromCasualDateTo(
-  eventStartMatches: RegExpMatchArray,
-  context: ParsingContext
-): GranularDateTime | undefined {
-  let month = eventStartMatches[to_monthFirstCasualMonthMonthFullMatchIndex];
-  let day = eventStartMatches[to_monthFirstCasualMonthDayMatchIndex];
-  let year =
-    eventStartMatches[to_casualMonthAndDayYearMatchIndex] ||
-    `${context.zonedNow.year}`;
-
-  let timeMatch =
-    eventStartMatches[to_casualMonthTimeMatchIndex] &&
-    getTimeFromCasualMonthTo(eventStartMatches);
-
-  let date =
-    month &&
-    day &&
-    parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context);
-
-  month = eventStartMatches[to_monthFirstCasualMonthMonthAbbrMatchIndex];
-  date =
-    date ||
-    (month &&
-      day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
-
-  day = eventStartMatches[to_dayFirstCasualMonthDayMatchIndex];
-  month = eventStartMatches[to_dayFirstCasualMonthMonthFullMatchIndex];
-  date =
-    date ||
-    (month &&
-      day &&
-      parseAsCasualDayFullMonth(`${year} ${month} ${parseInt(day)}`, context));
-
-  month = eventStartMatches[to_dayFirstCasualMonthMonthAbbrMatchIndex];
-  date =
-    date ||
-    (month &&
-      day &&
-      parseAsCasualDayAbbrMonth(`${year} ${month} ${parseInt(day)}`, context));
-
-  if (date) {
-    if (timeMatch) {
-      if (timeMatch) {
-        const dt = DateTime.fromISO(date.dateTimeIso, {
-          setZone: true,
-          zone: context.timezone,
-        });
-        const timeMatchIso = DateTime.fromISO(timeMatch.dateTimeIso, {
-          setZone: true,
-          zone: context.timezone,
-        });
-        date.dateTimeIso = dt
-          .set({
-            hour: timeMatchIso.hour,
-            minute: timeMatchIso.minute,
-          })
-          .toISO();
-        date.granularity = timeMatch.granularity;
-      }
-    }
-    return date;
-  }
-
-  year =
-    eventStartMatches[to_casualMonthYearMatchIndex] || `${context.zonedNow.year}`;
-  month = eventStartMatches[to_casualMonthMonthFullMatchIndex];
-  if (month) {
-    return {
-      dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM", {
-        setZone: true,
-        zone: context.timezone,
-      }).toISO(),
-      granularity: "month",
-    };
-  }
-  month = eventStartMatches[to_casualMonthMonthAbbrMatchIndex];
+  month = eventStartMatches[casualMonthMonthAbbrMatchIndex];
   if (month) {
     return {
       dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM", {

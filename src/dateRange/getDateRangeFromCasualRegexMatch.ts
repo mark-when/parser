@@ -31,6 +31,28 @@ import {
   to_timeOnly24HourHourMatchIndex,
   to_timeOnly24HourMinuteMatchIndex,
   eventTextMatchIndex,
+  from_casualMonthAndDayYearMatchIndex,
+  from_casualMonthMonthAbbrMatchIndex,
+  from_casualMonthMonthFullMatchIndex,
+  from_casualMonthTimeMatchIndex,
+  from_casualMonthYearMatchIndex,
+  from_dayFirstCasualMonthDayMatchIndex,
+  from_dayFirstCasualMonthMonthAbbrMatchIndex,
+  from_dayFirstCasualMonthMonthFullMatchIndex,
+  from_monthFirstCasualMonthDayMatchIndex,
+  from_monthFirstCasualMonthMonthAbbrMatchIndex,
+  from_monthFirstCasualMonthMonthFullMatchIndex,
+  to_casualMonthAndDayYearMatchIndex,
+  to_casualMonthMonthAbbrMatchIndex,
+  to_casualMonthMonthFullMatchIndex,
+  to_casualMonthYearMatchIndex,
+  to_dayFirstCasualMonthDayMatchIndex,
+  to_dayFirstCasualMonthMonthAbbrMatchIndex,
+  to_dayFirstCasualMonthMonthFullMatchIndex,
+  to_monthFirstCasualMonthDayMatchIndex,
+  to_monthFirstCasualMonthMonthAbbrMatchIndex,
+  to_monthFirstCasualMonthMonthFullMatchIndex,
+  to_casualMonthTimeMatchIndex,
 } from "../regex.js";
 import {
   DateRangePart,
@@ -41,8 +63,6 @@ import {
   toDateRange,
 } from "../Types.js";
 import {
-  fromCasualDateFrom,
-  fromCasualDateTo,
   getTimeFromSlashDateFrom,
   getTimeFromRegExpMatch,
   getTimeFromSlashDateTo,
@@ -50,6 +70,9 @@ import {
   getPriorEvent,
   parseSlashDate,
   roundDateUp,
+  getTimeFromCasualMonthFrom,
+  fromCasualDate,
+  getTimeFromCasualMonthTo,
 } from "./utils.js";
 import { checkRecurrence } from "./checkRecurrence.js";
 
@@ -66,42 +89,6 @@ export function getDateRangeFromCasualRegexMatch(
   }
   // What the regex matched as the date range part
   const datePart = eventStartLineRegexMatch[datePartMatchIndex];
-  const eventStartDate = eventStartLineRegexMatch[from_matchIndex];
-  const eventEndDate = eventStartLineRegexMatch[to_matchIndex];
-
-  const relativeFromDate = eventStartLineRegexMatch[from_relativeMatchIndex];
-  const relativeFromBeforeOrAfter =
-    eventStartLineRegexMatch[from_beforeOrAfterMatchIndex];
-  const fromBeforeOrAfter = ["before", "by"].includes(
-    relativeFromBeforeOrAfter || ""
-  )
-    ? "before"
-    : "after";
-  const relativeToDate = eventStartLineRegexMatch[to_relativeMatchIndex];
-  const relativeToBeforeOrAfter =
-    eventStartLineRegexMatch[to_beforeOrAfterMatchIndex];
-  const toBeforeOrAfter = ["before", "by"].includes(
-    relativeToBeforeOrAfter || ""
-  )
-    ? "before"
-    : "after";
-
-  const fromCasual = fromCasualDateFrom(eventStartLineRegexMatch, context);
-  const toCasual = fromCasualDateTo(eventStartLineRegexMatch, context);
-
-  const slashDateFrom = eventStartLineRegexMatch[from_slashDateFullMatchIndex];
-  const slashDateTo = eventStartLineRegexMatch[to_slashDateFullMatchIndex];
-
-  const timeOnlyFrom = eventStartLineRegexMatch[from_timeOnlyMatchIndex];
-  const timeOnlyTo = eventStartLineRegexMatch[to_timeOnlyMatchIndex];
-
-  const nowFrom = eventStartLineRegexMatch[from_nowMatchIndex];
-  const nowTo = eventStartLineRegexMatch[to_nowMatchIndex];
-
-  let fromDateTime: DateTime | undefined;
-  let endDateTime: DateTime | undefined;
-  let granularity: DateTimeGranularity = "instant";
-  let canCacheRange = true;
 
   const indexOfDateRange = line.indexOf(datePart);
   const dateRangeInText: Range = {
@@ -117,13 +104,14 @@ export function getDateRangeFromCasualRegexMatch(
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
   });
-
   const cached = cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const recurrence = checkRecurrence(
-      eventStartLineRegexMatch,
+      line,
+      i,
       lengthAtIndex,
-      i
+      eventStartLineRegexMatch,
+      context
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
@@ -141,6 +129,69 @@ export function getDateRangeFromCasualRegexMatch(
     );
     return dateRange;
   }
+
+  const eventStartDate = eventStartLineRegexMatch[from_matchIndex];
+  const eventEndDate = eventStartLineRegexMatch[to_matchIndex];
+
+  const relativeFromDate = eventStartLineRegexMatch[from_relativeMatchIndex];
+  const relativeFromBeforeOrAfter =
+    eventStartLineRegexMatch[from_beforeOrAfterMatchIndex];
+  const fromBeforeOrAfter = ["before", "by"].includes(
+    relativeFromBeforeOrAfter || ""
+  )
+    ? "before"
+    : "after";
+  const relativeToDate = eventStartLineRegexMatch[to_relativeMatchIndex];
+
+  const fromCasual = fromCasualDate(
+    eventStartLineRegexMatch,
+    context,
+    from_monthFirstCasualMonthMonthFullMatchIndex,
+    from_monthFirstCasualMonthDayMatchIndex,
+    from_casualMonthAndDayYearMatchIndex,
+    from_monthFirstCasualMonthMonthAbbrMatchIndex,
+    from_dayFirstCasualMonthDayMatchIndex,
+    from_dayFirstCasualMonthMonthFullMatchIndex,
+    from_dayFirstCasualMonthMonthAbbrMatchIndex,
+    from_casualMonthYearMatchIndex,
+    from_casualMonthMonthFullMatchIndex,
+    from_casualMonthMonthAbbrMatchIndex,
+    eventStartLineRegexMatch[from_casualMonthTimeMatchIndex]
+      ? getTimeFromCasualMonthFrom(eventStartLineRegexMatch)
+      : undefined
+  );
+
+  const toCasual = fromCasualDate(
+    eventStartLineRegexMatch,
+    context,
+    to_monthFirstCasualMonthMonthFullMatchIndex,
+    to_monthFirstCasualMonthDayMatchIndex,
+    to_casualMonthAndDayYearMatchIndex,
+    to_monthFirstCasualMonthMonthAbbrMatchIndex,
+    to_dayFirstCasualMonthDayMatchIndex,
+    to_dayFirstCasualMonthMonthFullMatchIndex,
+    to_dayFirstCasualMonthMonthAbbrMatchIndex,
+    to_casualMonthYearMatchIndex,
+    to_casualMonthMonthFullMatchIndex,
+    to_casualMonthMonthAbbrMatchIndex,
+    eventStartLineRegexMatch[to_casualMonthTimeMatchIndex]
+      ? getTimeFromCasualMonthTo(eventStartLineRegexMatch)
+      : undefined
+  );
+
+  const slashDateFrom = eventStartLineRegexMatch[from_slashDateFullMatchIndex];
+  const slashDateTo = eventStartLineRegexMatch[to_slashDateFullMatchIndex];
+
+  const timeOnlyFrom = eventStartLineRegexMatch[from_timeOnlyMatchIndex];
+  const timeOnlyTo = eventStartLineRegexMatch[to_timeOnlyMatchIndex];
+
+  const nowFrom = eventStartLineRegexMatch[from_nowMatchIndex];
+  const nowTo = eventStartLineRegexMatch[to_nowMatchIndex];
+
+  let fromDateTime: DateTime | undefined;
+  let endDateTime: DateTime | undefined;
+  let granularity: DateTimeGranularity = "instant";
+  let canCacheRange = true;
 
   if (relativeFromDate) {
     // Dependent on other events
@@ -162,7 +213,7 @@ export function getDateRangeFromCasualRegexMatch(
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
       if (!priorEvent) {
-        relativeTo = context.zonedNow
+        relativeTo = context.zonedNow;
       } else {
         relativeTo =
           fromBeforeOrAfter === "after"
@@ -256,7 +307,7 @@ export function getDateRangeFromCasualRegexMatch(
       from_timeOnly24HourHourMatchIndex,
       from_timeOnly24HourMinuteMatchIndex
     );
-    const priorEventDate = getPriorEventToDateTime(context) || context.zonedNow
+    const priorEventDate = getPriorEventToDateTime(context) || context.zonedNow;
     const timeFromIso = DateTime.fromISO(timeFrom.dateTimeIso, {
       setZone: true,
       zone: context.timezone,
@@ -274,7 +325,7 @@ export function getDateRangeFromCasualRegexMatch(
       granularity = timeFrom.granularity;
     }
   } else if (nowFrom) {
-    fromDateTime = context.zonedNow
+    fromDateTime = context.zonedNow;
     granularity = "instant";
   } else {
     fromDateTime = DateTime.fromISO(eventStartDate, {
@@ -285,7 +336,7 @@ export function getDateRangeFromCasualRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime.isValid) {
-    fromDateTime = context.zonedNow
+    fromDateTime = context.zonedNow;
     granularity = "instant";
   }
 
@@ -387,7 +438,7 @@ export function getDateRangeFromCasualRegexMatch(
       endDateTime = eventStartWithTimeTo;
       granularity = timeTo.granularity;
     } else if (nowTo) {
-      endDateTime = context.zonedNow
+      endDateTime = context.zonedNow;
       granularity = "instant";
     } else {
       endDateTime = DateTime.fromISO(
@@ -418,16 +469,16 @@ export function getDateRangeFromCasualRegexMatch(
   }
 
   const recurrence = checkRecurrence(
-    eventStartLineRegexMatch,
+    line,
+    i,
     lengthAtIndex,
-    i
+    eventStartLineRegexMatch,
+    context
   );
   if (recurrence) {
     context.ranges.push(recurrence.range);
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
-  } else {
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
   }
+  context.ranges.push(colonRange(RangeType.DateRangeColon));
   const dateRange = new DateRangePart(
     fromDateTime,
     endDateTime,
