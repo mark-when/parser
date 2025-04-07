@@ -166,13 +166,18 @@ export const checkEdtfRecurrence = (
       eventStartLineRegexMatch[edtf_recurrence_untilRelativeMatchIndex];
     const now = eventStartLineRegexMatch[edtf_recurrence_untilNowMatchIndex];
 
-    const indexOfDatePart = line.indexOf(datePart, line.indexOf(tilMatch));
-    const dateRangeInText: Range = {
-      type: RangeType.RecurrenceTilDate,
-      from: lengthAtIndex[i] + indexOfDatePart,
-      to: lengthAtIndex[i] + indexOfDatePart + datePart.length,
+    const textRange = (tilSegmentString: string) => {
+      const indexOfDatePart = line.indexOf(
+        tilSegmentString,
+        line.indexOf(tilMatch)
+      );
+      const dateRangeInText: Range = {
+        type: RangeType.RecurrenceTilDate,
+        from: lengthAtIndex[i] + indexOfDatePart,
+        to: lengthAtIndex[i] + indexOfDatePart + tilSegmentString.length,
+      };
+      return dateRangeInText;
     };
-    context.ranges.push(dateRangeInText);
 
     if (datePart) {
       if (hasTime) {
@@ -196,6 +201,7 @@ export const checkEdtfRecurrence = (
           zone: context.timezone,
         });
       }
+      context.ranges.push(textRange(datePart));
     } else if (relativeDate) {
       const relativeToEventId =
         eventStartLineRegexMatch[
@@ -215,10 +221,13 @@ export const checkEdtfRecurrence = (
         }
       }
       til = relativeTo;
+      context.ranges.push(textRange(relativeDate));
     } else if (now) {
       til = context.zonedNow;
+      context.ranges.push(textRange(now));
     } else {
       til = DateTime.fromISO(datePart);
+      context.ranges.push(textRange(datePart));
     }
 
     if (!til || !til.isValid) {

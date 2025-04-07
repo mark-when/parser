@@ -1,6 +1,6 @@
 import { parse } from "../src";
 import { expand, expandEvent } from "../src/utilities/recurrence";
-import { toDateRange } from "../src/Types";
+import { RangeType, toDateRange } from "../src/Types";
 import { nthEvent } from "./testUtilities";
 
 test("expansion 1", () => {
@@ -100,3 +100,56 @@ test("illogical until date is ignored", () => {
 
   expect(expansion.length).toBe(1);
 });
+
+test("until text range 1", () => {
+  const mw = parse(`2025 every other year | 2038: Event`);
+  const first = nthEvent(mw, 0);
+  let visited = false;
+  for (const range of mw.ranges) {
+    if (range.type === RangeType.RecurrenceTilDate) {
+      visited = true;
+    }
+  }
+  expect(visited).toBeTruthy();
+});
+
+test("until text range 1", () => {
+  const mw = parse(`2025 every other year | 2038: Event`);
+  let visited = false;
+  for (const range of mw.ranges) {
+    if (range.type === RangeType.RecurrenceTilDate) {
+      visited = true;
+      expect(range.from).toBe(24);
+      expect(range.to).toBe(24 + 4);
+    }
+  }
+  expect(visited).toBeTruthy();
+});
+
+test("until text range 2", () => {
+  const mwString = `2025 every other year | now: Event`;
+  const mw = parse(mwString);
+  let visited = false;
+  for (const range of mw.ranges) {
+    if (range.type === RangeType.RecurrenceTilDate) {
+      visited = true;
+      expect(range.from).toBe(24);
+      expect(range.to).toBe(24 + 3);
+      expect(mwString.substring(range.from, range.to)).toBe("now");
+    }
+  }
+  expect(visited).toBeTruthy();
+});
+
+// test("until text range 3", () => {
+//   const mw = parse(`2025 every other year until now: Event`);
+//   let visited = false;
+//   for (const range of mw.ranges) {
+//     if (range.type === RangeType.RecurrenceTilDate) {
+//       visited = true;
+//       expect(range.from).toBe(28);
+//       expect(range.to).toBe(28 + 3);
+//     }
+//   }
+//   expect(visited).toBeTruthy();
+// });
