@@ -419,8 +419,10 @@ export const edtf_recurrence_recurrenceAmountMatchIndex = ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountUnitMatchIndex = ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountMillisecondsUnitMatchIndex =
   ++edtfIndex;
-export const edtf_recurrence_recurrenceAmountSecondsUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_recurrenceAmountMinutesUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountSecondsUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_recurrenceAmountMinutesUnitMatchIndex =
+  ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountHoursUnitMatchIndex = ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountWeekDayMatchIndex = ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountDaysUnitMatchIndex = ++edtfIndex;
@@ -438,27 +440,35 @@ export const edtf_recurrence_repetitionsForAmountSecondsUnitMatchIndex =
   ++edtfIndex;
 export const edtf_recurrence_repetitionsForAmountMinutesUnitMatchIndex =
   ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountHoursUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountWeekDayMatchIndex = ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountDaysUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountWeeksUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountMonthsUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_repetitionsForAmountYearsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountHoursUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountWeekDayMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountDaysUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountWeeksUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountMonthsUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_repetitionsForAmountYearsUnitMatchIndex =
+  ++edtfIndex;
 export const edtf_recurrence_repetitionsForAmountTimesMatchIndex = ++edtfIndex;
 
 export const edtf_recurrence_recurrenceAmountXNotationMatchIndex = ++edtfIndex;
 export const edtf_recurrence_recurrenceAmountXNotationAmountMatchIndex =
   ++edtfIndex;
 
-export const edtf_recurrence_untilMatchIndex = ++edtfIndex
+export const edtf_recurrence_untilMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilDateIndex = ++edtfIndex;
 export const edtf_recurrence_untilDateMonthPart = ++edtfIndex;
 export const edtf_recurrence_untilDateDayPart = ++edtfIndex;
 
 export const edtf_recurrence_untilDateTimePartMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilDateTimeMeridiemHourMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilDateTimeMeridiemMinuteMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilDateTimeMeridiemMeridiemMatchIndex =
+  ++edtfIndex;
 export const edtf_recurrence_untilDateTime24HourHourMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilDateTime24HourMinuteMatchIndex = ++edtfIndex;
 
@@ -469,15 +479,23 @@ export const edtf_recurrence_untilRelativeEventIdMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilRelativeAmountsMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilRelativeAmountMatchIndex = ++edtfIndex;
 export const edtf_recurrence_untilRelativeAmountUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountMinutesUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountHoursUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMillisecondsUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountSecondsUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMinutesUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountHoursUnitMatchIndex =
+  ++edtfIndex;
 export const edtf_recurrence_untilRelativeAmountWeekDayMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountDaysUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountWeeksUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountMonthsUnitMatchIndex = ++edtfIndex;
-export const edtf_recurrence_untilRelativeAmountYearsUnitMatchIndex = ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountDaysUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountWeeksUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountMonthsUnitMatchIndex =
+  ++edtfIndex;
+export const edtf_recurrence_untilRelativeAmountYearsUnitMatchIndex =
+  ++edtfIndex;
 export const edtf_recurrence_untilNowMatchIndex = ++edtfIndex;
 
 export const edtfEventTextMatchIndex = ++edtfIndex;

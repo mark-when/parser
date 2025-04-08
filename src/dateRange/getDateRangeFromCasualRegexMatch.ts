@@ -115,10 +115,8 @@ export function getDateRangeFromCasualRegexMatch(
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
-      context.ranges.push(colonRange(RangeType.DateRangeColon));
-    } else {
-      context.ranges.push(colonRange(RangeType.DateRangeColon));
     }
+    context.ranges.push(colonRange(RangeType.DateRangeColon));
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
       DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
@@ -293,7 +291,10 @@ export function getDateRangeFromCasualRegexMatch(
       // Something non-ISO has come up, assume they want that
       context.preferredInterpolationFormat = context.header.dateFormat;
     } else {
-      console.error("Was supposed to have slash date but couldn't parse it.");
+      console.error(
+        "Was supposed to have slash date but couldn't parse it.",
+        slashDateFrom
+      );
     }
   } else if (timeOnlyFrom) {
     // Dependent on previous event

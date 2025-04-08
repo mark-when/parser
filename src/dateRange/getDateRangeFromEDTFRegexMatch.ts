@@ -120,10 +120,8 @@ export function getDateRangeFromEDTFRegexMatch(
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
-      context.ranges.push(colonRange(RangeType.DateRangeColon));
-    } else {
-      context.ranges.push(colonRange(RangeType.DateRangeColon));
     }
+    context.ranges.push(colonRange(RangeType.DateRangeColon));
     const dateRange = new DateRangePart(
       DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
       DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),

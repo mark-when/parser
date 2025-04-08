@@ -64,11 +64,50 @@ import {
   recurrence_untilMatchIndex,
   reccurence_untilDateMatchIndex,
   reccurence_until_relativeMatchIndex,
+  reccurence_until_casualMonthMonthFullMatchIndex,
+  reccurence_until_casualMonthAndDayYearMatchIndex,
+  reccurence_until_monthFirstCasualMonthDayMatchIndex,
+  reccurence_until_monthFirstCasualMonthMonthAbbrMatchIndex,
+  reccurence_until_monthFirstCasualMonthMonthFullMatchIndex,
+  reccurence_until_casualMonthYearMatchIndex,
+  reccurence_until_dayFirstCasualMonthDayMatchIndex,
+  reccurence_until_dayFirstCasualMonthMonthAbbrMatchIndex,
+  reccurence_until_dayFirstCasualMonthMonthFullMatchIndex,
+  reccurence_until_casualMonthMonthAbbrMatchIndex,
+  reccurence_until_casualMonthTimeMatchIndex,
+  reccurence_until_casualMonthTime24HourHourMatchIndex,
+  reccurence_until_casualMonthTime24HourMinuteMatchIndex,
+  reccurence_until_casualMonthTimeMeridiemHourMatchIndex,
+  reccurence_until_casualMonthTimeMeridiemMeridiemMatchIndex,
+  reccurence_until_casualMonthTimeMeridiemMinuteMatchIndex,
+  reccurence_until_nowMatchIndex,
+  reccurence_until_slashDateFullMatchIndex,
+  reccurence_until_timeOnlyMatchIndex,
+  reccurence_until_relativeEventIdMatchIndex,
+  reccurence_until_slashDateTimeMatchIndex,
+  reccurence_until_slashDateTime24HourHourMatchIndex,
+  reccurence_until_slashDateTime24HourMinuteMatchIndex,
+  reccurence_until_slashDateTimeMeridiemHourMatchIndex,
+  reccurence_until_slashDateTimeMeridiemMeridiemMatchIndex,
+  reccurence_until_slashDateTimeMeridiemMinuteMatchIndex,
+  reccurence_until_timeOnly24HourHourMatchIndex,
+  reccurence_until_timeOnly24HourMinuteMatchIndex,
+  reccurence_until_timeOnlyMeridiemHourMatchIndex,
+  reccurence_until_timeOnlyMeridiemMeridiemMatchIndex,
+  reccurence_until_timeOnlyMeridiemMinuteMatchIndex,
 } from "../regex.js";
-import { Range, RangeType, toDateRange } from "../Types.js";
+import { emptyTimeline, Range, RangeType, toDateRange } from "../Types.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { Caches } from "../Cache.js";
-import { getPriorEvent, getTimeFromRegExpMatch } from "./utils.js";
+import {
+  fromCasualDate,
+  getPriorEvent,
+  getPriorEventToDateTime,
+  getTimeFromCasualMonthFrom,
+  getTimeFromRegExpMatch,
+  getTimeFromSlashDateFrom,
+  parseSlashDate,
+} from "./utils.js";
 
 export type DurationUnit =
   | "years"
@@ -185,7 +224,7 @@ function getEdtfTil(
   }
 
   if (!til || !til.isValid) {
-    til = context.zonedNow;
+    return undefined;
   }
   return til;
 }
@@ -320,9 +359,163 @@ function getTil(
     return;
   }
 
+  const textRange = (tilSegmentString: string) => {
+    const indexOfDatePart = line.indexOf(
+      tilSegmentString,
+      line.indexOf(tilMatch)
+    );
+    const dateRangeInText: Range = {
+      type: RangeType.RecurrenceTilDate,
+      from: lengthAtIndex[i] + indexOfDatePart,
+      to: lengthAtIndex[i] + indexOfDatePart + tilSegmentString.length,
+    };
+    return dateRangeInText;
+  };
+
   const datePart = eventStartLineRegexMatch[reccurence_untilDateMatchIndex];
   const relativeDate =
     eventStartLineRegexMatch[reccurence_until_relativeMatchIndex];
+  const casual = fromCasualDate(
+    eventStartLineRegexMatch,
+    context,
+    reccurence_until_monthFirstCasualMonthMonthFullMatchIndex,
+    reccurence_until_monthFirstCasualMonthDayMatchIndex,
+    reccurence_until_casualMonthAndDayYearMatchIndex,
+    reccurence_until_monthFirstCasualMonthMonthAbbrMatchIndex,
+    reccurence_until_dayFirstCasualMonthDayMatchIndex,
+    reccurence_until_dayFirstCasualMonthMonthFullMatchIndex,
+    reccurence_until_dayFirstCasualMonthMonthAbbrMatchIndex,
+    reccurence_until_casualMonthYearMatchIndex,
+    reccurence_until_casualMonthMonthFullMatchIndex,
+    reccurence_until_casualMonthMonthAbbrMatchIndex,
+    eventStartLineRegexMatch[reccurence_until_casualMonthTimeMatchIndex]
+      ? getTimeFromRegExpMatch(
+          eventStartLineRegexMatch,
+          reccurence_until_casualMonthTimeMeridiemHourMatchIndex,
+          reccurence_until_casualMonthTimeMeridiemMinuteMatchIndex,
+          reccurence_until_casualMonthTimeMeridiemMeridiemMatchIndex,
+          reccurence_until_casualMonthTime24HourHourMatchIndex,
+          reccurence_until_casualMonthTime24HourMinuteMatchIndex
+        )
+      : undefined
+  );
+  const slashDate =
+    eventStartLineRegexMatch[reccurence_until_slashDateFullMatchIndex];
+  const timeOnly =
+    eventStartLineRegexMatch[reccurence_until_timeOnlyMatchIndex];
+  const now = eventStartLineRegexMatch[reccurence_until_nowMatchIndex];
+
+  const ifValid = (dt: DateTime) => (dt.isValid ? dt : context.zonedNow);
+  if (relativeDate) {
+    const relativeToEventId =
+      eventStartLineRegexMatch[reccurence_until_relativeEventIdMatchIndex];
+    let relativeTo =
+      relativeToEventId && context.ids[relativeToEventId]
+        ? toDateRange(context.ids[relativeToEventId].dateRangeIso).fromDateTime
+        : undefined;
+
+    if (!relativeTo) {
+      const priorEvent = getPriorEvent(context);
+      if (!priorEvent) {
+        relativeTo = context.zonedNow;
+      } else {
+        relativeTo = toDateRange(priorEvent.dateRangeIso).fromDateTime;
+      }
+    }
+    context.ranges.push(textRange(relativeDate));
+    return ifValid(relativeTo);
+  }
+
+  if (casual) {
+    const til = DateTime.fromISO(casual.dateTimeIso, {
+      setZone: true,
+      zone: context.timezone,
+    });
+    // TODO: text range for this match
+    return ifValid(til);
+  }
+
+  if (slashDate) {
+    const timeComponent =
+      eventStartLineRegexMatch[reccurence_until_slashDateTimeMatchIndex];
+    let slashPart = slashDate;
+    if (timeComponent) {
+      slashPart = slashPart
+        .substring(0, slashPart.indexOf(timeComponent))
+        .trim();
+    }
+    const parsed = parseSlashDate(
+      slashPart,
+      context.header.dateFormat,
+      context
+    );
+    if (parsed) {
+      context.ranges.push(textRange(slashDate));
+      if (timeComponent) {
+        const timePart = getTimeFromRegExpMatch(
+          eventStartLineRegexMatch,
+          reccurence_until_slashDateTimeMeridiemHourMatchIndex,
+          reccurence_until_slashDateTimeMeridiemMinuteMatchIndex,
+          reccurence_until_slashDateTimeMeridiemMeridiemMatchIndex,
+          reccurence_until_slashDateTime24HourHourMatchIndex,
+          reccurence_until_slashDateTime24HourMinuteMatchIndex
+        );
+        const timePartDateTime = DateTime.fromISO(timePart.dateTimeIso);
+        const til = DateTime.fromISO(parsed.dateTimeIso, {
+          setZone: true,
+          zone: context.timezone,
+        }).set({
+          hour: timePartDateTime.hour,
+          minute: timePartDateTime.minute,
+        });
+        return ifValid(til);
+      } else {
+        return ifValid(
+          DateTime.fromISO(parsed.dateTimeIso, {
+            setZone: true,
+            zone: context.timezone,
+          })
+        );
+      }
+    } else {
+      console.error(
+        "was supposed to have slash date but couldn't parse it",
+        slashDate
+      );
+      return;
+    }
+  }
+
+  if (timeOnly) {
+    const timeFrom = getTimeFromRegExpMatch(
+      eventStartLineRegexMatch,
+      reccurence_until_timeOnlyMeridiemHourMatchIndex,
+      reccurence_until_timeOnlyMeridiemMinuteMatchIndex,
+      reccurence_until_timeOnlyMeridiemMeridiemMatchIndex,
+      reccurence_until_timeOnly24HourHourMatchIndex,
+      reccurence_until_timeOnly24HourMinuteMatchIndex
+    );
+    const priorEventDate = getPriorEventToDateTime(context) || context.zonedNow;
+    const timeFromIso = DateTime.fromISO(timeFrom.dateTimeIso, {
+      setZone: true,
+      zone: context.timezone,
+    });
+    let priorEventWithParsedTime = priorEventDate.set({
+      hour: timeFromIso.hour,
+      minute: timeFromIso.minute,
+    });
+    context.ranges.push(textRange(timeOnly));
+    return ifValid(
+      priorEventWithParsedTime < priorEventDate
+        ? priorEventWithParsedTime.plus({ days: 1 })
+        : priorEventWithParsedTime
+    );
+  }
+
+  if (now) {
+    context.ranges.push(textRange(now));
+    return context.zonedNow;
+  }
 }
 
 export const checkRecurrence = (
