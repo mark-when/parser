@@ -96,16 +96,14 @@ import {
   reccurence_until_timeOnlyMeridiemMeridiemMatchIndex,
   reccurence_until_timeOnlyMeridiemMinuteMatchIndex,
 } from "../regex.js";
-import { emptyTimeline, Range, RangeType, toDateRange } from "../Types.js";
+import { DateTimeIso, Range, RangeType, toDateRange } from "../Types.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { Caches } from "../Cache.js";
 import {
   fromCasualDate,
   getPriorEvent,
   getPriorEventToDateTime,
-  getTimeFromCasualMonthFrom,
   getTimeFromRegExpMatch,
-  getTimeFromSlashDateFrom,
   parseSlashDate,
 } from "./utils.js";
 
@@ -129,7 +127,7 @@ export interface RecurrenceInText {
 export interface Recurrence {
   every: Duration;
   for?: Duration & { times?: number };
-  til?: DateTime;
+  til?: DateTimeIso;
 }
 export const recurrenceDurationUnits = [
   "years",
@@ -322,7 +320,7 @@ export const checkEdtfRecurrence = (
           for: {
             [repetitionUnit]: repetitionCount,
           },
-          til,
+          til: til?.toISO(),
         },
         range,
       };
@@ -338,13 +336,13 @@ export const checkEdtfRecurrence = (
           for: {
             times: repetitionCount,
           },
-          til,
+          til: til?.toISO(),
         },
         range,
       };
     }
   }
-  return { recurrence: { every, til }, range };
+  return { recurrence: { every, til: til?.toISO() }, range };
 };
 
 function getTil(
@@ -622,6 +620,7 @@ export const checkRecurrence = (
           for: {
             [repetitionUnit]: repetitionCount,
           },
+          til: til?.toISO(),
         },
         range,
       };
@@ -637,10 +636,11 @@ export const checkRecurrence = (
           for: {
             times: repetitionCount,
           },
+          til: til?.toISO(),
         },
         range,
       };
     }
   }
-  return { recurrence: { every }, range };
+  return { recurrence: { every, til: til?.toISO() }, range };
 };

@@ -74,7 +74,7 @@ test("until 1", () => {
 test("until 2", () => {
   const mw = parse(`2025-02-06 every day until 2025-02-28: Event`);
   const first = nthEvent(mw, 0);
-  expect(first.recurrence!.til!.toISODate()).toBe(`2025-02-28`);
+  expect(first.recurrence!.til!.substring(0, 10)).toBe(`2025-02-28`);
 });
 
 test("until 3", () => {
@@ -87,6 +87,18 @@ test("until 3", () => {
   );
 
   expect(expansion.length).toBe(22);
+});
+
+test("until 4", () => {
+  const mw = parse("2025-04-07 every day x30 until 2025-05-01: event");
+  const first = nthEvent(mw, 0);
+  const expansion = expand(
+    toDateRange(first.dateRangeIso),
+    first.recurrence!,
+    100
+  );
+
+  expect(expansion.length).toBe(24);
 });
 
 test("illogical until date is ignored", () => {

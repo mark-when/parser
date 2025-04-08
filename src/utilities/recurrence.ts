@@ -1,5 +1,5 @@
 import { DateRange, Event, toDateRange, toDateRangeIso } from "../Types.js";
-import { Duration } from "luxon";
+import { DateTime, Duration } from "luxon";
 import { Recurrence } from "../dateRange/checkRecurrence.js";
 
 export const expand = (
@@ -11,9 +11,13 @@ export const expand = (
   const startTime = dateRange.fromDateTime;
   const every = Duration.fromObject(recurrence.every);
   const untilTimes = Math.min(recurrence.for?.times || limit, limit);
-  
-  let untilDate = recurrence.til
-  if (!untilDate && typeof recurrence.for !== "undefined" && !recurrence.for.times) {
+
+  let untilDate = recurrence.til ? DateTime.fromISO(recurrence.til) : undefined;
+  if (
+    !untilDate &&
+    typeof recurrence.for !== "undefined" &&
+    !recurrence.for.times
+  ) {
     const untilDuration = Duration.fromObject(recurrence.for);
     untilDate = startTime.plus(untilDuration);
   }
