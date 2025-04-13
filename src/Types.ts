@@ -1,7 +1,7 @@
 import { DateTime, DurationLikeObject } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
-import { Foldable } from "./ParsingContext.js";
+import { Foldable, ParseMessage } from "./ParsingContext.js";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -358,7 +358,7 @@ export enum RangeType {
   PropertyKey = "propertyKey",
   PropertyKeyColon = "propertyKeyColon",
   PropertyValue = "propertyValue",
-  RecurrenceTilDate = "recurrenceTilDate"
+  RecurrenceTilDate = "recurrenceTilDate",
 }
 
 export type Range = {
@@ -392,7 +392,7 @@ export class EventGroup {
   textRanges!: {
     whole: Range;
   };
-  properties: any[] = []
+  properties: [string, any][] = [];
   tags: string[] = [];
   title: string = "";
   range?: GroupRange;
@@ -493,6 +493,7 @@ export type ParseResult = Timeline & {
   parser: {
     version: string;
   };
+  parseMessages: ParseMessage[];
 };
 
 export interface TimelineMetadata {

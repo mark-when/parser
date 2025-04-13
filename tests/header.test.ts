@@ -176,6 +176,11 @@ now: event`);
     expect(headerFoldable.type).toBe("header");
     expect(headerFoldable.foldStartIndex).toBe(5);
     expect(headerFoldable.endIndex).toBe(148);
+
+    expect(mw.parseMessages.length).toBe(2);
+    const error = mw.parseMessages[0];
+    expect(error.type).toBe("error");
+    expect(error.pos[0]).toBe(96);
   });
 
   test.each(sp())("overflow header items have correct ranges 1", () => {
@@ -373,5 +378,27 @@ objectAsValue:
 key: v
 
 `);
+  });
+});
+
+describe("errors and warnings", () => {
+  test("parsing errors are reported 1", () => {
+    const mw = `---
+key: value
+:-error   
+    
+---`;
+    const parsed = parse(mw);
+    expect(parsed.parseMessages.length).toBe(2);
+    expect(parsed.parseMessages[0].type).toBe("error");
+    expect(parsed.parseMessages[0].pos[0]).toBe(15);
+    expect(parsed.parseMessages[0].pos[1]).toBe(22);
+  });
+
+  test("no timezone warning", () => {
+    const mw = `now: event`;
+    const parsed = parse(mw);
+    expect(parsed.parseMessages.length).toBe(1);
+    expect(parsed.parseMessages[0].type).toBe("warning");
   });
 });

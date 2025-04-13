@@ -23,6 +23,12 @@ export interface Foldable {
   foldStartIndex?: number;
 }
 
+export interface ParseMessage {
+  type: "error" | "warning";
+  pos: [number] | [number, number];
+  message: string;
+}
+
 export class ParsingContext {
   now = DateTime.now();
 
@@ -46,6 +52,7 @@ export class ParsingContext {
   preferredInterpolationFormat: string | undefined;
   header: any;
   timezoneStack: Zone[];
+  parseMessages: ParseMessage[] = [];
 
   constructor() {
     this.events = new EventGroup();
@@ -63,7 +70,7 @@ export class ParsingContext {
   }
 
   get zonedNow(): DateTime {
-    return this.now.setZone(this.timezone)
+    return this.now.setZone(this.timezone);
   }
 
   public get timezone(): Zone {
@@ -165,7 +172,7 @@ export class ParsingContext {
     lengthAtIndex: number[],
     endLineIndex: number,
     endStringIndex: number
-  ): Timeline {
+  ): Timeline & { parseMessages: ParseMessage[] } {
     const maxDurationDays = this.maxDuration
       ? this.maxDuration / 1000 / 60 / 60 / 24
       : 0;
@@ -189,6 +196,7 @@ export class ParsingContext {
         ...(this.title ? { title: this.title } : {}),
         ...(this.description ? { description: this.description } : {}),
       },
+      parseMessages: this.parseMessages,
     };
   }
 }

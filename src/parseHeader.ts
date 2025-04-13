@@ -321,6 +321,13 @@ export function parseHeader(
     context.ranges.push(...headerRanges);
     context.header = parsedHeader;
   } catch (e) {
+    if (e instanceof YAML.YAMLParseError) {
+      context.parseMessages.push({
+        type: "error",
+        pos: e.pos,
+        message: e.message,
+      });
+    }
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
 
@@ -348,6 +355,15 @@ export function parseHeader(
       };
       context.foldables[index] = foldable;
     }
+  }
+
+  if (!context.header.timezone) {
+    context.parseMessages.push({
+      type: "warning",
+      pos: [0],
+      message:
+        "Timezone not specified. Specifying a `timezone` in the header is highly recommended.",
+    });
   }
 
   return headerEndLineIndex;

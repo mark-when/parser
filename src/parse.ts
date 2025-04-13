@@ -9,7 +9,7 @@ import { getDateRangeFromEDTFRegexMatch } from "./dateRange/getDateRangeFromEDTF
 import { getDateRangeFromBCEDateRegexMatch } from "./dateRange/getDateRangeFromBCEDateRegexMatch.js";
 import { Caches } from "./Cache.js";
 import { checkEvent } from "./lineChecks/checkEvent.js";
-import { ParsingContext } from "./ParsingContext.js";
+import { ParseMessage, ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader as _parseHeader } from "./parseHeader.js";
 import * as ICAL from "ical.js";
@@ -79,7 +79,7 @@ export function parse(
     version,
   };
   if (!timelineString) {
-    return { ...emptyTimeline(), cache, parser };
+    return { ...emptyTimeline(), cache, parser, parseMessages: [] };
   }
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
   return {
@@ -100,7 +100,7 @@ export function parseTimeline(
   lines: string[],
   lengthAtIndex: number[],
   cache?: Caches
-): Timeline {
+): Timeline & { parseMessages: ParseMessage[] } {
   const context = new ParsingContext();
 
   const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
