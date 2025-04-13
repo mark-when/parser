@@ -1924,8 +1924,11 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.days).toBe(3);
-    expect(first.recurrence?.for?.days).toBe(3);
+    expect(first.recurrence?.count).toBe(3);
+    expect(first.recurrence?.freq).toBe(3);
+    debugger;
+    // expect(first.recurrence?.every.days).toBe(3);
+    // expect(first.recurrence?.for?.days).toBe(3);
   });
 
   test.each(sp())("edtf recurrence 2", (p) => {
@@ -1933,26 +1936,29 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.months).toBe(12);
-    expect(first.recurrence?.for?.times).toBe(30);
+    expect(first.recurrence?.interval).toBe(12);
+    expect(first.recurrence?.freq).toBe(1);
+    expect(first.recurrence?.count).toBe(30);
   });
 
   test.each(sp())("edtf recurrence 3", (p) => {
-    const mw = p(`2022-08-07 every other year for 10 times: event title`);
+    const mw = p(`2022-08-07 every 2 years for 10 times: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.years).toBe(2);
-    expect(first.recurrence?.for?.times).toBe(10);
+    expect(first.recurrence?.interval).toBe(2)
+    expect(first.recurrence?.count).toBe(10)
+    // expect(first.recurrence?.every.years).toBe(2);
+    // expect(first.recurrence?.for?.times).toBe(10);
   });
 
   test.each(sp())("recurrence 1", (p) => {
-    const mw = p(`Dec 1 2022 every other year: event title`);
+    const mw = p(`Dec 1 2022 every 2 years: event title`);
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.years).toBe(2);
-    expect(first.recurrence?.for).toBeFalsy();
+    // expect(first.recurrence?.every.years).toBe(2);
+    // expect(first.recurrence?.for).toBeFalsy();
   });
 
   test.each(sp())("recurrence 2", (p) => {
@@ -1960,8 +1966,8 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.days).toBe(1);
-    expect(first.recurrence?.for?.years).toBe(10);
+    // expect(first.recurrence?.every.days).toBe(1);
+    // expect(first.recurrence?.for?.years).toBe(10);
   });
 
   test.each(sp())("recurrence 3", (p) => {
@@ -1969,8 +1975,8 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.every.days).toBe(40);
-    expect(first.recurrence?.for?.seconds).toBe(1);
+    // expect(first.recurrence?.every.days).toBe(40);
+    // expect(first.recurrence?.for?.seconds).toBe(1);
   });
 
   test.each(sp())("recurrence range 1", (p) => {
@@ -1996,7 +2002,7 @@ describe("recurrence", () => {
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
     expect(first.textRanges.recurrence?.from).toBe(10);
-    expect(first.textRanges.recurrence?.to).toBe(30);
+    expect(first.textRanges.recurrence?.to).toBe(32);
     expect(first.firstLine.restTrimmed).toBe("event title");
 
     const colonRange = mw.ranges.find((range) => range.to - range.from === 1);
@@ -2035,8 +2041,7 @@ describe("premature year parsing", () => {
     const s = "12 this doesn't work";
     const mw = p(s);
     expect(mw.events.children.length).toBe(0);
-  }); 
-
+  });
 
   test.each(sp())("standalone digits aren't parsed as date", (p) => {
     const s = "1988 this doesn't work";

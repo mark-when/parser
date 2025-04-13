@@ -358,7 +358,6 @@ export enum RangeType {
   PropertyKey = "propertyKey",
   PropertyKeyColon = "propertyKeyColon",
   PropertyValue = "propertyValue",
-  RecurrenceTilDate = "recurrenceTilDate",
 }
 
 export type Range = {
