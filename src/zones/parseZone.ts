@@ -28,17 +28,5 @@ export function parseZone(zoneString: string, cache?: Caches) {
       }
     }
   }
-}
-
-export function parseTopLevelHeaderZone(
-  parsedHeader: any,
-  context: ParsingContext,
-  cache?: Caches
-) {
-  if (typeof parsedHeader.timezone !== "undefined") {
-    const tz = parseZone(parsedHeader.timezone, cache);
-    if (tz) {
-      context.timezoneStack = [tz];
-    }
-  }
+  throw new Error("Cannot parse timezone")
 }

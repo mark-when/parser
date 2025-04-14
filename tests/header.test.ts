@@ -401,4 +401,13 @@ key: value
     expect(parsed.parseMessages.length).toBe(1);
     expect(parsed.parseMessages[0].type).toBe("warning");
   });
+
+  test("invalid timezone error", () => {
+    const mw = `timezone: America Los Angerles`;
+    const parsed = parse(mw);
+    const error = parsed.parseMessages.find(({ type }) => type === "error");
+    expect(error).toBeTruthy();
+    expect(error!.pos).toEqual([10, 30]);
+    expect(error?.message).toBe('Invalid timezone "America Los Angerles"');
+  });
 });

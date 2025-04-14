@@ -13,7 +13,7 @@ import {
   GROUP_START_REGEX,
 } from "./regex.js";
 import { Caches } from "./Cache.js";
-import { parseTopLevelHeaderZone } from "./zones/parseZone.js";
+import { parseZone } from "./zones/parseZone.js";
 import { checkHeaderTags } from "./lineChecks/checkTags.js";
 
 const stringEmailListToArray = (s: string) =>
@@ -326,7 +326,32 @@ export function parseHeader(
     if (parsedHeader.edit && typeof parsedHeader.edit === "string") {
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
-    parseTopLevelHeaderZone(parsedHeader, context, cache);
+
+    try {
+      if (typeof parsedHeader.timezone !== "undefined") {
+        const tz = parseZone(parsedHeader.timezone, cache);
+        if (tz) {
+          context.timezoneStack = [tz];
+        }
+      }
+    } catch (e) {
+      for (let i = headerStartLineIndex; i < lines.length; i++) {
+        const timezoneDef = "timezone:";
+        if (lines[i].startsWith(timezoneDef)) {
+          const specifiedTimezone = lines[i]
+            .substring(timezoneDef.length)
+            .trim();
+          const start = lines[i].indexOf(specifiedTimezone);
+          const end = start + specifiedTimezone.length;
+          context.parseMessages.push({
+            type: "error",
+            pos: [start, end],
+            message: `Invalid timezone "${specifiedTimezone}"`,
+          });
+        }
+      }
+    }
+
     // We're only going to push our ranges if the parsing was successful
     context.ranges.push(...headerRanges);
     context.header = parsedHeader;
