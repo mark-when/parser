@@ -150,6 +150,16 @@ export function parseProperties(
       properties = mapToArrays(map);
       context.ranges.push(...propertyRanges);
     } catch (e) {
+      if (e instanceof YAML.YAMLParseError) {
+        context.parseMessages.push({
+          type: "error",
+          pos: e.pos.map((index) => lengthAtIndex[i] + index) as [
+            number,
+            number
+          ],
+          message: e.message,
+        });
+      }
       console.error(e);
     }
   }
