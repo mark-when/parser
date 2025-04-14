@@ -14,7 +14,6 @@ import {
   iter,
   isEvent,
   get,
-  flatMap,
   EventGroup,
 } from "../src/Types";
 import { DateTime } from "luxon";
@@ -1946,8 +1945,8 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.recurrence?.interval).toBe(2)
-    expect(first.recurrence?.count).toBe(10)
+    expect(first.recurrence?.interval).toBe(2);
+    expect(first.recurrence?.count).toBe(10);
     // expect(first.recurrence?.every.years).toBe(2);
     // expect(first.recurrence?.for?.times).toBe(10);
   });
