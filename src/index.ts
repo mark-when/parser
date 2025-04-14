@@ -9,7 +9,7 @@ import {
 import {
   type Foldable,
   ParsingContext,
-  ParseMessage,
+  type ParseMessage,
 } from "./ParsingContext.js";
 import {
   AMERICAN_DATE_FORMAT,

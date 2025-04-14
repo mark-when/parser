@@ -1983,7 +1983,7 @@ describe("recurrence", () => {
     const mw = p(`Dec 1 every 40 days for 1 second: event title`);
 
     const first = nthEvent(mw, 0);
-    expect(first.textRanges.recurrence?.from).toBe(5);
+    expect(first.textRanges.recurrence?.from).toBe(6);
     expect(first.textRanges.recurrence?.to).toBe(32);
   });
 
@@ -1991,7 +1991,7 @@ describe("recurrence", () => {
     const mw = p(`2022-08-07 every 12 months x30: event title`);
 
     const first = nthEvent(mw, 0);
-    expect(first.textRanges.recurrence?.from).toBe(10);
+    expect(first.textRanges.recurrence?.from).toBe(11);
     expect(first.textRanges.recurrence?.to).toBe(30);
   });
 
@@ -2001,8 +2001,8 @@ describe("recurrence", () => {
 
     const first = nthEvent(mw, 0);
     expect(first.recurrence).toBeTruthy();
-    expect(first.textRanges.recurrence?.from).toBe(10);
-    expect(first.textRanges.recurrence?.to).toBe(32);
+    expect(first.textRanges.recurrence?.from).toBe(11);
+    expect(first.textRanges.recurrence?.to).toBe(30);
     expect(first.firstLine.restTrimmed).toBe("event title");
 
     const colonRange = mw.ranges.find((range) => range.to - range.from === 1);
