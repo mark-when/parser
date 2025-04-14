@@ -2,6 +2,7 @@ import { parse } from "../src";
 import { expand, expandEvent } from "../src/utilities/recurrence";
 import { RangeType, toDateRange } from "../src/Types";
 import { nthEvent } from "./testUtilities";
+import { DateTime } from "luxon";
 
 // test("expansion 1", () => {
 //   const mw = parse(
@@ -111,6 +112,14 @@ test("until 4", () => {
   );
 
   expect(expansion.length).toBe(25);
+});
+
+test("until now", () => {
+  const mw = parse("2025-04-07 every day | now: event");
+  const first = nthEvent(mw, 0);
+  expect(DateTime.fromISO(first.recurrence!.until!).toISODate()).toBe(
+    DateTime.now().toISODate()
+  );
 });
 
 test("illogical until date is ignored", () => {

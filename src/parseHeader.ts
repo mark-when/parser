@@ -341,12 +341,15 @@ export function parseHeader(
     context.header = { dateFormat: AMERICAN_DATE_FORMAT };
   }
 
+  let start: number, end: number;
   if (threeDashRanges.length === 2) {
     const index = lengthAtIndex[headerStartLineIndex];
+    start = index;
+    end = lengthAtIndex[headerEndLineIndex] - 1;
     context.foldables[index] = {
       startLine: headerStartLineIndex,
-      startIndex: index,
-      endIndex: lengthAtIndex[headerEndLineIndex] - 1,
+      startIndex: start,
+      endIndex: end,
       type: "header",
       foldStartIndex: threeDashRanges.length === 2 ? index + 3 : index,
     };
@@ -355,22 +358,25 @@ export function parseHeader(
       lastHeaderLineIndexWithText >= 0 &&
       lastHeaderLineIndexWithText !== firstHeaderLineIndexWithText
     ) {
-      const index = lengthAtIndex[firstHeaderLineIndexWithText];
+      start = lengthAtIndex[firstHeaderLineIndexWithText];
+      end = lengthAtIndex[lastHeaderLineIndexWithText + 1] - 1;
       const foldable: Foldable = {
         startLine: firstHeaderLineIndexWithText,
-        startIndex: index,
-        endIndex: lengthAtIndex[lastHeaderLineIndexWithText + 1] - 1,
+        startIndex: start,
+        endIndex: end,
         type: "header",
-        foldStartIndex: index,
+        foldStartIndex: start,
       };
-      context.foldables[index] = foldable;
+      context.foldables[start] = foldable;
     }
   }
 
-  if (!context.header.timezone) {
+  if (!context.header.timezone && lengthAtIndex[0] > 0) {
+    let pos: [number, number] =
+      start! !== undefined && end! !== undefined ? [start, end] : [0, 1];
     context.parseMessages.push({
       type: "warning",
-      pos: [0],
+      pos,
       message:
         "Timezone not specified. Specifying a `timezone` in the header is highly recommended.",
     });

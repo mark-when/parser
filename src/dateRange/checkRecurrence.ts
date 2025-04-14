@@ -25,7 +25,10 @@ export interface RecurrenceInText {
   recurrence: Recurrence;
   range: Range;
 }
-export type Recurrence = Partial<Options>;
+export type Recurrence = Omit<Partial<Options>, "until" | "dtstart"> & {
+  until?: string;
+  dtstart?: string;
+};
 
 export const recurrenceDurationUnits = [
   "years",
@@ -38,6 +41,30 @@ export const recurrenceDurationUnits = [
   "seconds",
   "milliseconds",
 ] as DurationUnit[];
+
+function makeRecurrenceSerializable(recurrence: Partial<Options>): Recurrence {
+  const until = recurrence.until
+    ? DateTime.fromJSDate(recurrence.until).toISO()
+    : undefined;
+  const dtstart = recurrence.dtstart
+    ? DateTime.fromJSDate(recurrence.dtstart).toISO()
+    : undefined;
+  return { ...recurrence, until, dtstart };
+}
+
+export function toJsDates(recurrence: Recurrence): Partial<Options> {
+  const until = recurrence.until
+    ? DateTime.fromISO(recurrence.until).toJSDate()
+    : undefined;
+  const dtstart = recurrence.dtstart
+    ? DateTime.fromISO(recurrence.dtstart).toJSDate()
+    : undefined;
+  return {
+    ...recurrence,
+    until,
+    dtstart,
+  };
+}
 
 export const checkEdtfRecurrence = (
   line: string,
@@ -52,10 +79,12 @@ export const checkEdtfRecurrence = (
   if (!recurrenceMatch) {
     return;
   }
-
-  const indexInString = eventStartLineRegexMatch[0].indexOf(recurrenceMatch);
+  const recurrenceMatchTrimmed = recurrenceMatch.trim();
+  const indexInString = eventStartLineRegexMatch[0].indexOf(
+    recurrenceMatchTrimmed
+  );
   const from = lengthAtIndex[i] + indexInString;
-  const to = lengthAtIndex[i] + indexInString + recurrenceMatch.length;
+  const to = lengthAtIndex[i] + indexInString + recurrenceMatchTrimmed.length;
   const range: Range = {
     type: RangeType.Recurrence,
     from,
@@ -65,7 +94,7 @@ export const checkEdtfRecurrence = (
 
   try {
     const recurrence = RRule.parseText(recurrenceMatch);
-    return { recurrence, range };
+    return { recurrence: makeRecurrenceSerializable(recurrence), range };
   } catch (e) {
     context.parseMessages.push({
       type: "error",
@@ -90,14 +119,28 @@ export const checkRecurrence = (
     return;
   }
 
-  const indexInString = eventStartLineRegexMatch[0].indexOf(recurrenceMatch);
+  const recurrenceMatchTrimmed = recurrenceMatch.trim();
+  const indexInString = eventStartLineRegexMatch[0].indexOf(
+    recurrenceMatchTrimmed
+  );
+  const from = lengthAtIndex[i] + indexInString;
+  const to = lengthAtIndex[i] + indexInString + recurrenceMatchTrimmed.length;
   const range: Range = {
     type: RangeType.Recurrence,
-    from: lengthAtIndex[i] + indexInString,
-    to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
+    from,
+    to,
     content: recurrenceMatch,
   };
 
-  const recurrence = RRule.parseText(recurrenceMatch);
-  return { recurrence, range };
+  try {
+    const recurrence = RRule.parseText(recurrenceMatch);
+    return { recurrence: makeRecurrenceSerializable(recurrence), range };
+  } catch (e) {
+    context.parseMessages.push({
+      type: "error",
+      message: "Cannot parse recurrence",
+      pos: [from, to],
+    });
+    return;
+  }
 };

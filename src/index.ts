@@ -6,7 +6,11 @@ import {
   hexToRgb,
   rgbStringToHex,
 } from "./ColorUtils.js";
-import { type Foldable, ParsingContext } from "./ParsingContext.js";
+import {
+  type Foldable,
+  ParsingContext,
+  ParseMessage,
+} from "./ParsingContext.js";
 import {
   AMERICAN_DATE_FORMAT,
   AT_REGEX,
@@ -127,5 +131,6 @@ export {
   EVENT_ID_REGEX,
   mapUrls,
   toArraySorted,
-  headerSet
+  headerSet,
+  ParseMessage,
 };

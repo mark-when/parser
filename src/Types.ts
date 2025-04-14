@@ -464,6 +464,7 @@ export interface Timeline {
   header: any;
   ids: IdedEvents;
   metadata: TimelineMetadata;
+  parseMessages: ParseMessage[];
 }
 
 export function emptyTimeline(): Timeline {
@@ -484,6 +485,7 @@ export function emptyTimeline(): Timeline {
       endStringIndex: 0,
       preferredInterpolationFormat: undefined,
     },
+    parseMessages: [],
   };
 }
 
@@ -492,7 +494,6 @@ export type ParseResult = Timeline & {
   parser: {
     version: string;
   };
-  parseMessages: ParseMessage[];
 };
 
 export interface TimelineMetadata {

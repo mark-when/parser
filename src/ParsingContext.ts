@@ -25,7 +25,7 @@ export interface Foldable {
 
 export interface ParseMessage {
   type: "error" | "warning";
-  pos: [number] | [number, number];
+  pos: [number, number];
   message: string;
 }
 
