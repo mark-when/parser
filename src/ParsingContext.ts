@@ -30,7 +30,7 @@ export interface ParseMessage {
 }
 
 export class ParsingContext {
-  now = DateTime.now();
+  now: DateTime;
 
   events: EventGroup;
   head?: Eventy;
@@ -54,7 +54,7 @@ export class ParsingContext {
   timezoneStack: Zone[];
   parseMessages: ParseMessage[] = [];
 
-  constructor() {
+  constructor(now?: DateTime | string) {
     this.events = new EventGroup();
     this.ids = {};
     this.paletteIndex = 0;
@@ -67,6 +67,19 @@ export class ParsingContext {
     this.ranges = [];
     this.header = { dateFormat: AMERICAN_DATE_FORMAT };
     this.timezoneStack = [new SystemZone()];
+    
+    if (typeof now === "string") {
+      const parsed = DateTime.fromISO(now);
+      if (parsed.isValid) {
+        this.now = parsed;
+      } else {
+        this.now = DateTime.now();
+      }
+    } else if (!now) {
+      this.now = DateTime.now();
+    } else {
+      this.now = now;
+    }
   }
 
   get zonedNow(): DateTime {
@@ -133,6 +146,7 @@ export class ParsingContext {
       this.tail = newTail;
     }
     this.currentPath = path;
+    return path
   }
 
   endCurrentGroup(

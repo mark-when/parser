@@ -20,10 +20,11 @@ import {
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
 import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
+import { ChangeSet, Text } from "@codemirror/state";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
-const version = "0.13.7";
+const version = "0.13.8";
 
 export function parseDateRange(
   dateRangeString: string
@@ -68,9 +69,33 @@ const linesAndLengths = (timelineString: string) => {
   return { lines, lengthAtIndex };
 };
 
+export function incrementalParse(
+  previousText: string | string[],
+  changes: ChangeSet = ChangeSet.empty(previousText.length),
+  previousParse?: ParseResult,
+  now?: DateTime | string
+): ParseResult {
+  if (!previousParse) {
+    if (!changes || changes.empty) {
+      return parse(
+        Array.isArray(previousText) ? previousText.join("\n") : previousText,
+        true,
+        now
+      );
+    }
+    const text = Text.of(
+      Array.isArray(previousText) ? previousText : previousText.split("\n")
+    );
+    return parse(changes.apply(text).toString(), true, now);
+  }
+
+  throw new Error("unimplemented");
+}
+
 export function parse(
   timelineString?: string,
-  cache?: Caches | true
+  cache?: Caches | true,
+  now?: DateTime | string
 ): ParseResult {
   if (cache === true) {
     cache = new Caches();
@@ -83,7 +108,7 @@ export function parse(
   }
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
   return {
-    ...parseTimeline(lines, lengthAtIndex, cache),
+    ...parseTimeline(lines, lengthAtIndex, cache, now),
     cache,
     parser,
   };
@@ -99,9 +124,10 @@ export function parseHeader(timelineString: string) {
 export function parseTimeline(
   lines: string[],
   lengthAtIndex: number[],
-  cache?: Caches
+  cache?: Caches,
+  now?: DateTime | string
 ): Timeline & { parseMessages: ParseMessage[] } {
-  const context = new ParsingContext();
+  const context = new ParsingContext(now);
 
   const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
   let i = headerEndLineIndex;
