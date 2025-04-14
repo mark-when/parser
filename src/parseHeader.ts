@@ -341,7 +341,7 @@ export function parseHeader(
           const specifiedTimezone = lines[i]
             .substring(timezoneDef.length)
             .trim();
-          const start = lines[i].indexOf(specifiedTimezone);
+          const start = lengthAtIndex[i] + lines[i].indexOf(specifiedTimezone);
           const end = start + specifiedTimezone.length;
           context.parseMessages.push({
             type: "error",

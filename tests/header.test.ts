@@ -410,4 +410,14 @@ key: value
     expect(error!.pos).toEqual([10, 30]);
     expect(error?.message).toBe('Invalid timezone "America Los Angerles"');
   });
+
+  test("invalid timezone error 2", () => {
+    const mw = `title: My timeline
+timezone: bds`;
+    const parsed = parse(mw);
+    const error = parsed.parseMessages.find(({ type }) => type === "error");
+    expect(error).toBeTruthy();
+    expect(error!.pos).toEqual([29, 32]);
+    expect(error?.message).toBe('Invalid timezone "bds"');
+  });
 });
