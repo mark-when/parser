@@ -54,16 +54,26 @@ export const checkEdtfRecurrence = (
   }
 
   const indexInString = eventStartLineRegexMatch[0].indexOf(recurrenceMatch);
+  const from = lengthAtIndex[i] + indexInString;
+  const to = lengthAtIndex[i] + indexInString + recurrenceMatch.length;
   const range: Range = {
     type: RangeType.Recurrence,
-    from: lengthAtIndex[i] + indexInString,
-    to: lengthAtIndex[i] + indexInString + recurrenceMatch.length,
+    from,
+    to,
     content: recurrenceMatch,
   };
 
-  const recurrence = RRule.parseText(recurrenceMatch);
-
-  return { recurrence, range };
+  try {
+    const recurrence = RRule.parseText(recurrenceMatch);
+    return { recurrence, range };
+  } catch (e) {
+    context.parseMessages.push({
+      type: "error",
+      message: "Cannot parse recurrence",
+      pos: [from, to],
+    });
+    return;
+  }
 };
 
 export const checkRecurrence = (
