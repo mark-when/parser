@@ -67,7 +67,7 @@ export class ParsingContext {
     this.ranges = [];
     this.header = { dateFormat: AMERICAN_DATE_FORMAT };
     this.timezoneStack = [new SystemZone()];
-    
+
     if (typeof now === "string") {
       const parsed = DateTime.fromISO(now);
       if (parsed.isValid) {
@@ -146,7 +146,7 @@ export class ParsingContext {
       this.tail = newTail;
     }
     this.currentPath = path;
-    return path
+    return path;
   }
 
   endCurrentGroup(

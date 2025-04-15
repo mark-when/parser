@@ -40,6 +40,8 @@ import {
   RangeType,
   Range,
   toDateRange,
+  get,
+  isEvent,
 } from "../Types.js";
 import { getPriorEvent, getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
@@ -174,15 +176,18 @@ export function getDateRangeFromEDTFRegexMatch(
     const relativeToEventId =
       eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
 
-    let relativeTo =
-      relativeToEventId &&
-      (fromBeforeOrAfter === "after"
-        ? context.ids[relativeToEventId]
-          ? toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime
-          : undefined
-        : context.ids[relativeToEventId]
-        ? toDateRange(context.ids[relativeToEventId].dateRangeIso).fromDateTime
-        : undefined);
+    let relativeTo: DateTime | undefined;
+    if (relativeToEventId) {
+      const event = get(context.events, context.ids[relativeToEventId]);
+      if (event && isEvent(event)) {
+        const range = toDateRange(event.dateRangeIso);
+        if (fromBeforeOrAfter === "after") {
+          relativeTo = range.toDateTime;
+        } else {
+          relativeTo = range.fromDateTime;
+        }
+      }
+    }
 
     if (!relativeTo) {
       const priorEvent = getPriorEvent(context);
@@ -246,10 +251,13 @@ export function getDateRangeFromEDTFRegexMatch(
 
       const relativeToEventId =
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
-      let relativeTo =
-        relativeToEventId &&
-        context.ids[relativeToEventId] &&
-        toDateRange(context.ids[relativeToEventId].dateRangeIso).toDateTime;
+      let relativeTo: DateTime | undefined;
+      if (relativeToEventId) {
+        const event = get(context.events, context.ids[relativeToEventId]);
+        if (event && isEvent(event)) {
+          relativeTo = toDateRange(event.dateRangeIso).toDateTime;
+        }
+      }
       if (!relativeTo) {
         // We do not have an event to refer to by id, use the start of this event
         relativeTo = fromDateTime;

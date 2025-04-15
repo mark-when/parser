@@ -15,6 +15,7 @@ import {
   Event,
   Range,
   DateRangePart,
+  Path,
 } from "../Types.js";
 import { checkComments } from "./checkComments.js";
 import { checkListItems } from "./checkListItems.js";
@@ -26,11 +27,12 @@ import { parseProperties } from "../parseHeader.js";
 
 function updateParseMetadata(
   event: Event,
+  path: Path,
   dateRange: DateRangePart,
   context: ParsingContext
 ) {
   if (event.id && !context.ids[event.id]) {
-    context.ids[event.id] = event;
+    context.ids[event.id] = [...path];
   }
 
   if (!context.earliest || dateRange.fromDateTime < context.earliest) {
@@ -196,8 +198,8 @@ export function checkEvent(
   );
 
   if (event) {
-    context.push(event);
-    updateParseMetadata(event, dateRange, context);
+    const path = context.push(event);
+    updateParseMetadata(event, path, dateRange, context);
     if (end - i > 1) {
       context.foldables[lengthAtIndex[i]] = {
         startIndex: lengthAtIndex[i + 1] - 1,

@@ -456,7 +456,7 @@ export class Event {
 }
 
 export type Tags = { [tagName: string]: string };
-export type IdedEvents = { [id: string]: Event };
+export type IdedEvents = { [id: string]: number[] };
 export interface Timeline {
   ranges: Range[];
   foldables: { [index: number]: Foldable };
@@ -509,11 +509,7 @@ export interface TimelineMetadata {
 
 export type GroupStyle = "section" | "group";
 
-export class Path extends Array<number> {
-  static root(): Path {
-    return Path.from([0]);
-  }
-}
+export type Path = number[];
 
 export const toArray = (node: Eventy) => {
   const array = [] as { path: Path; eventy: Eventy }[];
