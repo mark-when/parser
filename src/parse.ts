@@ -20,7 +20,7 @@ import {
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
 import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
-import { ChangeSet, Text } from "@codemirror/state";
+import { Text } from "@codemirror/state";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
@@ -55,8 +55,13 @@ export function parseDateRange(
   return dateRange;
 }
 
-const linesAndLengths = (timelineString: string) => {
-  const lines = timelineString.split("\n");
+const linesAndLengths = (timelineString: string | string[] | Text) => {
+  const lines =
+    timelineString instanceof Text
+      ? timelineString.toJSON()
+      : Array.isArray(timelineString)
+      ? timelineString
+      : timelineString.split("\n");
   let lengthAtIndex: number[] = [];
   for (let i = 0; i < lines.length; i++) {
     if (i === 0) {
@@ -69,31 +74,8 @@ const linesAndLengths = (timelineString: string) => {
   return { lines, lengthAtIndex };
 };
 
-export function incrementalParse(
-  previousText: string | string[],
-  changes: ChangeSet = ChangeSet.empty(previousText.length),
-  previousParse?: ParseResult,
-  now?: DateTime | string
-): ParseResult {
-  if (!previousParse) {
-    if (!changes || changes.empty) {
-      return parse(
-        Array.isArray(previousText) ? previousText.join("\n") : previousText,
-        true,
-        now
-      );
-    }
-    const text = Text.of(
-      Array.isArray(previousText) ? previousText : previousText.split("\n")
-    );
-    return parse(changes.apply(text).toString(), true, now);
-  }
-
-  throw new Error("unimplemented");
-}
-
 export function parse(
-  timelineString?: string,
+  timelineString?: string | string[] | Text,
   cache?: Caches | true,
   now?: DateTime | string
 ): ParseResult {
@@ -151,8 +133,8 @@ export function parseTimeline(
     i = checkEvent(line, lines, i, lengthAtIndex, context, cache) + 1;
   }
 
+  const lastLineIndex = i - 1;
   while (context.currentPath.length > 1) {
-    const lastLineIndex = i - 1;
     context.endCurrentGroup(
       lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
       { line: lastLineIndex, index: lines[lastLineIndex].length },
