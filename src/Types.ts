@@ -479,10 +479,6 @@ export function emptyTimeline(): Timeline {
       earliestTime: now.minus({ years: 5 }).toISO(),
       latestTime: now.plus({ years: 5 }).toISO(),
       maxDurationDays: now.diff(now.minus({ years: 1 })).as("days"),
-      startLineIndex: 0,
-      endLineIndex: 0,
-      startStringIndex: 0,
-      endStringIndex: 0,
       preferredInterpolationFormat: undefined,
     },
     parseMessages: [],
@@ -499,10 +495,6 @@ export type ParseResult = Timeline & {
 export interface TimelineMetadata {
   earliestTime?: DateTimeIso;
   latestTime?: DateTimeIso;
-  startLineIndex: number;
-  startStringIndex: number;
-  endLineIndex: number;
-  endStringIndex: number;
   maxDurationDays: number;
   preferredInterpolationFormat: string | undefined;
 }

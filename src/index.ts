@@ -31,7 +31,7 @@ import {
   Image,
   LINK_REGEX,
   LOCATION_REGEX,
-  Path,
+  type Path,
   RangeType,
   RelativeDate,
   emptyTimeline,

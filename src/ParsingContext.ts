@@ -200,13 +200,7 @@ export class ParsingContext {
         earliestTime: this.earliest?.toISO(),
         latestTime: this.latest?.toISO(),
         maxDurationDays,
-        startLineIndex: 0,
-        startStringIndex: lengthAtIndex[0],
-        endLineIndex,
         preferredInterpolationFormat: this.preferredInterpolationFormat,
-
-        // minus one to make sure the newline character is always there
-        endStringIndex,
         ...(this.title ? { title: this.title } : {}),
         ...(this.description ? { description: this.description } : {}),
       },
