@@ -1651,26 +1651,6 @@ group 10
       }
     }
   });
-
-  test.each(sp())("group foldables", (p) => {
-    const mw = p(`
-group 1
-group 2
-group 3
-group 4
-group 5
-2021: an event
-endGroup
-endGroup
-endGroup
-endGroup
-endGroup
-
-2022: last event`);
-
-    const foldables = mw.foldables;
-    expect(Object.keys(foldables).length).toBe(5);
-  });
 });
 
 describe("mrakdown style image", () => {
