@@ -103,17 +103,17 @@ export function parseHeader(timelineString: string) {
   return { ...context, lines, lengthAtIndex, headerEndLineIndex };
 }
 
-export function parseTimeline(
+export function parsePastHeader(
+  from: number,
+  context: ParsingContext,
   lines: string[],
   lengthAtIndex: number[],
   cache?: Caches,
-  now?: DateTime | string
-): Timeline & { parseMessages: ParseMessage[] } {
-  const context = new ParsingContext(now);
-
-  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
-  let i = headerEndLineIndex;
-  while (i < lines.length) {
+  to?: number
+) {
+  let i = from;
+  const upTo = to || lines.length;
+  while (i < lines.length && i < upTo) {
     const line = lines[i];
     if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
       i++;
@@ -133,21 +133,29 @@ export function parseTimeline(
     i = checkEvent(line, lines, i, lengthAtIndex, context, cache) + 1;
   }
 
-  const lastLineIndex = i - 1;
-  while (context.currentPath.length > 1) {
-    context.endCurrentGroup(
-      lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
-      { line: lastLineIndex, index: lines[lastLineIndex].length },
-      cache
-    );
+  if (to === undefined) {
+    const lastLineIndex = i - 1;
+    while (context.currentPath.length > 1) {
+      context.endCurrentGroup(
+        lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
+        { line: lastLineIndex, index: lines[lastLineIndex].length },
+        cache
+      );
+    }
   }
+  return context;
+}
 
-  return context.toTimeline(
-    lengthAtIndex,
-    lines.length - 1,
-    // As this is the last timeline, return the length of the whole string
-    lengthAtIndex[lines.length - 1] + lines[lines.length - 1].length
-  );
+export function parseTimeline(
+  lines: string[],
+  lengthAtIndex: number[],
+  cache?: Caches,
+  now?: DateTime | string
+): Timeline & { parseMessages: ParseMessage[] } {
+  const context = new ParsingContext(now);
+  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
+  parsePastHeader(headerEndLineIndex, context, lines, lengthAtIndex, cache);
+  return context.toTimeline();
 }
 
 export function parseICal(

@@ -182,11 +182,7 @@ export class ParsingContext {
     this.finishFoldableSection(lineTo.line, to);
   }
 
-  toTimeline(
-    lengthAtIndex: number[],
-    endLineIndex: number,
-    endStringIndex: number
-  ): Timeline & { parseMessages: ParseMessage[] } {
+  toTimeline(): Timeline & { parseMessages: ParseMessage[] } {
     const maxDurationDays = this.maxDuration
       ? this.maxDuration / 1000 / 60 / 60 / 24
       : 0;

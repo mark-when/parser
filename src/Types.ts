@@ -386,6 +386,9 @@ export type Eventy = Event | EventGroup;
 export function isEvent(eventy: Eventy): eventy is Event {
   return !(eventy as EventGroup).children;
 }
+export function isGroup(eventy: Eventy): eventy is EventGroup {
+  return !isEvent(eventy);
+}
 export type GroupRange = DateRange & { maxFrom: DateTime };
 export class EventGroup {
   textRanges!: {

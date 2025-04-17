@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { parse } from "../src";
 import { Caches } from "../src/Cache";
 import { ParseResult, Event, isEvent, iter } from "../src/Types";
+import { performance } from "perf_hooks";
 
 export const firstEvent = (markwhen: ParseResult) => nthEvent(markwhen, 0);
 
@@ -45,9 +46,9 @@ const logTimingData = () => {
 };
 
 const time = <T>(fn: () => T, timeKey: keyof typeof timers) => {
-  const start = DateTime.now();
+  const start = performance.now();
   const result = fn();
-  timers[timeKey].push(+DateTime.now() - +start);
+  timers[timeKey].push(performance.now() - start);
   return result;
 };
 
