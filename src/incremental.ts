@@ -1,11 +1,9 @@
 import { ChangeSet, Text } from "@codemirror/state";
 import { DateTime } from "luxon";
 import {
-  Event,
   EventGroup,
   Eventy,
   get,
-  isEvent,
   isGroup,
   iter,
   ParseResult,
@@ -13,50 +11,9 @@ import {
   Range,
 } from "./Types";
 import { parse, parsePastHeader } from "./parse";
-import { Foldable, ParsingContext } from "./ParsingContext";
+import { ParsingContext } from "./ParsingContext";
 import { parseZone } from "./zones/parseZone";
 import { Caches } from "./Cache";
-
-function mapEventyThroughChanges(eventy: Eventy, changes: ChangeSet) {
-  const m = changes.mapPos;
-  if (isEvent(eventy)) {
-    let { datePart, whole, recurrence } = eventy.textRanges;
-    if (changes.touchesRange(datePart.from, datePart.to)) {
-      throw new Error("date range affected");
-    }
-    datePart = {
-      ...datePart,
-      from: m(datePart.from),
-      to: m(datePart.to),
-    };
-    eventy.textRanges.datePart = datePart;
-    whole = {
-      ...whole,
-      from: m(whole.from),
-      to: m(whole.to),
-    };
-    eventy.textRanges.whole = whole;
-    if (recurrence) {
-      if (changes.touchesRange(recurrence?.from, recurrence.to)) {
-        throw new Error("recurrence affected");
-      }
-      recurrence = {
-        ...recurrence,
-        from: m(recurrence.from),
-        to: m(recurrence.to),
-      };
-      eventy.textRanges.recurrence = recurrence;
-    }
-  } else {
-    let { whole } = eventy.textRanges;
-    whole = {
-      ...whole,
-      from: m(whole.from),
-      to: m(whole.to),
-    };
-    eventy.textRanges.whole = whole;
-  }
-}
 
 function touchesRanges(
   rangeA: [number, number] | Range,
@@ -77,9 +34,9 @@ type EventyIterator = Generator<{ eventy: Eventy; path: Path }>;
 const next = (it: EventyIterator) => {
   let {
     done,
-    value: { eventy, path },
+    value,
   }: { done?: boolean; value: { eventy: Eventy; path: Path } } = it.next();
-  return { done, eventy, path };
+  return done ? { done } : { done, eventy: value.eventy, path: value.path };
 };
 
 type ChangedRange = {
@@ -143,44 +100,76 @@ function getGraft({
 }) {
   const { fromA, toA, fromB, toB, inserted } = changedRange;
 
+  const n = () => {
+    const iterate = next(eventyIterator);
+    if (iterate.done) {
+      done = true;
+    } else {
+      done = false;
+      eventy = iterate.eventy;
+      path = iterate.path;
+    }
+  };
+
+  const affected: { path: Path; eventy: Eventy }[] = [];
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
       eventyIterator = iter(root, newPath);
     }
-    ({ done, eventy, path } = next(eventyIterator));
+    n();
   }
 
-  previousText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
-  const lineFrom = previousText.lineAt(fromB);
-  const lineTo = previousText.lineAt(toB);
+  // Now accumulate all the affected eventies
+  do {
+    affected.push({ eventy, path });
+    n();
+  } while (!done && touchesRanges(eventy.textRanges.whole, [fromA, toA]));
 
-  if (isGroup(eventy)) {
-    if (!eventy.children.length) {
-      const lines: string[] = [],
-        lengths: number[] = [];
-      const textIterator = previousText.iterLines(
-        lineFrom.number,
-        lineTo.number
-      );
-
-      let runningLength = lineFrom.from;
-      for (const line of textIterator) {
-        lines.push(line);
-        runningLength += line.length;
-        lengths.push(runningLength);
-      }
-      parsePastHeader(
-        lineFrom.number - 1,
-        context(),
-        Array(lineFrom.number - 1).concat(lines),
-        Array(lineFrom.number - 1).concat(lengths),
-        cache
-      );
+  // If both a parent and children are affected, we can exclude the children
+  // as we'll just reparse the whole parent node, children included.
+  for (let i = 1; i < affected.length; i++) {
+    const potentialChildPath = affected[i].path.join(",");
+    const potentialParentPath = affected[i - 1].path.join(",");
+    if (potentialChildPath.startsWith(potentialParentPath)) {
+      affected.splice(i, 1);
+      i--;
     }
-
-    // See if this actually only affects children
   }
+
+  const _change = ChangeSet.of(
+    { from: fromB, to: toB, insert: inserted },
+    previousText.length
+  );
+  previousText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
+  const newFrom = _change.mapPos(eventy.textRanges.whole.from);
+  const newTo = _change.mapPos(eventy.textRanges.whole.to);
+  const lineFrom = previousText.lineAt(newFrom);
+  const lineTo = previousText.lineAt(newTo);
+
+  const lines: string[] = [],
+    lengths: number[] = [];
+  const textIterator = previousText.iterLines(
+    lineFrom.number,
+    lineTo.number + 1
+  );
+
+  let runningLength = 0;
+  for (const line of textIterator) {
+    lines.push(line);
+    lengths.push(runningLength);
+    runningLength += line.length;
+  }
+  lengths.push(runningLength);
+  const c = parsePastHeader(
+    lineFrom.number - 1,
+    context(),
+    Array(lineFrom.number - 1).concat(lines),
+    Array(lineFrom.number - 1).concat(lengths),
+    cache
+  );
+
+  return { affectedPaths: affected, context: c };
 }
 
 function mapParseThroughChanges(
@@ -197,12 +186,12 @@ function mapParseThroughChanges(
   }
   ({ done, eventy, path } = next(eventyIterator));
 
-  let _context: ParsingContext;
+  if (done || !eventy || !path) {
+    throw new Error("Nothing to graft");
+  }
+
   const context = () => {
-    if (_context) {
-      return _context;
-    }
-    _context = new ParsingContext(now);
+    const _context = new ParsingContext(now);
     _context.header = parse.header;
     if (typeof _context.header.timezone !== "undefined") {
       const tz = parseZone(_context.header.timezone, parse.cache);
@@ -215,7 +204,7 @@ function mapParseThroughChanges(
 
   const changesArray = asArray(changes);
   for (let i = 0; i < changesArray.length; i++) {
-    getGraft({
+    const { affectedPaths, context: parseContext } = getGraft({
       changedRange: changesArray[i],
       root: parse.events,
       cache: parse.cache,

@@ -518,10 +518,11 @@ export function* iter(
   eventy: Eventy,
   path: Path = []
 ): Generator<{ eventy: Eventy; path: number[] }> {
-  yield { eventy, path };
-  if (eventy && !isEvent(eventy)) {
-    for (let i = 0; i < eventy.children.length; i++) {
-      yield* iter(eventy.children[i], [...path, i]);
+  const e = get(eventy, path)!;
+  yield { eventy: e, path };
+  if (e && !isEvent(e)) {
+    for (let i = 0; i < e.children.length; i++) {
+      yield* iter(e.children[i], [...path, i]);
     }
   }
 }

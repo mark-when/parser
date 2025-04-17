@@ -2,34 +2,76 @@ import { ChangeSet, ChangeSpec, Text } from "@codemirror/state";
 import { parse } from "../src/index";
 import { incrementalParse } from "../src/incremental";
 import { DateTime } from "luxon";
+import { performance } from "perf_hooks";
+
+const time = <T>(fn: () => T): [T, number] => {
+  const start = performance.now();
+  const result = fn();
+  return [result, performance.now() - start];
+};
 
 const docs: [string, ChangeSpec][] = [
+  //   [
+  //     `title: markwhen
+  // timezone: America/Los_Angeles
+
+  // 2025: event
+  // property: value
+
+  // hi`,
+  //     ChangeSet.empty(78),
+  //   ],
+//   [
+//     `title: markwhen
+// timezone: America/Los_Angeles
+
+// 2025: event
+// property: value
+
+// hi`,
+//     ChangeSet.of(
+//       {
+//         from: 78,
+//         insert: "!",
+//       },
+//       78
+//     ),
+//   ],
   [
-    `title: markwhen
-timezone: America/Los_Angeles
+    `
+timezone: +5
 
-2025: event
-property: value
+#generalGrievous:
+  timezone: +0
 
-hi`,
-    ChangeSet.empty(78),
+#t:
+  timezone: -5
+
+group #generalGrievous
+
+group #t
+
+2023-05-01: this is an event in asia or something
+
+2023-05-01: this is an event in the  uk timezone
+#generalGrievous
+
+endGroup
+
+endGroup
+
+2023-05-01: this is an event in the UK timezone
+
+#generalGrievous
+
+
+2023-05-01: this`,
+    ChangeSet.of({
+      from: 300,
+      insert: " "
+    }, 325),
   ],
-  [
-    `title: markwhen
-timezone: America/Los_Angeles
-
-2025: event
-property: value
-
-hi`,
-    ChangeSet.of(
-      {
-        from: 78,
-        insert: "!",
-      },
-      78
-    ),
-  ],
+  // [`now: event`, ChangeSet.of({ from: 10, insert: "!" }, 10)],
 ];
 
 describe("incremental parsing", () => {
@@ -39,9 +81,10 @@ describe("incremental parsing", () => {
     const newDoc = ChangeSet.of(changes, original.length).apply(
       Text.of(original.split("\n"))
     );
-    const newParse = parse(newDoc.toString(), true, now);
-
-    expect(newParse).toEqual(
+    const [newParse, normalParseDuration] = time(() =>
+      parse(newDoc.toString(), true, now)
+    );
+    const [incParse, incParseDuration] = time(() =>
       incrementalParse(
         original,
         ChangeSet.of(changes, original.length),
@@ -49,5 +92,9 @@ describe("incremental parsing", () => {
         now
       )
     );
+    console.log(
+      `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
+    );
+    expect(newParse).toEqual(incParse);
   });
 });
