@@ -6,14 +6,15 @@ import {
   get,
   isGroup,
   iter,
+  iterateTreeFromPath,
+  iterFrom,
   ParseResult,
   Path,
   Range,
 } from "./Types";
 import { parse, parsePastHeader } from "./parse";
-import { ParsingContext } from "./ParsingContext";
+import { Foldable, ParsingContext } from "./ParsingContext";
 import { parseZone } from "./zones/parseZone";
-import { Caches } from "./Cache";
 
 function touchesRanges(
   rangeA: [number, number] | Range,
@@ -124,27 +125,26 @@ function linesAndLengths(newText: Text, change: ChangeSet, eventy: Eventy) {
   return { from: lineFrom.number - 1, lines, lengths };
 }
 
-function getGraft({
+function graft({
   changedRange,
-  root,
+  previousParse,
   done,
   eventy,
   path,
   eventyIterator,
   previousText,
   context,
-  cache,
 }: {
   changedRange: ChangedRange;
-  root: Eventy;
   done: boolean | undefined;
   eventy: Eventy;
   path: Path;
   eventyIterator: EventyIterator;
   previousText: Text;
   context: () => ParsingContext;
-  cache?: Caches;
+  previousParse: ParseResult;
 }) {
+  const { events: root, cache, foldables, ranges } = previousParse;
   const { fromA, toA, fromB, toB, inserted } = changedRange;
 
   const n = () => {
@@ -162,7 +162,7 @@ function getGraft({
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
-      eventyIterator = iter(root, newPath);
+      eventyIterator = iterFrom(root, newPath!);
     }
     n();
   }
@@ -185,7 +185,7 @@ function getGraft({
   }
 
   const _change = ChangeSet.of(
-    { from: fromB, to: toB, insert: inserted },
+    { from: fromA, to: toA, insert: inserted },
     previousText.length
   );
   const newText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
@@ -199,9 +199,13 @@ function getGraft({
       Array(from).concat(lengths),
       cache
     );
-    return { context: c, to: lengths.at(-1) };
+    return {
+      context: c,
+      affectedFrom: lengths[0],
+      affectedTo: lengths.at(-1)!,
+    };
   };
-  let { context: c, to: upToIndex } = withEventy(eventy);
+  let { context: c, affectedFrom, affectedTo } = withEventy(eventy);
 
   if (!c.events.children.length) {
     const commonAncestor = getCommonAncestor(affected.map(({ path }) => path));
@@ -212,7 +216,7 @@ function getGraft({
           path: commonAncestor,
           eventy: ancestor,
         });
-        ({ context: c, to: upToIndex } = withEventy(ancestor));
+        ({ context: c, affectedFrom, affectedTo } = withEventy(ancestor));
       }
     }
   }
@@ -221,7 +225,78 @@ function getGraft({
     throw new Error("No children found");
   }
 
-  return { affectedPaths: affected, context: c, upToIndex };
+  const m = (i: number) => _change.mapPos(i);
+  const mapRange = (r: Range): Range => {
+    return {
+      ...r,
+      from: m(r.from),
+      to: m(r.to),
+    };
+  };
+  for (let i = affected.length - 1; i >= 0; i--) {
+    if (i === affected.length - 1) {
+      for (const { eventy } of iterateTreeFromPath(root, affected[i].path)) {
+        if (isGroup(eventy)) {
+          eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+        } else {
+          eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
+          eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+          if (eventy.textRanges.recurrence) {
+            eventy.textRanges.recurrence = mapRange(
+              eventy.textRanges.recurrence
+            );
+          }
+        }
+      }
+    }
+    splice(root, affected[i].path, c.events.children[0]);
+  }
+
+  let newFoldables: { [index: number]: Foldable } = {};
+  // all this foldable shit sucks
+  for (const [foldableIndex, foldable] of Object.entries(foldables)) {
+    const index = parseInt(foldableIndex);
+    if (index < affectedFrom || index > affectedFrom) {
+      newFoldables[index] = {
+        ...foldable,
+        endIndex: _change.mapPos(foldable.endIndex),
+        foldStartIndex: foldable.foldStartIndex
+          ? _change.mapPos(foldable.foldStartIndex)
+          : undefined,
+        startIndex: foldable.startIndex
+          ? _change.mapPos(foldable.startIndex)
+          : undefined,
+        startLine: newText.lineAt(
+          _change.mapPos(previousText.line(foldable.startLine).from)
+        ).number,
+      };
+    }
+  }
+  newFoldables = {
+    ...newFoldables,
+    ...c.foldables,
+  };
+  previousParse.foldables = newFoldables;
+
+  let newRanges: Range[] = [];
+  for (const range of previousParse.ranges) {
+    if (range.to < affectedFrom) {
+      newRanges.push(range);
+    } else if (range.from > affectedTo) {
+      newRanges.push({
+        content: range.content,
+        type: range.type,
+        from: m(range.from),
+        to: m(range.to),
+      });
+    }
+  }
+  previousParse.ranges = [
+    ...newRanges,
+    ...c.ranges.filter(
+      ({ from, to }) => from >= affectedFrom && to <= affectedTo
+    ),
+  ];
 }
 
 function splice(root: EventGroup, affectedPath: Path, eventy: Eventy) {
@@ -269,14 +344,9 @@ function mapParseThroughChanges(
   }
 
   for (let i = 0; i < changesArray.length; i++) {
-    const {
-      affectedPaths,
-      context: parseContext,
-      upToIndex,
-    } = getGraft({
+    graft({
       changedRange: changesArray[i],
-      root: parse.events,
-      cache: parse.cache,
+      previousParse: parse,
       context,
       done,
       eventy,
@@ -284,13 +354,6 @@ function mapParseThroughChanges(
       previousText,
       path,
     });
-    for (let i = affectedPaths.length - 1; i >= 0; i--) {
-      splice(
-        parse.events,
-        affectedPaths[i].path,
-        parseContext.events.children[0]
-      );
-    }
   }
 
   return parse;

@@ -1719,6 +1719,38 @@ some text after`);
 });
 
 describe("ranges", () => {
+  test("ranges that abut end of string", () => {
+    const mw = parse(`
+timezone: +5
+
+#generalGrievous:
+  timezone: +0
+
+#t:
+  timezone: -5
+
+group #generalGrievous
+
+group #t
+
+2023-05-01: this is an event in asia or something
+
+2023-05-01: this is an event in the  uk timezone
+#generalGrievous
+
+endGroup
+
+endGroup
+
+2023-05-01: this is an event in the UK timezone
+
+#generalGrievous
+
+
+2023-05-01: this`);
+
+    expect(mw.events.children[2].textRanges.whole.to).toBe(325);
+  });
   test("list item contents", () => {
     const mw = parse(`06/2025 - 09/2025: Sub
 - [ ] We need to get this done
@@ -1905,7 +1937,6 @@ describe("recurrence", () => {
     expect(first.recurrence).toBeTruthy();
     expect(first.recurrence?.count).toBe(3);
     expect(first.recurrence?.freq).toBe(3);
-    debugger;
     // expect(first.recurrence?.every.days).toBe(3);
     // expect(first.recurrence?.for?.days).toBe(3);
   });

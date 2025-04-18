@@ -68,7 +68,9 @@ const linesAndLengths = (timelineString: string | string[] | Text) => {
       lengthAtIndex.push(0);
     }
     lengthAtIndex.push(
-      1 + lines[i].length + lengthAtIndex[lengthAtIndex.length - 1] || 0
+      (i === lines.length - 1 ? 0 : 1) +
+        lines[i].length +
+        lengthAtIndex[lengthAtIndex.length - 1] || 0
     );
   }
   return { lines, lengthAtIndex };

@@ -514,15 +514,68 @@ export const toArray = (node: Eventy) => {
   return array;
 };
 
+// We don't need 3 versions of iterating
+export function* iterateTreeFromPath(
+  root: EventGroup,
+  path: Path
+): Generator<{ eventy: Eventy; path: Path }, void, unknown> {
+  // If path is empty, start from root
+  if (path.length === 0) {
+    yield* iter(root, []);
+    return;
+  }
+
+  // Traverse to the parent of the node at path
+  let parent: EventGroup = root;
+  let parentPath: Path = [];
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const index = path[i];
+    if (!isGroup(parent) || index < 0 || index >= parent.children.length)
+      return;
+    const child = parent.children[index];
+    if (!isGroup(child)) return; // invalid path — can't go deeper
+    parent = child;
+    parentPath.push(index);
+  }
+
+  const startIndex = path[path.length - 1];
+
+  if (startIndex < 0 || startIndex >= parent.children.length) return;
+
+  // Start DFS from this index in parent's children
+  for (let i = startIndex; i < parent.children.length; i++) {
+    const child = parent.children[i];
+    yield* iter(child, [...parentPath, i]);
+  }
+}
+
+export function* iterFrom(
+  root: EventGroup,
+  path: number[]
+): Generator<{ eventy: Eventy; path: Path }, void, unknown> {
+  let current: Eventy = root;
+  let currentPath: number[] = [];
+
+  for (let i = 0; i < path.length; i++) {
+    if (!isGroup(current)) return; // invalid path
+    const index = path[i];
+    if (index < 0 || index >= current.children.length) return;
+    current = current.children[index];
+    currentPath = [...currentPath, index];
+  }
+
+  yield* iter(current, currentPath);
+}
+
 export function* iter(
   eventy: Eventy,
   path: Path = []
 ): Generator<{ eventy: Eventy; path: number[] }> {
-  const e = get(eventy, path)!;
-  yield { eventy: e, path };
-  if (e && !isEvent(e)) {
-    for (let i = 0; i < e.children.length; i++) {
-      yield* iter(e.children[i], [...path, i]);
+  yield { eventy, path };
+  if (eventy && isGroup(eventy)) {
+    for (let i = 0; i < eventy.children.length; i++) {
+      yield* iter(eventy.children[i], [...path, i]);
     }
   }
 }
