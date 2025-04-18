@@ -11,32 +11,32 @@ const time = <T>(fn: () => T): [T, number] => {
 };
 
 const docs: [string, ChangeSpec][] = [
-  //   [
-  //     `title: markwhen
-  // timezone: America/Los_Angeles
+  [
+    `title: markwhen
+  timezone: America/Los_Angeles
 
-  // 2025: event
-  // property: value
+  2025: event
+  property: value
 
-  // hi`,
-  //     ChangeSet.empty(78),
-  //   ],
-//   [
-//     `title: markwhen
-// timezone: America/Los_Angeles
+  hi`,
+    ChangeSet.empty(86),
+  ],
+  [
+    `title: markwhen
+timezone: America/Los_Angeles
 
-// 2025: event
-// property: value
+2025: event
+property: value
 
-// hi`,
-//     ChangeSet.of(
-//       {
-//         from: 78,
-//         insert: "!",
-//       },
-//       78
-//     ),
-//   ],
+hi`,
+    ChangeSet.of(
+      {
+        from: 78,
+        insert: "!",
+      },
+      78
+    ),
+  ],
   [
     `
 timezone: +5
@@ -66,12 +66,15 @@ endGroup
 
 
 2023-05-01: this`,
-    ChangeSet.of({
-      from: 300,
-      insert: " "
-    }, 325),
+    ChangeSet.of(
+      {
+        from: 300,
+        insert: " ",
+      },
+      325
+    ),
   ],
-  // [`now: event`, ChangeSet.of({ from: 10, insert: "!" }, 10)],
+  [`now: event`, ChangeSet.of({ from: 10, insert: "!" }, 10)],
 ];
 
 describe("incremental parsing", () => {
@@ -95,11 +98,11 @@ describe("incremental parsing", () => {
     console.log(
       `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
     );
-    const { cache, ...np } = newParse
-    const { cache: incCaches, ...ip } = incParse
-    
+    const { cache, ...np } = newParse;
+    const { cache: incCaches, ...ip } = incParse;
+
     // The caches weren't matching due to one being an Object
     // versus the other an intance of Caches. Idk
-    expect(np).toMatchObject(ip)
+    expect(np).toMatchObject(ip);
   });
 });

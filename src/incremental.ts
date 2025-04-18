@@ -120,7 +120,9 @@ function linesAndLengths(newText: Text, change: ChangeSet, eventy: Eventy) {
     // plus one for newline
     runningLength += line.length + 1;
   }
-  lengths.push(runningLength);
+  // If we are up against the end of the string, we need to undo our
+  // +1 for a newline at the end
+  lengths.push(runningLength - (lineTo.number === newText.lines ? 1 : 0));
 
   return { from: lineFrom.number - 1, lines, lengths };
 }
@@ -260,15 +262,18 @@ function graft({
       newFoldables[index] = {
         ...foldable,
         endIndex: _change.mapPos(foldable.endIndex),
-        foldStartIndex: foldable.foldStartIndex
-          ? _change.mapPos(foldable.foldStartIndex)
-          : undefined,
-        startIndex: foldable.startIndex
-          ? _change.mapPos(foldable.startIndex)
-          : undefined,
-        startLine: newText.lineAt(
-          _change.mapPos(previousText.line(foldable.startLine).from)
-        ).number,
+        foldStartIndex:
+          foldable.foldStartIndex !== undefined
+            ? _change.mapPos(foldable.foldStartIndex)
+            : undefined,
+        startIndex:
+          foldable.startIndex !== undefined
+            ? _change.mapPos(foldable.startIndex)
+            : undefined,
+        startLine:
+          newText.lineAt(
+            _change.mapPos(previousText.line(foldable.startLine + 1).from)
+          ).number - 1,
       };
     }
   }

@@ -1751,6 +1751,12 @@ endGroup
 
     expect(mw.events.children[2].textRanges.whole.to).toBe(325);
   });
+
+  test("ranges that abut the end of the string 1", () => {
+    const mw = parse("now: event!");
+    expect(mw.events.children[0].textRanges.whole.to).toBe("now: event!".length);
+  });
+  
   test("list item contents", () => {
     const mw = parse(`06/2025 - 09/2025: Sub
 - [ ] We need to get this done
