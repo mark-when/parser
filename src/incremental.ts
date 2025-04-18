@@ -77,6 +77,53 @@ function skip(root: Eventy, p: Path) {
   return path;
 }
 
+function getCommonAncestor(arrays: Path[]): Path {
+  if (arrays.length === 0) return [];
+
+  let prefix: Path = [];
+
+  // Use the first array as a base for comparison
+  const firstArray = arrays[0];
+
+  for (let i = 0; i < firstArray.length; i++) {
+    const currentValue = firstArray[i];
+
+    // Check if this value is present at the same position in all other arrays
+    for (let j = 1; j < arrays.length; j++) {
+      if (i >= arrays[j].length || arrays[j][i] !== currentValue) {
+        return prefix;
+      }
+    }
+
+    // If all arrays have the same value at position i, add it to the prefix
+    prefix.push(currentValue);
+  }
+
+  return prefix;
+}
+
+function linesAndLengths(newText: Text, change: ChangeSet, eventy: Eventy) {
+  const newFrom = change.mapPos(eventy.textRanges.whole.from);
+  const newTo = change.mapPos(eventy.textRanges.whole.to);
+  const lineFrom = newText.lineAt(newFrom);
+  const lineTo = newText.lineAt(newTo);
+
+  const lines: string[] = [],
+    lengths: number[] = [];
+  const textIterator = newText.iterLines(lineFrom.number, lineTo.number + 1);
+
+  let runningLength = lineFrom.from;
+  for (const line of textIterator) {
+    lines.push(line);
+    lengths.push(runningLength);
+    // plus one for newline
+    runningLength += line.length + 1;
+  }
+  lengths.push(runningLength);
+
+  return { from: lineFrom.number - 1, lines, lengths };
+}
+
 function getGraft({
   changedRange,
   root,
@@ -141,35 +188,47 @@ function getGraft({
     { from: fromB, to: toB, insert: inserted },
     previousText.length
   );
-  previousText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
-  const newFrom = _change.mapPos(eventy.textRanges.whole.from);
-  const newTo = _change.mapPos(eventy.textRanges.whole.to);
-  const lineFrom = previousText.lineAt(newFrom);
-  const lineTo = previousText.lineAt(newTo);
+  const newText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
 
-  const lines: string[] = [],
-    lengths: number[] = [];
-  const textIterator = previousText.iterLines(
-    lineFrom.number,
-    lineTo.number + 1
-  );
+  const withEventy = (e: Eventy) => {
+    const { from, lines, lengths } = linesAndLengths(newText, _change, e);
+    const c = parsePastHeader(
+      from,
+      context(),
+      Array(from).concat(lines),
+      Array(from).concat(lengths),
+      cache
+    );
+    return { context: c, to: lengths.at(-1) };
+  };
+  let { context: c, to: upToIndex } = withEventy(eventy);
 
-  let runningLength = 0;
-  for (const line of textIterator) {
-    lines.push(line);
-    lengths.push(runningLength);
-    runningLength += line.length;
+  if (!c.events.children.length) {
+    const commonAncestor = getCommonAncestor(affected.map(({ path }) => path));
+    if (commonAncestor.length) {
+      const ancestor = get(root, commonAncestor);
+      if (ancestor) {
+        affected.splice(0, affected.length, {
+          path: commonAncestor,
+          eventy: ancestor,
+        });
+        ({ context: c, to: upToIndex } = withEventy(ancestor));
+      }
+    }
   }
-  lengths.push(runningLength);
-  const c = parsePastHeader(
-    lineFrom.number - 1,
-    context(),
-    Array(lineFrom.number - 1).concat(lines),
-    Array(lineFrom.number - 1).concat(lengths),
-    cache
-  );
 
-  return { affectedPaths: affected, context: c };
+  if (!c.events.children.length) {
+    throw new Error("No children found");
+  }
+
+  return { affectedPaths: affected, context: c, upToIndex };
+}
+
+function splice(root: EventGroup, affectedPath: Path, eventy: Eventy) {
+  while (affectedPath.length > 1) {
+    root = root.children[affectedPath.shift()!] as EventGroup;
+  }
+  root.children.splice(affectedPath[0], 1, eventy);
 }
 
 function mapParseThroughChanges(
@@ -203,8 +262,18 @@ function mapParseThroughChanges(
   };
 
   const changesArray = asArray(changes);
+  if (changesArray.length > 1) {
+    throw new Error(
+      "Can't incrementally parse more than one change at a time (yet)"
+    );
+  }
+
   for (let i = 0; i < changesArray.length; i++) {
-    const { affectedPaths, context: parseContext } = getGraft({
+    const {
+      affectedPaths,
+      context: parseContext,
+      upToIndex,
+    } = getGraft({
       changedRange: changesArray[i],
       root: parse.events,
       cache: parse.cache,
@@ -215,6 +284,13 @@ function mapParseThroughChanges(
       previousText,
       path,
     });
+    for (let i = affectedPaths.length - 1; i >= 0; i--) {
+      splice(
+        parse.events,
+        affectedPaths[i].path,
+        parseContext.events.children[0]
+      );
+    }
   }
 
   return parse;
