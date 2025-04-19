@@ -466,7 +466,6 @@ export interface Timeline {
   events: EventGroup;
   header: any;
   ids: IdedEvents;
-  metadata: TimelineMetadata;
   parseMessages: ParseMessage[];
 }
 
@@ -478,12 +477,6 @@ export function emptyTimeline(): Timeline {
     foldables: [],
     ids: {},
     header: { dateFormat: AMERICAN_DATE_FORMAT },
-    metadata: {
-      earliestTime: now.minus({ years: 5 }).toISO(),
-      latestTime: now.plus({ years: 5 }).toISO(),
-      maxDurationDays: now.diff(now.minus({ years: 1 })).as("days"),
-      preferredInterpolationFormat: undefined,
-    },
     parseMessages: [],
   };
 }

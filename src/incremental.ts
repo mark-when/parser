@@ -186,12 +186,15 @@ function graft({
     }
   }
 
+  if (affected.length > 1) {
+    throw new Error("Can't incrementally parse across siblings yet");
+  }
+
   const _change = ChangeSet.of(
     { from: fromA, to: toA, insert: inserted },
     previousText.length
   );
   const newText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
-
   const withEventy = (e: Eventy) => {
     const { from, lines, lengths } = linesAndLengths(newText, _change, e);
     const c = parsePastHeader(
@@ -207,7 +210,7 @@ function graft({
       affectedTo: lengths.at(-1)!,
     };
   };
-  let { context: c, affectedFrom, affectedTo } = withEventy(eventy);
+  let { context: c, affectedFrom, affectedTo } = withEventy(affected[0].eventy);
 
   if (!c.events.children.length) {
     const commonAncestor = getCommonAncestor(affected.map(({ path }) => path));
@@ -235,6 +238,7 @@ function graft({
       to: m(r.to),
     };
   };
+
   for (let i = affected.length - 1; i >= 0; i--) {
     if (i === affected.length - 1) {
       for (const { eventy } of iterateTreeFromPath(root, affected[i].path)) {
@@ -257,8 +261,8 @@ function graft({
   let newFoldables: { [index: number]: Foldable } = {};
   // all this foldable shit sucks
   for (const [foldableIndex, foldable] of Object.entries(foldables)) {
-    const index = parseInt(foldableIndex);
-    if (index < affectedFrom || index > affectedFrom) {
+    const index = m(parseInt(foldableIndex));
+    if (index < affectedFrom || index > affectedTo) {
       newFoldables[index] = {
         ...foldable,
         endIndex: _change.mapPos(foldable.endIndex),
@@ -285,14 +289,15 @@ function graft({
 
   let newRanges: Range[] = [];
   for (const range of previousParse.ranges) {
-    if (range.to < affectedFrom) {
+    const to = m(range.to);
+    const from = m(range.from);
+    if (to < affectedFrom) {
       newRanges.push(range);
-    } else if (range.from > affectedTo) {
+    } else if (from > affectedTo) {
       newRanges.push({
-        content: range.content,
-        type: range.type,
-        from: m(range.from),
-        to: m(range.to),
+        ...range,
+        from,
+        to,
       });
     }
   }
@@ -301,7 +306,7 @@ function graft({
     ...c.ranges.filter(
       ({ from, to }) => from >= affectedFrom && to <= affectedTo
     ),
-  ];
+  ].sort(({ from: fromA }, { from: fromB }) => fromA - fromB);
 }
 
 function splice(root: EventGroup, affectedPath: Path, eventy: Eventy) {

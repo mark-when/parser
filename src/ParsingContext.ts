@@ -189,17 +189,11 @@ export class ParsingContext {
     return {
       events: this.events,
       ids: this.ids,
-      ranges: this.ranges,
+      ranges: this.ranges.sort(
+        ({ from: fromA }, { from: fromB }) => fromA - fromB
+      ),
       foldables: this.foldables,
       header: this.header,
-      metadata: {
-        earliestTime: this.earliest?.toISO(),
-        latestTime: this.latest?.toISO(),
-        maxDurationDays,
-        preferredInterpolationFormat: this.preferredInterpolationFormat,
-        ...(this.title ? { title: this.title } : {}),
-        ...(this.description ? { description: this.description } : {}),
-      },
       parseMessages: this.parseMessages,
     };
   }
