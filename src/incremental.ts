@@ -13,7 +13,7 @@ import {
   Range,
 } from "./Types";
 import { parse, parsePastHeader } from "./parse";
-import { Foldable, ParsingContext } from "./ParsingContext";
+import { Foldable, ParseMessage, ParsingContext } from "./ParsingContext";
 import { parseZone } from "./zones/parseZone";
 
 function touchesRanges(
@@ -103,11 +103,22 @@ function getCommonAncestor(arrays: Path[]): Path {
   return prefix;
 }
 
-function linesAndLengths(newText: Text, change: ChangeSet, eventy: Eventy) {
-  const newFrom = change.mapPos(eventy.textRanges.whole.from);
-  const newTo = change.mapPos(eventy.textRanges.whole.to);
+function linesAndLengths(newText: Text, change: ChangeSet, affected: Eventy[]) {
+  let min = -1,
+    max = -1;
+  for (let i = 0; i < affected.length; i++) {
+    const { from, to } = affected[i].textRanges.whole;
+    if (min === -1 || from < min) {
+      min = from;
+    }
+    if (max === -1 || to > max) {
+      max = to;
+    }
+  }
+  const newFrom = change.mapPos(min);
+  const newTo = change.mapPos(max);
   const lineFrom = newText.lineAt(newFrom);
-  const lineTo = newText.lineAt(newTo);
+  const lineTo = newText.lineAt(newTo - 1);
 
   const lines: string[] = [],
     lengths: number[] = [];
@@ -146,8 +157,8 @@ function graft({
   context: () => ParsingContext;
   previousParse: ParseResult;
 }) {
-  const { events: root, cache, foldables, ranges } = previousParse;
-  const { fromA, toA, fromB, toB, inserted } = changedRange;
+  const { events: root, cache } = previousParse;
+  const { fromA, toA, fromB, inserted } = changedRange;
 
   const n = () => {
     const iterate = next(eventyIterator);
@@ -160,13 +171,21 @@ function graft({
     }
   };
 
-  const affected: { path: Path; eventy: Eventy }[] = [];
+  let prior = { eventy, path };
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
+    prior = { eventy, path };
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
       eventyIterator = iterFrom(root, newPath!);
     }
     n();
+  }
+
+  const affected: { path: Path; eventy: Eventy }[] = [];
+  // If we are editing the definition of an event or section, we might ablate it completely,
+  // so we need to assume the prior event will be affected as well
+  if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
+    affected.push(prior);
   }
 
   // Now accumulate all the affected eventies
@@ -185,18 +204,17 @@ function graft({
       i--;
     }
   }
-
-  if (affected.length > 1) {
-    throw new Error("Can't incrementally parse across siblings yet");
-  }
-
   const _change = ChangeSet.of(
     { from: fromA, to: toA, insert: inserted },
     previousText.length
   );
   const newText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
-  const withEventy = (e: Eventy) => {
-    const { from, lines, lengths } = linesAndLengths(newText, _change, e);
+  const withAffected = (affectedEventies: Eventy[]) => {
+    const { from, lines, lengths } = linesAndLengths(
+      newText,
+      _change,
+      affectedEventies
+    );
     const c = parsePastHeader(
       from,
       context(),
@@ -210,9 +228,8 @@ function graft({
       affectedTo: lengths.at(-1)!,
     };
   };
-  let { context: c, affectedFrom, affectedTo } = withEventy(affected[0].eventy);
 
-  if (!c.events.children.length) {
+  const withCommonAncestor = () => {
     const commonAncestor = getCommonAncestor(affected.map(({ path }) => path));
     if (commonAncestor.length) {
       const ancestor = get(root, commonAncestor);
@@ -221,10 +238,31 @@ function graft({
           path: commonAncestor,
           eventy: ancestor,
         });
-        ({ context: c, affectedFrom, affectedTo } = withEventy(ancestor));
+        return withAffected(affected.map(({ eventy }) => eventy));
       }
     }
+  };
+
+  let result:
+    | {
+        context: ParsingContext;
+        affectedFrom: number;
+        affectedTo: number;
+      }
+    | undefined;
+  if (areSiblings(affected.map(({ path }) => path))) {
+    result = withAffected(affected.map(({ eventy }) => eventy));
+    if (!result.context.events.children.length) {
+      result = withCommonAncestor();
+    }
+  } else {
+    result = withCommonAncestor();
   }
+
+  if (!result) {
+    throw new Error("No common ancestor found");
+  }
+  let { context: c, affectedFrom, affectedTo } = result;
 
   if (!c.events.children.length) {
     throw new Error("No children found");
@@ -239,25 +277,69 @@ function graft({
     };
   };
 
-  for (let i = affected.length - 1; i >= 0; i--) {
-    if (i === affected.length - 1) {
-      for (const { eventy } of iterateTreeFromPath(root, affected[i].path)) {
-        if (isGroup(eventy)) {
-          eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
-        } else {
-          eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
-          eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
-          if (eventy.textRanges.recurrence) {
-            eventy.textRanges.recurrence = mapRange(
-              eventy.textRanges.recurrence
-            );
-          }
-        }
+  for (const { eventy } of iterateTreeFromPath(root, affected.at(-1)!.path)) {
+    if (isGroup(eventy)) {
+      eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+    } else {
+      eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
+      eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+      eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
+      if (eventy.textRanges.recurrence) {
+        eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
       }
     }
-    splice(root, affected[i].path, c.events.children[0]);
   }
 
+  splice(
+    root,
+    affected.map(({ path }) => path),
+    c.events.children
+  );
+
+  mapRanges(
+    previousParse,
+    c,
+    affectedFrom,
+    affectedTo,
+    _change,
+    previousText,
+    newText
+  );
+}
+
+function areSiblings(affected: Path[]): boolean {
+  if (affected.length < 2) {
+    return true;
+  }
+  const parent = affected[0].slice(0, -1).join(",");
+  const length = affected[0].length;
+  const leaves = [affected[0].at(-1)!];
+  for (let i = 1; i < affected.length; i++) {
+    const path = affected[i];
+    if (path.length !== length || path.slice(0, -1).join(",") !== parent) {
+      return false;
+    }
+    const leaf = path.at(-1)!;
+    if (!leaves.some((x) => Math.abs(leaf - x) === 1)) {
+      return false;
+    }
+    leaves.push(leaf);
+  }
+  return true;
+}
+
+function mapRanges(
+  previousParse: ParseResult,
+  c: ParsingContext,
+  affectedFrom: number,
+  affectedTo: number,
+  _change: ChangeSet,
+  previousText: Text,
+  newText: Text
+) {
+  const m = (i: number) => _change.mapPos(i);
+
+  const { foldables } = previousParse;
   let newFoldables: { [index: number]: Foldable } = {};
   // all this foldable shit sucks
   for (const [foldableIndex, foldable] of Object.entries(foldables)) {
@@ -293,7 +375,7 @@ function graft({
     const from = m(range.from);
     if (to < affectedFrom) {
       newRanges.push(range);
-    } else if (from > affectedTo) {
+    } else if (from >= affectedTo) {
       newRanges.push({
         ...range,
         from,
@@ -307,13 +389,38 @@ function graft({
       ({ from, to }) => from >= affectedFrom && to <= affectedTo
     ),
   ].sort(({ from: fromA }, { from: fromB }) => fromA - fromB);
+
+  let newMessages: ParseMessage[] = [];
+  for (const message of previousParse.parseMessages) {
+    const from = m(message.pos[0]);
+    const to = m(message.pos[1]);
+    if (to < affectedFrom) {
+      newMessages.push(message);
+    } else if (from > affectedTo) {
+      newMessages.push({
+        ...message,
+        pos: [from, to],
+      });
+    }
+  }
+  previousParse.parseMessages = [...newMessages, ...c.parseMessages].sort(
+    ({ pos: posA }, { pos: posB }) => posA[0] - posB[0]
+  );
 }
 
-function splice(root: EventGroup, affectedPath: Path, eventy: Eventy) {
-  while (affectedPath.length > 1) {
-    root = root.children[affectedPath.shift()!] as EventGroup;
+function splice(root: EventGroup, affectedPaths: Path[], eventies: Eventy[]) {
+  if (!areSiblings(affectedPaths)) {
+    throw new Error("Can't splice non-siblings");
   }
-  root.children.splice(affectedPath[0], 1, eventy);
+
+  const youngest = affectedPaths.reduce((prev, curr) => {
+    return curr.at(-1)! < prev.at(-1)! ? curr : prev;
+  });
+
+  while (youngest.length > 1) {
+    root = root.children[youngest.shift()!] as EventGroup;
+  }
+  root.children.splice(youngest[0], affectedPaths.length, ...eventies);
 }
 
 function mapParseThroughChanges(

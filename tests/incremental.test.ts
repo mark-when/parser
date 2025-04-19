@@ -3,6 +3,9 @@ import { parse } from "../src/index";
 import { incrementalParse } from "../src/incremental";
 import { DateTime } from "luxon";
 import { performance } from "perf_hooks";
+import { resolve } from "path";
+import { readFileSync } from "fs";
+import { basic78, basic86, grievous256, grievous324, now10 } from "./testStrings";
 
 const time = <T>(fn: () => T): [T, number] => {
   const start = performance.now();
@@ -10,93 +13,42 @@ const time = <T>(fn: () => T): [T, number] => {
   return [result, performance.now() - start];
 };
 
+const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8").substring(
+  0,
+  2100
+);
+
 const docs: [string, ChangeSpec][] = [
-//   [
-//     `title: markwhen
-//   timezone: America/Los_Angeles
-
-//   2025: event
-//   property: value
-
-//   hi`,
-//     ChangeSet.empty(86),
-//   ],
-//   [
-//     `title: markwhen
-// timezone: America/Los_Angeles
-
-// 2025: event
-// property: value
-
-// hi`,
-//     ChangeSet.of(
-//       {
-//         from: 78,
-//         insert: "!",
-//       },
-//       78
-//     ),
-//   ],
-//   [
-//     `
-// timezone: +5
-
-// #generalGrievous:
-//   timezone: +0
-
-// #t:
-//   timezone: -5
-
-// group #generalGrievous
-
-// group #t
-
-// 2023-05-01: this is an event in asia or something
-
-// 2023-05-01: this is an event in the  uk timezone
-// #generalGrievous
-
-// endGroup
-
-// endGroup
-
-// 2023-05-01: this is an event in the UK timezone
-
-// #generalGrievous
-
-
-// 2023-05-01: this`,
-//     ChangeSet.of(
-//       {
-//         from: 300,
-//         insert: " ",
-//       },
-//       325
-//     ),
-//   ],
-//   [`now: event`, ChangeSet.of({ from: 10, insert: "!" }, 10)],
+  [basic86, ChangeSet.empty(86)],
   [
-    `
-group #generalGrievous
-
-group #t
-
-2023-05-01: this is an event in asia or something
-
-2023-05-01: this is an event in the  uk timezone
-#generalGrievous
-
-endGroup
-
-endGroup
-
-2023-05-01: this is an event in the UK timezone
-
-#generalGrievous
-
-
-2023-05-01: this`,
-    ChangeSet.of({ insert: "now: ", from: 85 }, 257),
+    basic78,
+    ChangeSet.of(
+      {
+        from: 78,
+        insert: "!",
+      },
+      78
+    ),
+  ],
+  [
+    grievous324,
+    ChangeSet.of(
+      {
+        from: 300,
+        insert: " ",
+      },
+      324
+    ),
+  ],
+  [now10, ChangeSet.of({ from: 10, insert: "!" }, 10)],
+  [grievous256, ChangeSet.of({ insert: "now: ", from: 85 }, 256)],
+  [large, ChangeSet.of({ insert: "hello", from: 1000 }, large.length)],
+  [
+    large.substring(1800),
+    ChangeSet.of(
+      { insert: "\nnow: hi\n", from: 200 },
+      large.substring(1800).length
+    ),
   ],
 ];
 
