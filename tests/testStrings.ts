@@ -63,3 +63,12 @@ endGroup
 #generalGrievous
 
 2023-05-01: this`;
+
+export const basic = `
+key: value
+
+2025 - 2026: hello
+2026 / 2027: darkness
+March 2 2028: my old friend
+
+`

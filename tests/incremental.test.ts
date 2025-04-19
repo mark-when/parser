@@ -5,7 +5,14 @@ import { DateTime } from "luxon";
 import { performance } from "perf_hooks";
 import { resolve } from "path";
 import { readFileSync } from "fs";
-import { basic78, basic86, grievous256, grievous324, now10 } from "./testStrings";
+import {
+  basic,
+  basic78,
+  basic86,
+  grievous256,
+  grievous324,
+  now10,
+} from "./testStrings";
 
 const time = <T>(fn: () => T): [T, number] => {
   const start = performance.now();
@@ -49,6 +56,26 @@ const docs: [string, ChangeSpec][] = [
       { insert: "\nnow: hi\n", from: 200 },
       large.substring(1800).length
     ),
+  ],
+  [
+    large.substring(1800),
+    ChangeSet.of(
+      { insert: "\nnow: hi\nnow: hi\n", from: 200 },
+      large.substring(1800).length
+    ),
+  ],
+  [large, ChangeSet.of({ insert: "", from: 900, to: 1000 }, large.length)],
+  [
+    `2025 - 2026: craziness`,
+    ChangeSet.of(
+      { insert: "", from: 12, to: 13 },
+      `2025 - 2026: craziness`.length
+    ),
+  ],
+  [basic, ChangeSet.of({ insert: "", from: 20, to: 40 }, basic.length)],
+  [
+    basic,
+    ChangeSet.of({ insert: `\n${basic}`, from: basic.length }, basic.length),
   ],
 ];
 

@@ -115,8 +115,19 @@ function linesAndLengths(newText: Text, change: ChangeSet, affected: Eventy[]) {
       max = to;
     }
   }
-  const newFrom = change.mapPos(min);
-  const newTo = change.mapPos(max);
+
+  let newFrom = change.mapPos(min);
+  let newTo = change.mapPos(max);
+
+  change.iterChangedRanges((fromA, toA, fromB, toB) => {
+    if (fromB < newFrom) {
+      newFrom = fromB;
+    }
+    if (toB > newTo) {
+      newTo = toB;
+    }
+  });
+
   const lineFrom = newText.lineAt(newFrom);
   const lineTo = newText.lineAt(newTo - 1);
 
