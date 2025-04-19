@@ -118,15 +118,21 @@ export function getDateRangeFromCasualRegexMatch(
     if (recurrence) {
       context.ranges.push(recurrence.range);
     }
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
-    const dateRange = new DateRangePart(
-      DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
-      DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
-      datePart,
+    const colon = colonRange(RangeType.DateRangeColon);
+    context.ranges.push(colon);
+    const dateRange = new DateRangePart({
+      from: DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
+      to: DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
+      originalString: datePart,
       dateRangeInText,
-      eventStartLineRegexMatch[eventTextMatchIndex],
-      recurrence
-    );
+      eventText: eventStartLineRegexMatch[eventTextMatchIndex],
+      recurrence,
+      definition: {
+        ...dateRangeInText,
+        type: RangeType.EventDefinition,
+        to: colon.to,
+      },
+    });
     return dateRange;
   }
 
@@ -487,15 +493,21 @@ export function getDateRangeFromCasualRegexMatch(
   if (recurrence) {
     context.ranges.push(recurrence.range);
   }
-  context.ranges.push(colonRange(RangeType.DateRangeColon));
-  const dateRange = new DateRangePart(
-    fromDateTime,
-    endDateTime,
-    datePart,
+  const colon = colonRange(RangeType.DateRangeColon);
+  context.ranges.push(colon);
+  const dateRange = new DateRangePart({
+    from: fromDateTime,
+    to: endDateTime,
+    originalString: datePart,
     dateRangeInText,
-    eventStartLineRegexMatch[eventTextMatchIndex],
-    recurrence
-  );
+    eventText: eventStartLineRegexMatch[eventTextMatchIndex],
+    recurrence,
+    definition: {
+      ...dateRangeInText,
+      type: RangeType.EventDefinition,
+      to: colon.to,
+    },
+  });
 
   if (canCacheRange) {
     cache?.zone(context.timezone).ranges.set(datePart, {

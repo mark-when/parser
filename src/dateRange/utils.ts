@@ -34,6 +34,7 @@ import {
   DateTimeIso,
   DateTimeGranularity,
   EventGroup,
+  RangeType,
 } from "../Types.js";
 import { Caches } from "../Cache.js";
 
@@ -277,13 +278,24 @@ export function parseGroupFromStartTag(
   const group: EventGroup = new EventGroup();
   group.tags = [];
   group.style = "group";
-  group.textRanges = { whole: range };
+  group.textRanges = {
+    whole: range,
+    definition: {
+      from: range.from,
+      to: range.from + s.length,
+      type: RangeType.SectionDefinition,
+    },
+  };
 
   s = s
     .replace(GROUP_START_REGEX, (match, startToken, groupOrSection) => {
       // Start expanded if this start tag is not indented
       group.startExpanded = !startToken.length;
       group.style = groupOrSection as "group" | "section";
+      group.textRanges.definition.to =
+        group.textRanges.definition.from +
+        startToken.length +
+        groupOrSection.length;
       return "";
     })
     .replace(TAG_REGEX, (match, tag) => {

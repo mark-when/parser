@@ -124,14 +124,19 @@ export function getDateRangeFromEDTFRegexMatch(
       context.ranges.push(recurrence.range);
     }
     context.ranges.push(colonRange(RangeType.DateRangeColon));
-    const dateRange = new DateRangePart(
-      DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
-      DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
-      datePart,
+    const dateRange = new DateRangePart({
+      from: DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
+      to: DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
+      originalString: datePart,
       dateRangeInText,
-      eventStartLineRegexMatch[edtfEventTextMatchIndex],
-      recurrence
-    );
+      eventText: eventStartLineRegexMatch[edtfEventTextMatchIndex],
+      recurrence,
+      definition: {
+        ...dateRangeInText,
+        type: RangeType.EventDefinition,
+        to: lengthAtIndex[i] + colonIndex + 1,
+      },
+    });
     return dateRange;
   }
 
@@ -325,20 +330,24 @@ export function getDateRangeFromEDTFRegexMatch(
     context,
     cache
   );
+  const colon = colonRange(RangeType.DateRangeColon);
   if (recurrence) {
     context.ranges.push(recurrence.range);
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
-  } else {
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
   }
-  const dateRange = new DateRangePart(
-    fromDateTime,
-    endDateTime,
-    datePart,
+  context.ranges.push(colon);
+  const dateRange = new DateRangePart({
+    from: fromDateTime,
+    to: endDateTime,
+    originalString: datePart,
     dateRangeInText,
-    eventStartLineRegexMatch[edtfEventTextMatchIndex],
-    recurrence
-  );
+    eventText: eventStartLineRegexMatch[edtfEventTextMatchIndex],
+    recurrence,
+    definition: {
+      ...dateRangeInText,
+      type: RangeType.EventDefinition,
+      to: colon.to,
+    },
+  });
 
   if (canCacheRange) {
     cache?.zone(context.timezone).ranges.set(datePart, {

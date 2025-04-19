@@ -1,7 +1,7 @@
 import { DateTime, DurationLikeObject } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
-import { Foldable, ParseMessage } from "./ParsingContext.js";
+import { DocumentMessage, Foldable, ParseMessage } from "./ParsingContext.js";
 import {
   AMOUNT_REGEX,
   COMMENT_REGEX,
@@ -177,24 +177,35 @@ export class DateRangePart implements DateRange {
   originalString?: string;
   eventText: string;
   dateRangeInText: Range;
+  definition: Range
   recurrence?: Recurrence;
   recurrenceRangeInText?: Range;
 
-  constructor(
-    fromDateTime: DateTime,
-    toDateTime: DateTime,
-    originalString: string,
-    dateRangeInText: Range,
-    eventText: string,
-    recurrence?: RecurrenceInText
-  ) {
-    this.fromDateTime = fromDateTime;
-    this.toDateTime = toDateTime;
+  constructor({
+    from,
+    to,
+    originalString,
+    dateRangeInText,
+    eventText,
+    definition,
+    recurrence,
+  }: {
+    from: DateTime;
+    to: DateTime;
+    originalString: string;
+    dateRangeInText: Range;
+    eventText: string;
+    definition: Range;
+    recurrence?: RecurrenceInText;
+  }) {
+    this.fromDateTime = from;
+    this.toDateTime = to;
     this.originalString = originalString;
     this.dateRangeInText = dateRangeInText;
     this.eventText = eventText;
     this.recurrence = recurrence?.recurrence;
     this.recurrenceRangeInText = recurrence?.range;
+    this.definition = definition
   }
 }
 
@@ -358,6 +369,8 @@ export enum RangeType {
   PropertyKey = "propertyKey",
   PropertyKeyColon = "propertyKeyColon",
   PropertyValue = "propertyValue",
+  EventDefinition = "eventDefinition",
+  SectionDefinition = "sectionDefinition"
 }
 
 export type Range = {
@@ -393,6 +406,7 @@ export type GroupRange = DateRange & { maxFrom: DateTime };
 export class EventGroup {
   textRanges!: {
     whole: Range;
+    definition: Range;
   };
   properties: [string, any][] = [];
   tags: string[] = [];
@@ -414,6 +428,7 @@ export class Event {
   textRanges: {
     whole: Range;
     datePart: Range;
+    definition: Range;
     recurrence?: Range;
   };
   properties: any[];
@@ -445,6 +460,7 @@ export class Event {
     this.textRanges = {
       whole: rangeInText,
       datePart: dateRangeInText,
+      definition: dateRangeInText,
       recurrence: dateRange.recurrenceRangeInText,
     };
     this.dateRangeIso = toDateRangeIso(dateRange);
@@ -467,6 +483,7 @@ export interface Timeline {
   header: any;
   ids: IdedEvents;
   parseMessages: ParseMessage[];
+  documentMessages: DocumentMessage[];
 }
 
 export function emptyTimeline(): Timeline {
@@ -478,6 +495,7 @@ export function emptyTimeline(): Timeline {
     ids: {},
     header: { dateFormat: AMERICAN_DATE_FORMAT },
     parseMessages: [],
+    documentMessages: [],
   };
 }
 

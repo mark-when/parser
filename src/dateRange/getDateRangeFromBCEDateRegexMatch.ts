@@ -63,14 +63,20 @@ export function getDateRangeFromBCEDateRegexMatch(
   });
   const cached = cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
-    context.ranges.push(colonRange(RangeType.DateRangeColon));
-    return new DateRangePart(
-      DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
-      DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
-      datePart,
+    const colon = colonRange(RangeType.DateRangeColon);
+    context.ranges.push(colon);
+    return new DateRangePart({
+      from: DateTime.fromISO(cached.fromDateTimeIso, { setZone: true }),
+      to: DateTime.fromISO(cached.toDateTimeIso, { setZone: true }),
+      originalString: datePart,
       dateRangeInText,
-      eventStartLineRegexMatch[BCEEventTextMatchIndex]
-    );
+      eventText: eventStartLineRegexMatch[BCEEventTextMatchIndex],
+      definition: {
+        ...dateRangeInText,
+        type: RangeType.EventDefinition,
+        to: colon.to,
+      },
+    });
   }
 
   let fromDateTime: DateTime | undefined;
@@ -90,7 +96,7 @@ export function getDateRangeFromBCEDateRegexMatch(
   }
 
   if (!fromDateTime || !fromDateTime?.isValid) {
-    fromDateTime = context.zonedNow
+    fromDateTime = context.zonedNow;
     granularity = "instant";
   }
 
@@ -118,14 +124,20 @@ export function getDateRangeFromBCEDateRegexMatch(
     );
   }
 
-  context.ranges.push(colonRange(RangeType.DateRangeColon));
-  const dateRange = new DateRangePart(
-    fromDateTime,
-    endDateTime,
-    datePart,
+  const colon = colonRange(RangeType.DateRangeColon);
+  context.ranges.push(colon);
+  const dateRange = new DateRangePart({
+    from: fromDateTime,
+    to: endDateTime,
+    originalString: datePart,
     dateRangeInText,
-    eventStartLineRegexMatch[BCEEventTextMatchIndex]
-  );
+    eventText: eventStartLineRegexMatch[BCEEventTextMatchIndex],
+    definition: {
+      ...dateRangeInText,
+      type: RangeType.EventDefinition,
+      to: colon.to,
+    },
+  });
 
   if (canCacheRange) {
     cache?.zone(context.timezone).ranges.set(datePart, {

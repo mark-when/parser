@@ -151,12 +151,6 @@ export function checkEvent(
 
   const eventGroup = lines.slice(from - 1, end);
 
-  const eventRange: Range = {
-    from: lengthAtIndex[i],
-    to: lengthAtIndex[end],
-    type: RangeType.Event,
-  };
-
   const completed = checkCompletion(dateRange, line, context);
 
   eventGroup[0] = dateRange.eventText.trim();
@@ -186,6 +180,12 @@ export function checkEvent(
       });
     }
   }
+
+  const eventRange: Range = {
+    from: lengthAtIndex[i],
+    to: lengthAtIndex[end],
+    type: RangeType.Event,
+  };
 
   const event = new Event(
     line,
