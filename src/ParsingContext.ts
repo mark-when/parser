@@ -23,11 +23,14 @@ export interface Foldable {
   foldStartIndex?: number;
 }
 
-export interface ParseMessage {
+export interface DocumentMessage {
   type: "error" | "warning";
-  pos: [number, number];
   message: string;
 }
+
+export type ParseMessage = DocumentMessage & {
+  pos: [number, number];
+};
 
 export class ParsingContext {
   now: DateTime;
@@ -53,6 +56,7 @@ export class ParsingContext {
   header: any;
   timezoneStack: Zone[];
   parseMessages: ParseMessage[] = [];
+  documentMessages: DocumentMessage[] = [];
 
   constructor(now?: DateTime | string) {
     this.events = new EventGroup();
@@ -194,7 +198,11 @@ export class ParsingContext {
       ),
       foldables: this.foldables,
       header: this.header,
-      parseMessages: this.parseMessages,
+      parseMessages: this.parseMessages.sort(
+        ({ pos: posA, message: messageA }, { pos: posB, message: messageB }) =>
+          posA[0] - posB[0]
+      ),
+      documentMessages: this.documentMessages,
     };
   }
 }

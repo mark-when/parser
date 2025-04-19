@@ -177,7 +177,7 @@ now: event`);
     expect(headerFoldable.foldStartIndex).toBe(5);
     expect(headerFoldable.endIndex).toBe(148);
 
-    expect(mw.parseMessages.length).toBe(2);
+    expect(mw.parseMessages.length).toBe(1);
     const error = mw.parseMessages[0];
     expect(error.type).toBe("error");
     expect(error.pos[0]).toBe(96);
@@ -389,7 +389,7 @@ key: value
     
 ---`;
     const parsed = parse(mw);
-    expect(parsed.parseMessages.length).toBe(2);
+    expect(parsed.parseMessages.length).toBe(1);
     expect(parsed.parseMessages[0].type).toBe("error");
     expect(parsed.parseMessages[0].pos[0]).toBe(15);
     expect(parsed.parseMessages[0].pos[1]).toBe(22);
@@ -398,8 +398,8 @@ key: value
   test("no timezone warning", () => {
     const mw = `now: event`;
     const parsed = parse(mw);
-    expect(parsed.parseMessages.length).toBe(1);
-    expect(parsed.parseMessages[0].type).toBe("warning");
+    expect(parsed.documentMessages.length).toBe(1);
+    expect(parsed.documentMessages[0].type).toBe("warning");
   });
 
   test("invalid timezone error", () => {

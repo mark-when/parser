@@ -398,11 +398,8 @@ export function parseHeader(
 
   const hasSomeText = lines.length > 0 || lines[0].length > 0;
   if (!context.header.timezone && hasSomeText) {
-    let pos: [number, number] =
-      start! !== undefined && end! !== undefined ? [start, end] : [0, 1];
-    context.parseMessages.push({
+    context.documentMessages.push({
       type: "warning",
-      pos,
       message:
         "Timezone not specified. Specifying a `timezone` in the header is highly recommended.",
     });
