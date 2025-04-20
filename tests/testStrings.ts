@@ -71,4 +71,27 @@ key: value
 2026 / 2027: darkness
 March 2 2028: my old friend
 
-`
+`;
+
+export const recurrence1 = `2022-08-07 every 12 months x30: event title`;
+export const recurrence2 = `2025-02-06 every day until 2025-02-28: Event`;
+export const recurrence3 = "2025-04-07 every day until 2025-05-01: event";
+export const recurrence4 = "2025-04-07 every day | 2025-05-01: event";
+export const recurrence5 = "2025-04-07 every day | now: event";
+export const recurrence6 = `2025-02-06 every day until 2025-01-28: Event`;
+export const recurrence7 = `february 2 1989 every 3 days for 3 days: event title`;
+export const recurrence8 = `09/09/1999 every 3 months x29: event title`;
+export const recurrence9 = `Dec 19 every 12 week days for 9 times: event title`;
+export const recurrence10 = `2019-01-01 every 12 week days for 9 times: event title`;
+export const recurrence11 = `2019-01-01 / 2022-08-07 every 12 week days for 9 times: event title`;
+export const recurrence12 = `2019-01-01/2022-08-07 every 12 week days for 9 times: event title`;
+export const recurrence13 = `2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`
+export const recurrence14 = `2019-01-01/now every 4 months x50: event title`
+export const recurrence15 = `2019-01-01/now every other year: event title`
+export const recurrence16 = `2025-04-04 / now every day til 2025-12-12: `
+export const recurrence17 = `2025-04-04 every other week until 2025-12-12: `
+export const recurrence18 = `2025-04-04 every other day | now: `
+export const recurrence19 = `2019-01-01/now every other year: event title`
+
+export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `
+export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `

@@ -1,8 +1,16 @@
 import { parse } from "../src";
 import { expand, expandEvent } from "../src/utilities/recurrence";
-import { RangeType, toDateRange } from "../src/Types";
+import { toDateRange } from "../src/Types";
 import { nthEvent } from "./testUtilities";
 import { DateTime } from "luxon";
+import {
+  recurrence1,
+  recurrence2,
+  recurrence3,
+  recurrence4,
+  recurrence5,
+  recurrence6,
+} from "./testStrings";
 
 // test("expansion 1", () => {
 //   const mw = parse(
@@ -17,7 +25,7 @@ import { DateTime } from "luxon";
 // });
 
 test("expansion times", () => {
-  const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  const mw = parse(recurrence1);
 
   const first = nthEvent(mw, 0);
   const expansion = expandEvent(first, 50);
@@ -26,7 +34,7 @@ test("expansion times", () => {
 });
 
 test("expansion limit", () => {
-  const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  const mw = parse(recurrence1);
 
   const first = nthEvent(mw, 0);
   const expansion = expandEvent(first, 10);
@@ -35,7 +43,7 @@ test("expansion limit", () => {
 });
 
 test("expansion 2", () => {
-  const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  const mw = parse(recurrence1);
 
   const first = nthEvent(mw, 0);
   const expansion = expand(
@@ -51,7 +59,7 @@ test("expansion 2", () => {
 });
 
 test("expansion 3", () => {
-  const mw = parse(`2022-08-07 every 12 months x30: event title`);
+  const mw = parse(recurrence1);
 
   const first = nthEvent(mw, 0);
   const expansion = expand(
@@ -67,19 +75,19 @@ test("expansion 3", () => {
 });
 
 test("until 1", () => {
-  const mw = parse(`2025-02-06 every day until 2025-02-28: Event`);
+  const mw = parse(recurrence2);
   const first = nthEvent(mw, 0);
   expect(first.recurrence).toBeTruthy();
 });
 
 test("until 2", () => {
-  const mw = parse(`2025-02-06 every day until 2025-02-28: Event`);
+  const mw = parse(recurrence2);
   const first = nthEvent(mw, 0);
   // expect(first.recurrence!.til!.substring(0, 10)).toBe(`2025-02-28`);
 });
 
 test("until 3", () => {
-  const mw = parse(`2025-02-06 every day until 2025-02-28: Event`);
+  const mw = parse(recurrence2);
   const first = nthEvent(mw, 0);
   const expansion = expand(
     toDateRange(first.dateRangeIso),
@@ -91,7 +99,7 @@ test("until 3", () => {
 });
 
 test("until 4", () => {
-  const mw = parse("2025-04-07 every day until 2025-05-01: event");
+  const mw = parse(recurrence3);
   const first = nthEvent(mw, 0);
   const expansion = expand(
     toDateRange(first.dateRangeIso),
@@ -103,7 +111,7 @@ test("until 4", () => {
 });
 
 test("until 4", () => {
-  const mw = parse("2025-04-07 every day | 2025-05-01: event");
+  const mw = parse(recurrence4);
   const first = nthEvent(mw, 0);
   const expansion = expand(
     toDateRange(first.dateRangeIso),
@@ -115,7 +123,7 @@ test("until 4", () => {
 });
 
 test("until now", () => {
-  const mw = parse("2025-04-07 every day | now: event");
+  const mw = parse(recurrence5);
   const first = nthEvent(mw, 0);
   expect(DateTime.fromISO(first.recurrence!.until!).toISODate()).toBe(
     DateTime.now().toISODate()
@@ -123,7 +131,7 @@ test("until now", () => {
 });
 
 test("illogical until date is ignored", () => {
-  const mw = parse(`2025-02-06 every day until 2025-01-28: Event`);
+  const mw = parse(recurrence6);
   const first = nthEvent(mw, 0);
   const expansion = expand(
     toDateRange(first.dateRangeIso),
