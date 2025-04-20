@@ -85,13 +85,43 @@ export const recurrence9 = `Dec 19 every 12 week days for 9 times: event title`;
 export const recurrence10 = `2019-01-01 every 12 week days for 9 times: event title`;
 export const recurrence11 = `2019-01-01 / 2022-08-07 every 12 week days for 9 times: event title`;
 export const recurrence12 = `2019-01-01/2022-08-07 every 12 week days for 9 times: event title`;
-export const recurrence13 = `2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`
-export const recurrence14 = `2019-01-01/now every 4 months x50: event title`
-export const recurrence15 = `2019-01-01/now every other year: event title`
-export const recurrence16 = `2025-04-04 / now every day til 2025-12-12: `
-export const recurrence17 = `2025-04-04 every other week until 2025-12-12: `
-export const recurrence18 = `2025-04-04 every other day | now: `
-export const recurrence19 = `2019-01-01/now every other year: event title`
+export const recurrence13 = `2019-01-01 / 2022-08-07 every 3 days for 3 days: event title`;
+export const recurrence14 = `2019-01-01/now every 4 months x50: event title`;
+export const recurrence15 = `2019-01-01/now every other year: event title`;
+export const recurrence16 = `2025-04-04 / now every day til 2025-12-12: `;
+export const recurrence17 = `2025-04-04 every other week until 2025-12-12: `;
+export const recurrence18 = `2025-04-04 every other day | now: `;
+export const recurrence19 = `2019-01-01/now every other year: event title`;
 
-export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `
-export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `
+export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `;
+export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `;
+
+export const all = [
+  basic86,
+  basic78,
+  grievous324,
+  now10,
+  grievous256,
+  basic,
+  recurrence1,
+  recurrence2,
+  recurrence3,
+  recurrence4,
+  recurrence5,
+  recurrence6,
+  recurrence7,
+  recurrence8,
+  recurrence9,
+  recurrence10,
+  recurrence11,
+  recurrence12,
+  recurrence13,
+  recurrence14,
+  recurrence15,
+  recurrence16,
+  recurrence17,
+  recurrence18,
+  recurrence19,
+  eventText1,
+  eventText2,
+];
