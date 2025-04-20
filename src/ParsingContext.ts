@@ -52,7 +52,6 @@ export class ParsingContext {
   };
   foldableSections: Foldable[];
   ranges: Range[];
-  preferredInterpolationFormat: string | undefined;
   header: any;
   timezoneStack: Zone[];
   parseMessages: ParseMessage[] = [];

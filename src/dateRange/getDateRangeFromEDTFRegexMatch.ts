@@ -179,17 +179,44 @@ export function getDateRangeFromEDTFRegexMatch(
     canCacheRange = false;
 
     const relativeToEventId =
-      eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
+      eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex]?.substring(
+        1
+      );
 
     let relativeTo: DateTime | undefined;
     if (relativeToEventId) {
-      const event = get(context.events, context.ids[relativeToEventId]);
-      if (event && isEvent(event)) {
-        const range = toDateRange(event.dateRangeIso);
-        if (fromBeforeOrAfter === "after") {
-          relativeTo = range.toDateTime;
+      const relativeToPath = context.ids[relativeToEventId];
+      if (!relativeToPath) {
+        context.parseMessages.push({
+          type: "error",
+          message: `Event ${relativeToEventId} is not defined`,
+          pos: [
+            lengthAtIndex[i] + line.indexOf(relativeToEventId),
+            lengthAtIndex[i] +
+              line.indexOf(relativeToEventId) +
+              relativeToEventId.length,
+          ],
+        });
+      } else {
+        const event = get(context.events, relativeToPath);
+        if (event && isEvent(event)) {
+          const range = toDateRange(event.dateRangeIso);
+          if (fromBeforeOrAfter === "after") {
+            relativeTo = range.toDateTime;
+          } else {
+            relativeTo = range.fromDateTime;
+          }
         } else {
-          relativeTo = range.fromDateTime;
+          context.parseMessages.push({
+            type: "error",
+            message: `Event ${relativeToEventId} not found`,
+            pos: [
+              lengthAtIndex[i] + line.indexOf(relativeToEventId),
+              lengthAtIndex[i] +
+                line.indexOf(relativeToEventId) +
+                relativeToEventId.length,
+            ],
+          });
         }
       }
     }

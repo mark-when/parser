@@ -177,7 +177,7 @@ export class DateRangePart implements DateRange {
   originalString?: string;
   eventText: string;
   dateRangeInText: Range;
-  definition: Range
+  definition: Range;
   recurrence?: Recurrence;
   recurrenceRangeInText?: Range;
 
@@ -205,7 +205,7 @@ export class DateRangePart implements DateRange {
     this.eventText = eventText;
     this.recurrence = recurrence?.recurrence;
     this.recurrenceRangeInText = recurrence?.range;
-    this.definition = definition
+    this.definition = definition;
   }
 }
 
@@ -307,7 +307,7 @@ export class EventDescription {
       });
       line = line.replace(EVENT_ID_REGEX, (match, id) => {
         if (!this.id) {
-          this.id = id;
+          this.id = (id as string).substring(1);
           return "";
         }
         return id;
@@ -370,7 +370,7 @@ export enum RangeType {
   PropertyKeyColon = "propertyKeyColon",
   PropertyValue = "propertyValue",
   EventDefinition = "eventDefinition",
-  SectionDefinition = "sectionDefinition"
+  SectionDefinition = "sectionDefinition",
 }
 
 export type Range = {
@@ -431,7 +431,7 @@ export class Event {
     definition: Range;
     recurrence?: Range;
   };
-  properties: any[];
+  properties: [string, any][];
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
   tags: string[];
@@ -443,7 +443,7 @@ export class Event {
 
   constructor(
     firstLine: string,
-    properties: any[],
+    properties: [string, any][],
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
@@ -468,7 +468,10 @@ export class Event {
     this.tags = eventDescription.tags;
     this.supplemental = eventDescription.supplemental;
     this.matchedListItems = eventDescription.matchedListItems;
-    this.id = eventDescription.id;
+    this.id =
+      properties.find(
+        ([key, value]) => key === "id" && typeof value === "string"
+      )?.[1] || eventDescription.id;
     this.percent = eventDescription.percent;
     this.completed = eventDescription.completed;
   }
@@ -505,13 +508,6 @@ export type ParseResult = Timeline & {
     version: string;
   };
 };
-
-export interface TimelineMetadata {
-  earliestTime?: DateTimeIso;
-  latestTime?: DateTimeIso;
-  maxDurationDays: number;
-  preferredInterpolationFormat: string | undefined;
-}
 
 export type GroupStyle = "section" | "group";
 

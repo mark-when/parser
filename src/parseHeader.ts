@@ -141,7 +141,7 @@ export function parseProperties(
     }
   }
 
-  let properties: any[] = [];
+  let properties: [string, any][] = [];
   if (propertyLines.length) {
     try {
       const map = YAML.parse(propertyLines.join("\n"), {
@@ -196,8 +196,8 @@ export function parseProperties(
   };
 }
 
-function mapToArrays(map: Map<any, any>): any[] {
-  let arr: any[] = [];
+function mapToArrays(map: Map<any, any>) {
+  let arr: [string, any][] = [];
   map.forEach((value, key) => {
     if (value instanceof Map) {
       arr.push([key, mapToArrays(value)]);
