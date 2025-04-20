@@ -76,6 +76,7 @@ export function getDateRangeFromBCEDateRegexMatch(
         type: RangeType.EventDefinition,
         to: colon.to,
       },
+      isRelative: false,
     });
   }
 
@@ -137,6 +138,7 @@ export function getDateRangeFromBCEDateRegexMatch(
       type: RangeType.EventDefinition,
       to: colon.to,
     },
+    isRelative: false,
   });
 
   if (canCacheRange) {

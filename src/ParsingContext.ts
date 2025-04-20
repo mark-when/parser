@@ -11,6 +11,7 @@ import {
   get,
   isEvent,
   Event,
+  toDateRange,
 } from "./Types.js";
 import { parseZone } from "./zones/parseZone.js";
 import { Caches } from "./Cache.js";
@@ -57,7 +58,10 @@ export class ParsingContext {
   parseMessages: ParseMessage[] = [];
   documentMessages: DocumentMessage[] = [];
 
-  constructor(now?: DateTime | string) {
+  constructor(
+    now?: DateTime | string,
+    getPriorEvent?: (c: ParsingContext) => Event | undefined
+  ) {
     this.events = new EventGroup();
     this.ids = {};
     this.paletteIndex = 0;
@@ -82,6 +86,10 @@ export class ParsingContext {
       this.now = DateTime.now();
     } else {
       this.now = now;
+    }
+
+    if (getPriorEvent) {
+      this.priorEvent = () => getPriorEvent(this);
     }
   }
 
@@ -203,5 +211,25 @@ export class ParsingContext {
       ),
       documentMessages: this.documentMessages,
     };
+  }
+
+  priorEvent() {
+    return this.tail;
+  }
+
+  priorEventToDateTime() {
+    const prior = this.priorEvent();
+    if (!prior) {
+      return;
+    }
+    return toDateRange(prior.dateRangeIso).toDateTime;
+  }
+
+  priorEventFromDateTime() {
+    const prior = this.priorEvent();
+    if (!prior) {
+      return;
+    }
+    return toDateRange(prior.dateRangeIso).fromDateTime;
   }
 }

@@ -43,7 +43,7 @@ import {
   get,
   isEvent,
 } from "../Types.js";
-import { getPriorEvent, getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
+import { getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
 
 export function getDateRangeFromEDTFRegexMatch(
@@ -131,6 +131,7 @@ export function getDateRangeFromEDTFRegexMatch(
       dateRangeInText,
       eventText: eventStartLineRegexMatch[edtfEventTextMatchIndex],
       recurrence,
+      isRelative: false,
       definition: {
         ...dateRangeInText,
         type: RangeType.EventDefinition,
@@ -145,6 +146,7 @@ export function getDateRangeFromEDTFRegexMatch(
   let granularity: DateTimeGranularity = "instant";
 
   let canCacheRange = true;
+  let isRelative = false;
 
   if (edtfFrom) {
     if (edtfFromHasTime) {
@@ -177,6 +179,7 @@ export function getDateRangeFromEDTFRegexMatch(
   } else if (relativeFromDate) {
     // Dependent on other event
     canCacheRange = false;
+    isRelative = true;
 
     const relativeToEventId =
       eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex]?.substring(
@@ -222,7 +225,7 @@ export function getDateRangeFromEDTFRegexMatch(
     }
 
     if (!relativeTo) {
-      const priorEvent = getPriorEvent(context);
+      const priorEvent = context.priorEvent();
       if (!priorEvent) {
         relativeTo = context.zonedNow;
       } else {
@@ -280,6 +283,7 @@ export function getDateRangeFromEDTFRegexMatch(
     if (relativeToDate) {
       // Dependent on other event
       canCacheRange = false;
+      isRelative = true;
 
       const relativeToEventId =
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
@@ -369,6 +373,7 @@ export function getDateRangeFromEDTFRegexMatch(
     dateRangeInText,
     eventText: eventStartLineRegexMatch[edtfEventTextMatchIndex],
     recurrence,
+    isRelative,
     definition: {
       ...dateRangeInText,
       type: RangeType.EventDefinition,

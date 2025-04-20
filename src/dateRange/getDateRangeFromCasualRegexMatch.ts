@@ -68,8 +68,6 @@ import {
   getTimeFromSlashDateFrom,
   getTimeFromRegExpMatch,
   getTimeFromSlashDateTo,
-  getPriorEventToDateTime,
-  getPriorEvent,
   parseSlashDate,
   roundDateUp,
   getTimeFromCasualMonthFrom,
@@ -132,6 +130,7 @@ export function getDateRangeFromCasualRegexMatch(
         type: RangeType.EventDefinition,
         to: colon.to,
       },
+      isRelative: false,
     });
     return dateRange;
   }
@@ -198,10 +197,12 @@ export function getDateRangeFromCasualRegexMatch(
   let endDateTime: DateTime | undefined;
   let granularity: DateTimeGranularity = "instant";
   let canCacheRange = true;
+  let isRelative = false;
 
   if (relativeFromDate) {
     // Dependent on other events
     canCacheRange = false;
+    isRelative = true;
 
     const relativeToEventId =
       eventStartLineRegexMatch[from_relativeEventIdMatchIndex]?.substring(1);
@@ -245,7 +246,7 @@ export function getDateRangeFromCasualRegexMatch(
     }
 
     if (!relativeTo) {
-      const priorEvent = getPriorEvent(context);
+      const priorEvent = context.priorEvent();
       if (!priorEvent) {
         relativeTo = context.zonedNow;
       } else {
@@ -324,14 +325,16 @@ export function getDateRangeFromCasualRegexMatch(
         granularity = parsed.granularity;
       }
     } else {
-      console.error(
-        "Was supposed to have slash date but couldn't parse it.",
-        slashDateFrom
-      );
+      context.parseMessages.push({
+        type: "error",
+        message: "Was supposed to have a slash date but couldn't parse it",
+        pos: [dateRangeInText.from, dateRangeInText.to],
+      });
     }
   } else if (timeOnlyFrom) {
     // Dependent on previous event
     canCacheRange = false;
+    isRelative = true;
 
     const timeFrom = getTimeFromRegExpMatch(
       eventStartLineRegexMatch,
@@ -341,7 +344,7 @@ export function getDateRangeFromCasualRegexMatch(
       from_timeOnly24HourHourMatchIndex,
       from_timeOnly24HourMinuteMatchIndex
     );
-    const priorEventDate = getPriorEventToDateTime(context) || context.zonedNow;
+    const priorEventDate = context.priorEventToDateTime() || context.zonedNow;
     const timeFromIso = DateTime.fromISO(timeFrom.dateTimeIso, {
       setZone: true,
       zone: context.timezone,
@@ -377,6 +380,7 @@ export function getDateRangeFromCasualRegexMatch(
   if (!endDateTime) {
     if (relativeToDate) {
       canCacheRange = false;
+      isRelative = true;
 
       const relativeToEventId =
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
@@ -447,7 +451,11 @@ export function getDateRangeFromCasualRegexMatch(
           });
         }
       } else {
-        console.error("Was supposed to have slash date but couldn't parse it.");
+        context.parseMessages.push({
+          type: "error",
+          message: "Was supposed to have a slash date but couldn't parse it",
+          pos: [dateRangeInText.from, dateRangeInText.to],
+        });
       }
     } else if (timeOnlyTo) {
       const timeTo = getTimeFromRegExpMatch(
@@ -521,6 +529,7 @@ export function getDateRangeFromCasualRegexMatch(
     dateRangeInText,
     eventText: eventStartLineRegexMatch[eventTextMatchIndex],
     recurrence,
+    isRelative,
     definition: {
       ...dateRangeInText,
       type: RangeType.EventDefinition,

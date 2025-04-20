@@ -1,9 +1,12 @@
 import { ChangeSet, Text } from "@codemirror/state";
 import { DateTime } from "luxon";
 import {
+  Event,
   EventGroup,
   Eventy,
   get,
+  getLast,
+  isEvent,
   isGroup,
   iter,
   iterateTreeFromPath,
@@ -165,7 +168,9 @@ function graft({
   path: Path;
   eventyIterator: EventyIterator;
   previousText: Text;
-  context: () => ParsingContext;
+  context: (
+    getPriorEvent: (c: ParsingContext) => Event | undefined
+  ) => ParsingContext;
   previousParse: ParseResult;
 }) {
   const { events: root, cache } = previousParse;
@@ -182,8 +187,10 @@ function graft({
     }
   };
 
+  let lastUnaffected = { eventy, path };
   let prior = { eventy, path };
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
+    lastUnaffected = prior;
     prior = { eventy, path };
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
@@ -197,6 +204,8 @@ function graft({
   // so we need to assume the prior event will be affected as well
   if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
     affected.push(prior);
+  } else {
+    lastUnaffected = prior;
   }
 
   // Now accumulate all the affected eventies
@@ -226,9 +235,23 @@ function graft({
       _change,
       affectedEventies
     );
+
+    const getPriorEvent = (_c: ParsingContext) => {
+      if (_c.tail) {
+        return _c.tail;
+      }
+      const { eventy: last } = lastUnaffected;
+      if (last) {
+        if (isEvent(last)) {
+          return last;
+        }
+        throw new Error("Last unaffected eventy to relate to is not an event");
+      }
+    };
+
     const c = parsePastHeader(
       from,
-      context(),
+      context(getPriorEvent),
       Array(from).concat(lines),
       Array(from).concat(lengths),
       cache
@@ -452,8 +475,8 @@ function mapParseThroughChanges(
     throw new Error("Nothing to graft");
   }
 
-  const context = () => {
-    const _context = new ParsingContext(now);
+  const context = (getPriorEvent: (c: ParsingContext) => Event | undefined) => {
+    const _context = new ParsingContext(now, getPriorEvent);
     _context.header = parse.header;
     if (typeof _context.header.timezone !== "undefined") {
       const tz = parseZone(_context.header.timezone, parse.cache);

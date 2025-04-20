@@ -179,6 +179,7 @@ export class DateRangePart implements DateRange {
   dateRangeInText: Range;
   definition: Range;
   recurrence?: Recurrence;
+  isRelative: boolean;
   recurrenceRangeInText?: Range;
 
   constructor({
@@ -188,6 +189,7 @@ export class DateRangePart implements DateRange {
     dateRangeInText,
     eventText,
     definition,
+    isRelative,
     recurrence,
   }: {
     from: DateTime;
@@ -196,6 +198,7 @@ export class DateRangePart implements DateRange {
     dateRangeInText: Range;
     eventText: string;
     definition: Range;
+    isRelative: boolean;
     recurrence?: RecurrenceInText;
   }) {
     this.fromDateTime = from;
@@ -206,6 +209,7 @@ export class DateRangePart implements DateRange {
     this.recurrence = recurrence?.recurrence;
     this.recurrenceRangeInText = recurrence?.range;
     this.definition = definition;
+    this.isRelative = isRelative;
   }
 }
 
@@ -437,6 +441,7 @@ export class Event {
   tags: string[];
   supplemental: MarkdownBlock[];
   matchedListItems: Range[];
+  isRelative: boolean;
   id?: string;
   percent?: number;
   completed?: boolean;
@@ -474,6 +479,7 @@ export class Event {
       )?.[1] || eventDescription.id;
     this.percent = eventDescription.percent;
     this.completed = eventDescription.completed;
+    this.isRelative = dateRange.isRelative;
   }
 }
 

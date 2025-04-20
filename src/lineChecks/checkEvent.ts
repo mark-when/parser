@@ -161,16 +161,11 @@ export function checkEvent(
   );
 
   // See if we need to adjust things based on our timezone
-  const headerTagDef =
-    eventDescription.tags.length &&
-    context.header[
-      `)${eventDescription.tags[eventDescription.tags.length - 1]}`
-    ];
-  if (
-    typeof headerTagDef === "object" &&
-    typeof headerTagDef.timezone !== "undefined"
-  ) {
-    const zone = parseZone(headerTagDef.timezone, cache);
+  const timezoneProperty = properties.find(([k, v]) => {
+    return (k === "tz" || k === "timezone") && typeof v !== "object" && !!!v;
+  });
+  if (timezoneProperty) {
+    const zone = parseZone(timezoneProperty[1], cache);
     if (zone) {
       dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
         keepLocalTime: true,
@@ -178,6 +173,32 @@ export function checkEvent(
       dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
         keepLocalTime: true,
       });
+    } else {
+      context.parseMessages.push({
+        type: "error",
+        message: "Unable to parse timezone",
+        pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+      });
+    }
+  } else {
+    const headerTagDef =
+      eventDescription.tags.length &&
+      context.header[
+        `)${eventDescription.tags[eventDescription.tags.length - 1]}`
+      ];
+    if (
+      typeof headerTagDef === "object" &&
+      typeof headerTagDef.timezone !== "undefined"
+    ) {
+      const zone = parseZone(headerTagDef.timezone, cache);
+      if (zone) {
+        dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
+          keepLocalTime: true,
+        });
+        dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
+          keepLocalTime: true,
+        });
+      }
     }
   }
 

@@ -309,28 +309,6 @@ export function parseGroupFromStartTag(
   return group;
 }
 
-export function getPriorEvent(context: ParsingContext): Event | undefined {
-  return context.tail;
-}
-
-export function getPriorEventToDateTime(
-  context: ParsingContext
-): DateTime | undefined {
-  const priorEvent = getPriorEvent(context);
-  if (!priorEvent) {
-    return;
-  }
-  return toDateRange(priorEvent.dateRangeIso).toDateTime;
-}
-
-export function getPriorEventFromDateTime(context: ParsingContext) {
-  const priorEvent = getPriorEvent(context);
-  if (!priorEvent) {
-    return;
-  }
-  return toDateRange(priorEvent.dateRangeIso).fromDateTime;
-}
-
 export function parseSlashDate(
   s: string,
   fullFormat: string,
