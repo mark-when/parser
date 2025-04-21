@@ -105,7 +105,12 @@ function getCommonAncestor(arrays: Path[]): Path {
   return prefix;
 }
 
-function linesAndLengths(newText: Text, change: ChangeSet, affected: Eventy[]) {
+function linesAndLengths(
+  newText: Text,
+  change: ChangeSet,
+  affected: Eventy[],
+  preChange: boolean = true
+) {
   let min = -1,
     max = -1;
   for (let i = 0; i < affected.length; i++) {
@@ -118,17 +123,19 @@ function linesAndLengths(newText: Text, change: ChangeSet, affected: Eventy[]) {
     }
   }
 
-  let newFrom = change.mapPos(min);
-  let newTo = change.mapPos(max);
+  let newFrom = preChange ? change.mapPos(min) : min;
+  let newTo = preChange ? change.mapPos(max) : max;
 
-  change.iterChangedRanges((fromA, toA, fromB, toB) => {
-    if (fromB < newFrom) {
-      newFrom = fromB;
-    }
-    if (toB > newTo) {
-      newTo = toB;
-    }
-  });
+  if (preChange) {
+    change.iterChangedRanges((fromA, toA, fromB, toB) => {
+      if (fromB < newFrom) {
+        newFrom = fromB;
+      }
+      if (toB > newTo) {
+        newTo = toB;
+      }
+    });
+  }
 
   const lineFrom = newText.lineAt(newFrom);
   const lineTo = newText.lineAt(newTo - 1);
@@ -335,6 +342,27 @@ function graft({
     c.events.children
   );
 
+  let lastToBeRelativeTo: Event;
+  const relativeContext = new ParsingContext(now, (_c) => {
+    if (_c.tail) {
+      return _c.tail;
+    }
+    if (lastToBeRelativeTo) {
+      if (isEvent(lastToBeRelativeTo)) {
+        return lastToBeRelativeTo;
+      }
+      throw new Error("Last unaffected eventy to relate to is not an event");
+    }
+  });
+  relativeContext.header = previousParse.header;
+  if (typeof relativeContext.header.timezone !== "undefined") {
+    const tz = parseZone(relativeContext.header.timezone, previousParse.cache);
+    if (tz) {
+      relativeContext.timezoneStack = [tz];
+    }
+  }
+  relativeContext.ids = previousParse.ids;
+
   outer: for (const { eventy, path } of iterateTreeFromPath(
     root,
     affected.at(-1)!.path
@@ -343,6 +371,9 @@ function graft({
       if (!newEventy.textRanges) {
         // The root doesn't have text ranges... it probably should though??
         continue;
+      }
+      if (isEvent(newEventy)) {
+        lastToBeRelativeTo = newEventy;
       }
       if (
         newEventy.textRanges.whole.from === eventy.textRanges.whole.from &&
@@ -361,7 +392,25 @@ function graft({
         eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
       }
       if (eventy.isRelative) {
-        
+        const { from, lines, lengths } = linesAndLengths(
+          newText,
+          _change,
+          [eventy],
+          false
+        );
+
+        const c = parsePastHeader(
+          from,
+          relativeContext,
+          Array(from).concat(lines),
+          Array(from).concat(lengths),
+          cache
+        );
+        if (c.events.children.length !== 1) {
+          throw new Error("Tried to update relative event and failed");
+        } else {
+          splice(root, [path], c.events.children);
+        }
       }
     }
   }
