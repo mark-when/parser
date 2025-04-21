@@ -5,7 +5,6 @@ import {
   EventGroup,
   Eventy,
   get,
-  getLast,
   isEvent,
   isGroup,
   iter,
@@ -160,7 +159,7 @@ function graft({
   path,
   eventyIterator,
   previousText,
-  context,
+  now,
 }: {
   changedRange: ChangedRange;
   done: boolean | undefined;
@@ -168,10 +167,8 @@ function graft({
   path: Path;
   eventyIterator: EventyIterator;
   previousText: Text;
-  context: (
-    getPriorEvent: (c: ParsingContext) => Event | undefined
-  ) => ParsingContext;
   previousParse: ParseResult;
+  now?: DateTime | string;
 }) {
   const { events: root, cache } = previousParse;
   const { fromA, toA, fromB, inserted } = changedRange;
@@ -229,29 +226,44 @@ function graft({
     previousText.length
   );
   const newText = previousText.replace(fromB, fromB + (toA - fromA), inserted);
-  const withAffected = (affectedEventies: Eventy[]) => {
+
+  const withAffected = (
+    affectedEventies: Eventy[],
+    lastUnaffected: Eventy | undefined
+  ) => {
     const { from, lines, lengths } = linesAndLengths(
       newText,
       _change,
       affectedEventies
     );
 
-    const getPriorEvent = (_c: ParsingContext) => {
-      if (_c.tail) {
-        return _c.tail;
-      }
-      const { eventy: last } = lastUnaffected;
-      if (last) {
-        if (isEvent(last)) {
-          return last;
+    const context = () => {
+      const _context = new ParsingContext(now, (_c: ParsingContext) => {
+        if (_c.tail) {
+          return _c.tail;
         }
-        throw new Error("Last unaffected eventy to relate to is not an event");
+        if (lastUnaffected) {
+          if (isEvent(lastUnaffected)) {
+            return lastUnaffected;
+          }
+          throw new Error(
+            "Last unaffected eventy to relate to is not an event"
+          );
+        }
+      });
+      _context.header = previousParse.header;
+      if (typeof _context.header.timezone !== "undefined") {
+        const tz = parseZone(_context.header.timezone, previousParse.cache);
+        if (tz) {
+          _context.timezoneStack = [tz];
+        }
       }
+      return _context;
     };
 
     const c = parsePastHeader(
       from,
-      context(getPriorEvent),
+      context(),
       Array(from).concat(lines),
       Array(from).concat(lengths),
       cache
@@ -272,7 +284,10 @@ function graft({
           path: commonAncestor,
           eventy: ancestor,
         });
-        return withAffected(affected.map(({ eventy }) => eventy));
+        return withAffected(
+          affected.map(({ eventy }) => eventy),
+          lastUnaffected.eventy
+        );
       }
     }
   };
@@ -285,7 +300,10 @@ function graft({
       }
     | undefined;
   if (areSiblings(affected.map(({ path }) => path))) {
-    result = withAffected(affected.map(({ eventy }) => eventy));
+    result = withAffected(
+      affected.map(({ eventy }) => eventy),
+      lastUnaffected.eventy
+    );
     if (!result.context.events.children.length) {
       result = withCommonAncestor();
     }
@@ -311,7 +329,28 @@ function graft({
     };
   };
 
-  for (const { eventy } of iterateTreeFromPath(root, affected.at(-1)!.path)) {
+  splice(
+    root,
+    affected.map(({ path }) => path),
+    c.events.children
+  );
+
+  outer: for (const { eventy, path } of iterateTreeFromPath(
+    root,
+    affected.at(-1)!.path
+  )) {
+    for (const { eventy: newEventy } of iter(c.events)) {
+      if (!newEventy.textRanges) {
+        // The root doesn't have text ranges... it probably should though??
+        continue;
+      }
+      if (
+        newEventy.textRanges.whole.from === eventy.textRanges.whole.from &&
+        newEventy.textRanges.whole.to === eventy.textRanges.whole.to
+      ) {
+        continue outer;
+      }
+    }
     if (isGroup(eventy)) {
       eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
     } else {
@@ -321,14 +360,11 @@ function graft({
       if (eventy.textRanges.recurrence) {
         eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
       }
+      if (eventy.isRelative) {
+        
+      }
     }
   }
-
-  splice(
-    root,
-    affected.map(({ path }) => path),
-    c.events.children
-  );
 
   mapRanges(
     previousParse,
@@ -475,18 +511,6 @@ function mapParseThroughChanges(
     throw new Error("Nothing to graft");
   }
 
-  const context = (getPriorEvent: (c: ParsingContext) => Event | undefined) => {
-    const _context = new ParsingContext(now, getPriorEvent);
-    _context.header = parse.header;
-    if (typeof _context.header.timezone !== "undefined") {
-      const tz = parseZone(_context.header.timezone, parse.cache);
-      if (tz) {
-        _context.timezoneStack = [tz];
-      }
-    }
-    return _context;
-  };
-
   const changesArray = asArray(changes);
   if (changesArray.length > 1) {
     throw new Error(
@@ -498,7 +522,7 @@ function mapParseThroughChanges(
     graft({
       changedRange: changesArray[i],
       previousParse: parse,
-      context,
+      now,
       done,
       eventy,
       eventyIterator,
@@ -542,6 +566,7 @@ export function incrementalParse(
   try {
     return mapParseThroughChanges(_previousParse, changes, text(), now);
   } catch (e) {
+    console.log(e);
     throw e;
   }
 }
