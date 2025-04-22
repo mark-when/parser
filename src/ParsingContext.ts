@@ -161,10 +161,7 @@ export class ParsingContext {
     return path;
   }
 
-  endCurrentGroup(
-    to: number,
-    lineTo: { line: number; index: number },
-  ) {
+  endCurrentGroup(to: number, lineTo: { line: number; index: number }) {
     this.currentPath.pop();
     // Assign text range
     const group = get(this.events, this.currentPath);
@@ -201,6 +198,7 @@ export class ParsingContext {
 
   parentZone(): Zone {
     const p = [...this.currentPath];
+    p.pop()
     while (p.length) {
       const parent = get(this.events, p);
       const zone = timezoneFromProperties(parent?.properties ?? [], this.cache);
@@ -209,16 +207,10 @@ export class ParsingContext {
       }
       p.pop();
     }
-    try {
-      if (
-        typeof this.header.timezone !== "undefined" ||
-        typeof this.header.tz !== "undefined"
-      ) {
-        return parseZone(this.header.timezone ?? this.header.tz, this.cache);
-      }
-    } finally {
-      return SystemZone.instance;
-    }
+    return (
+      parseZone(this.header.timezone ?? this.header.tz, this.cache) ??
+      SystemZone.instance
+    );
   }
 
   priorEventToDateTime() {
@@ -244,7 +236,10 @@ export function timezoneFromProperties(
 ) {
   if (Array.isArray(properties)) {
     const timezoneProperty = properties.find(([k, v]) => {
-      return (k === "tz" || k === "timezone") && typeof v !== "object" && !!v;
+      return (
+        (k === "tz" || k === "timezone") &&
+        (typeof v === "string" || typeof v === "number")
+      );
     });
     if (timezoneProperty) {
       return parseZone(timezoneProperty[1], cache);

@@ -156,7 +156,10 @@ export function checkEvent(
 
   // See if we need to adjust things based on our timezone
   const timezoneProperty = properties.find(([k, v]) => {
-    return (k === "tz" || k === "timezone") && typeof v !== "object" && !!v;
+    return (
+      (k === "tz" || k === "timezone") &&
+      (typeof v === "string" || typeof v === "number")
+    );
   });
   if (timezoneProperty) {
     const zone = parseZone(timezoneProperty[1], context.cache);

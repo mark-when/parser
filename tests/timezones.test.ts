@@ -15,10 +15,10 @@ describe("timezones", () => {
     ).toBe(9 + 4);
   });
 
-  test.only("timezone by group property", () => {
+  test("timezone by group property", () => {
     const mw = parse(eventsWithTz);
     const la = nthEvent(mw, 2);
 
-    expect(toDateRange(la.dateRangeIso).fromDateTime.zone.name).toBe("");
+    expect(toDateRange(la.dateRangeIso).fromDateTime.zone.name).toBe("UTC+6");
   });
 });

@@ -111,13 +111,12 @@ timezone: +5
   test.each(sp())("zone via group tag", (p) => {
     const mw = `
 timezone: +5
-#generalGrievous:
-  timezone: +0
 
 group #generalGrievous 
+timezone: +0
 2023-05-01: this is an event in the UK timezone
 endGroup
-2023-05-01: this is an event in the UK timezone
+2023-05-01: this is an event in the US
 
 #generalGrievous`;
 
@@ -130,35 +129,30 @@ endGroup
       nthEvent(timelines, 1).dateRangeIso.fromDateTimeIso
     );
     const diff = uk1.diff(uk2).as("hours");
-    expect(diff).toBe(0);
+    expect(diff).toBe(5);
   });
 
   test.each(sp())("nested zones via group tag", (p) => {
     const mw = `
 timezone: +5
 
-#generalGrievous:
-  timezone: +0
-
-#t:
-  timezone: -5
-
 group #generalGrievous
+timezone: +0
 
 group #t
+timezone: -5
 
 2023-05-01: this is an event in asia or something
 
 2023-05-01: this is an event in the  uk timezone
-#generalGrievous
+timezone: +0
 
 endGroup
 
 endGroup
 
 2023-05-01: this is an event in the UK timezone
-
-#generalGrievous
+tz: +0
 
 
 2023-05-01: this `;

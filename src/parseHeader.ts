@@ -326,30 +326,28 @@ export function parseHeader(
       parsedHeader.edit = stringEmailListToArray(parsedHeader.edit);
     }
 
-    try {
-      if (
-        typeof parsedHeader.timezone !== "undefined" ||
-        typeof parsedHeader.tz !== "undefined"
-      ) {
-        parseZone(parsedHeader.timezone ?? parsedHeader.tz, context.cache);
-      }
-    } catch (e) {
-      for (let i = headerStartLineIndex; i < lines.length; i++) {
-        const timezoneDefs = ["timezone:", "tz:"];
-        for (let j = 0; j < timezoneDefs.length; j++) {
-          const timezoneDef = timezoneDefs[j];
-          if (lines[i].startsWith(timezoneDef)) {
-            const specifiedTimezone = lines[i]
-              .substring(timezoneDef.length)
-              .trim();
-            const start =
-              lengthAtIndex[i] + lines[i].indexOf(specifiedTimezone);
-            const end = start + specifiedTimezone.length;
-            context.parseMessages.push({
-              type: "error",
-              pos: [start, end],
-              message: `Invalid timezone "${specifiedTimezone}"`,
-            });
+    if (
+      typeof parsedHeader.timezone !== "undefined" ||
+      typeof parsedHeader.tz !== "undefined"
+    ) {
+      if (!parseZone(parsedHeader.timezone ?? parsedHeader.tz, context.cache)) {
+        for (let i = headerStartLineIndex; i < lines.length; i++) {
+          const timezoneDefs = ["timezone:", "tz:"];
+          for (let j = 0; j < timezoneDefs.length; j++) {
+            const timezoneDef = timezoneDefs[j];
+            if (lines[i].startsWith(timezoneDef)) {
+              const specifiedTimezone = lines[i]
+                .substring(timezoneDef.length)
+                .trim();
+              const start =
+                lengthAtIndex[i] + lines[i].indexOf(specifiedTimezone);
+              const end = start + specifiedTimezone.length;
+              context.parseMessages.push({
+                type: "error",
+                pos: [start, end],
+                message: `Invalid timezone "${specifiedTimezone}"`,
+              });
+            }
           }
         }
       }

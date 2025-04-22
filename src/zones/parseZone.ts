@@ -27,5 +27,4 @@ export function parseZone(zoneString: string, cache?: Caches) {
       }
     }
   }
-  throw new Error("Cannot parse timezone");
 }

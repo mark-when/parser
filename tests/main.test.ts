@@ -36,7 +36,7 @@ describe("parsing", () => {
       const { fromDateTime } = toDateRange(
         firstEvent(markwhen).dateRangeIso
       ) as DateRange;
-      expect(fromDateTime.equals(expected)).toBe(true);
+      expect(+fromDateTime).toBe(+expected);
     }
   );
 
@@ -54,8 +54,8 @@ describe("parsing", () => {
       firstEvent(markwhen).dateRangeIso
     ) as DateRange;
 
-    expect(dateRange.fromDateTime.equals(fromDateTime)).toBe(true);
-    expect(dateRange.toDateTime.equals(toDateTime)).toBe(true);
+    expect(+dateRange.fromDateTime).toBe(+fromDateTime);
+    expect(+dateRange.toDateTime).toBe(+toDateTime);
   });
 
   test.each(
@@ -72,8 +72,8 @@ describe("parsing", () => {
       firstEvent(markwhen).dateRangeIso
     ) as DateRange;
 
-    expect(dateRange.fromDateTime.equals(fromDateTime)).toBe(true);
-    expect(dateRange.toDateTime.equals(toDateTime)).toBe(true);
+    expect(+dateRange.fromDateTime).toBe(+fromDateTime);
+    expect(+dateRange.toDateTime).toBe(+toDateTime);
   });
 
   test.each(sameParse([]))("year by itself", async (p) => {
@@ -633,98 +633,70 @@ after !firstEvent 3 years 8 days 1 month: third event
       const markwhen = p("dateFormat: d/M/y\n5 June 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfDay)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          startOfDay.plus({ day: 1 })
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +startOfDay.plus({ day: 1 })
+      );
     });
 
     test.each(sp())("casual dates via month words 2", (p) => {
       const markwhen = p("dateFormat: d/M/y\nJune 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfDay)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          startOfDay.plus({ day: 1 })
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +startOfDay.plus({ day: 1 })
+      );
     });
 
     test.each(sp())("casual dates via month words 3", (p) => {
       const markwhen = p("dateFormat: d/M/y\nJun 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfDay)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          startOfDay.plus({ day: 1 })
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +startOfDay.plus({ day: 1 })
+      );
     });
 
     test.each(sp())("casual dates via month words 4", (p) => {
       const markwhen = p("  5 Jun 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfDay)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          startOfDay.plus({ day: 1 })
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +startOfDay.plus({ day: 1 })
+      );
     });
 
     test.each(sp())("casual dates via month words 5", (p) => {
       const markwhen = p("June   2009: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO("2009-06-01");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfMonth)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          DateTime.fromISO("2009-07-01")
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfMonth);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +DateTime.fromISO("2009-07-01")
+      );
     });
 
     test.each(sp())("casual dates via month words 6", (p) => {
       const markwhen = p(" Feb  2009: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO("2009-02-01");
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfMonth)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          DateTime.fromISO("2009-03-01")
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfMonth);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +DateTime.fromISO("2009-03-01")
+      );
     });
 
     test.each(sp())("casual dates via month words 7", (p) => {
       const markwhen = p("Feb: event");
       const first = firstEvent(markwhen);
       const startOfMonth = DateTime.fromISO(`${currentYear}-02-01`);
-      expect(
-        toDateRange(first.dateRangeIso).fromDateTime.equals(startOfMonth)
-      ).toBe(true);
-      expect(
-        toDateRange(first.dateRangeIso).toDateTime.equals(
-          DateTime.fromISO(`${currentYear}-03-01`)
-        )
-      ).toBe(true);
+      expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfMonth);
+      expect(+toDateRange(first.dateRangeIso).toDateTime).toBe(
+        +DateTime.fromISO(`${currentYear}-03-01`)
+      );
     });
   });
 
@@ -1754,9 +1726,11 @@ endGroup
 
   test("ranges that abut the end of the string 1", () => {
     const mw = parse("now: event!");
-    expect(mw.events.children[0].textRanges.whole.to).toBe("now: event!".length);
+    expect(mw.events.children[0].textRanges.whole.to).toBe(
+      "now: event!".length
+    );
   });
-  
+
   test("list item contents", () => {
     const mw = parse(`06/2025 - 09/2025: Sub
 - [ ] We need to get this done

@@ -395,8 +395,8 @@ export const toDateRangeIso = (dr: DateRange) => ({
 });
 
 export const toDateRange = (dr: DateRangeIso) => ({
-  fromDateTime: DateTime.fromISO(dr.fromDateTimeIso),
-  toDateTime: DateTime.fromISO(dr.toDateTimeIso),
+  fromDateTime: DateTime.fromISO(dr.fromDateTimeIso, { setZone: true }),
+  toDateTime: DateTime.fromISO(dr.toDateTimeIso, { setZone: true }),
 });
 
 export type Eventy = Event | EventGroup;

@@ -107,7 +107,7 @@ export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `;
 
 export const eventsWithTz = `
 group West Coast
-tz: -6
+tz: +6
 
 2025-09-14: Date
 tz: America/New_York
