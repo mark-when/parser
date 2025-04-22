@@ -26,17 +26,14 @@ import {
 } from "../regex.js";
 import {
   GranularDateTime,
-  Event,
   Range,
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
-  toDateRange,
   DateTimeIso,
   DateTimeGranularity,
   EventGroup,
   RangeType,
 } from "../Types.js";
-import { Caches } from "../Cache.js";
 
 export function getTimeFromRegExpMatch(
   eventStartMatches: RegExpMatchArray,
@@ -312,11 +309,10 @@ export function parseGroupFromStartTag(
 export function parseSlashDate(
   s: string,
   fullFormat: string,
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): GranularDateTime | undefined {
   const cacheKey = JSON.stringify({ s, fullFormat });
-  const cached = cache?.zone(context.timezone).slashDate.get(cacheKey);
+  const cached = context.cache?.zone(context.timezone).slashDate.get(cacheKey);
   if (cached) {
     return cached;
   }
@@ -337,7 +333,7 @@ export function parseSlashDate(
         dateTimeIso: dateTime.toISO(),
         granularity: f[1],
       };
-      cache?.zone(context.timezone).slashDate.set(cacheKey, gdt);
+      context.cache?.zone(context.timezone).slashDate.set(cacheKey, gdt);
       return gdt;
     }
   }
@@ -345,17 +341,18 @@ export function parseSlashDate(
 
 export function roundDateUp(
   granularDateTime: GranularDateTime,
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): DateTimeIso {
   const cacheKey = JSON.stringify(granularDateTime);
-  const cached = cache?.zone(context.timezone).roundDateUp.get(cacheKey);
+  const cached = context.cache
+    ?.zone(context.timezone)
+    .roundDateUp.get(cacheKey);
   if (cached) {
     return cached;
   }
 
   const cacheAndReturn = (s: DateTimeIso) => {
-    cache?.zone(context.timezone).roundDateUp.set(cacheKey, s);
+    context.cache?.zone(context.timezone).roundDateUp.set(cacheKey, s);
     return s;
   };
 

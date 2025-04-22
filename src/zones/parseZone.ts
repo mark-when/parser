@@ -1,6 +1,5 @@
 import { DateTime } from "luxon";
 import { Caches } from "../Cache";
-import { ParsingContext } from "../ParsingContext";
 
 export function parseZone(zoneString: string, cache?: Caches) {
   const tz = `${zoneString}`;
@@ -28,5 +27,5 @@ export function parseZone(zoneString: string, cache?: Caches) {
       }
     }
   }
-  throw new Error("Cannot parse timezone")
+  throw new Error("Cannot parse timezone");
 }

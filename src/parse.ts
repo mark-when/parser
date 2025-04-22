@@ -13,7 +13,7 @@ import { ParseMessage, ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader as _parseHeader } from "./parseHeader.js";
 import * as ICAL from "ical.js";
-import { DateTime } from "luxon";
+import { DateTime, SystemZone } from "luxon";
 import {
   DateFormap,
   ISOMap,
@@ -110,29 +110,22 @@ export function parsePastHeader(
   context: ParsingContext,
   lines: string[],
   lengthAtIndex: number[],
-  cache?: Caches,
   to?: number
 ) {
   let i = from;
   const upTo = to || lines.length;
   while (i < lines.length && i < upTo) {
     const line = lines[i];
-    if (checkNonEvents(line, i, lengthAtIndex, context, cache)) {
+    if (checkNonEvents(line, i, lengthAtIndex, context)) {
       i++;
       continue;
     }
-    const possibleGroup = checkGroupStart(
-      lines,
-      i,
-      lengthAtIndex,
-      context,
-      cache
-    );
+    const possibleGroup = checkGroupStart(lines, i, lengthAtIndex, context);
     if (possibleGroup) {
       i = possibleGroup.end;
       continue;
     }
-    i = checkEvent(line, lines, i, lengthAtIndex, context, cache) + 1;
+    i = checkEvent(line, lines, i, lengthAtIndex, context) + 1;
   }
 
   if (to === undefined) {
@@ -140,8 +133,7 @@ export function parsePastHeader(
     while (context.currentPath.length > 1) {
       context.endCurrentGroup(
         lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
-        { line: lastLineIndex, index: lines[lastLineIndex].length },
-        cache
+        { line: lastLineIndex, index: lines[lastLineIndex].length }
       );
     }
   }
@@ -154,9 +146,9 @@ export function parseTimeline(
   cache?: Caches,
   now?: DateTime | string
 ): Timeline & { parseMessages: ParseMessage[] } {
-  const context = new ParsingContext(now);
-  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context, cache);
-  parsePastHeader(headerEndLineIndex, context, lines, lengthAtIndex, cache);
+  const context = new ParsingContext(now, cache);
+  const headerEndLineIndex = _parseHeader(lines, lengthAtIndex, context);
+  parsePastHeader(headerEndLineIndex, context, lines, lengthAtIndex);
   return context.toTimeline();
 }
 

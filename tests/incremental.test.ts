@@ -23,7 +23,10 @@ const time = <T>(fn: () => T): [T, number] => {
   return [result, performance.now() - start];
 };
 
-const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8").substring(0, 10000)
+const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8").substring(
+  0,
+  10000
+);
 
 const docs: [string, ChangeSpec][] = [
   [basic86, ChangeSet.empty(86)],
@@ -97,7 +100,7 @@ const docs: [string, ChangeSpec][] = [
       { insert: "\n 5 years: ok \n", from: recurrence1.length },
       [recurrence1, "5 years: ok", recurrence14].join("\n").length
     ),
-  ]
+  ],
 ];
 
 describe("incremental parsing", () => {

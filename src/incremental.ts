@@ -245,26 +245,24 @@ function graft({
     );
 
     const context = () => {
-      const _context = new ParsingContext(now, (_c: ParsingContext) => {
-        if (_c.tail) {
-          return _c.tail;
-        }
-        if (lastUnaffected) {
-          if (isEvent(lastUnaffected)) {
-            return lastUnaffected;
+      const _context = new ParsingContext(
+        now,
+        previousParse.cache,
+        (_c: ParsingContext) => {
+          if (_c.tail) {
+            return _c.tail;
           }
-          throw new Error(
-            "Last unaffected eventy to relate to is not an event"
-          );
+          if (lastUnaffected) {
+            if (isEvent(lastUnaffected)) {
+              return lastUnaffected;
+            }
+            throw new Error(
+              "Last unaffected eventy to relate to is not an event"
+            );
+          }
         }
-      });
+      );
       _context.header = previousParse.header;
-      if (typeof _context.header.timezone !== "undefined") {
-        const tz = parseZone(_context.header.timezone, previousParse.cache);
-        if (tz) {
-          _context.timezoneStack = [tz];
-        }
-      }
       return _context;
     };
 
@@ -272,8 +270,7 @@ function graft({
       from,
       context(),
       Array(from).concat(lines),
-      Array(from).concat(lengths),
-      cache
+      Array(from).concat(lengths)
     );
     return {
       context: c,
@@ -343,7 +340,7 @@ function graft({
   );
 
   let lastToBeRelativeTo: Event;
-  const relativeContext = new ParsingContext(now, (_c) => {
+  const relativeContext = new ParsingContext(now, previousParse.cache, (_c) => {
     if (_c.tail) {
       return _c.tail;
     }
@@ -355,12 +352,6 @@ function graft({
     }
   });
   relativeContext.header = previousParse.header;
-  if (typeof relativeContext.header.timezone !== "undefined") {
-    const tz = parseZone(relativeContext.header.timezone, previousParse.cache);
-    if (tz) {
-      relativeContext.timezoneStack = [tz];
-    }
-  }
   relativeContext.ids = previousParse.ids;
 
   outer: for (const { eventy, path } of iterateTreeFromPath(
@@ -403,8 +394,7 @@ function graft({
           from,
           relativeContext,
           Array(from).concat(lines),
-          Array(from).concat(lengths),
-          cache
+          Array(from).concat(lengths)
         );
         if (c.events.children.length !== 1) {
           throw new Error("Tried to update relative event and failed");

@@ -1,6 +1,5 @@
-import { DateTime } from "luxon";
+import { DateTime, Zone } from "luxon";
 import { ParsingContext } from "../ParsingContext.js";
-import { Caches } from "../Cache.js";
 import {
   EVENT_START_REGEX,
   datePartMatchIndex,
@@ -80,8 +79,7 @@ export function getDateRangeFromCasualRegexMatch(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): DateRangePart | undefined {
   const eventStartLineRegexMatch = line.match(EVENT_START_REGEX);
   if (!eventStartLineRegexMatch) {
@@ -104,7 +102,7 @@ export function getDateRangeFromCasualRegexMatch(
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
   });
-  const cached = cache?.zone(context.timezone).ranges.get(datePart);
+  const cached = context.cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const recurrence = checkRecurrence(
       line,
@@ -302,8 +300,7 @@ export function getDateRangeFromCasualRegexMatch(
     const parsed = parseSlashDate(
       slashPart,
       context.header.dateFormat,
-      context,
-      cache
+      context
     );
     if (parsed) {
       if (timeComponent) {
@@ -397,7 +394,7 @@ export function getDateRangeFromCasualRegexMatch(
       }
       endDateTime = RelativeDate.from(eventEndDate, relativeTo);
     } else if (toCasual) {
-      endDateTime = DateTime.fromISO(roundDateUp(toCasual, context, cache), {
+      endDateTime = DateTime.fromISO(roundDateUp(toCasual, context), {
         setZone: true,
         zone: context.timezone,
       });
@@ -415,8 +412,7 @@ export function getDateRangeFromCasualRegexMatch(
       const parsed = parseSlashDate(
         slashPart,
         context.header.dateFormat,
-        context,
-        cache
+        context
       );
       if (parsed) {
         if (timeComponent) {
@@ -439,13 +435,12 @@ export function getDateRangeFromCasualRegexMatch(
                 dateTimeIso: endDateTime.toISO(),
                 granularity: timePart.granularity,
               },
-              context,
-              cache
+              context
             ),
             { setZone: true, zone: context.timezone }
           );
         } else {
-          endDateTime = DateTime.fromISO(roundDateUp(parsed, context, cache), {
+          endDateTime = DateTime.fromISO(roundDateUp(parsed, context), {
             setZone: true,
             zone: context.timezone,
           });
@@ -489,8 +484,7 @@ export function getDateRangeFromCasualRegexMatch(
             dateTimeIso: eventEndDate,
             granularity: "instant",
           },
-          context,
-          cache
+          context
         ),
         { setZone: true, zone: context.timezone }
       );
@@ -503,8 +497,7 @@ export function getDateRangeFromCasualRegexMatch(
           dateTimeIso: fromDateTime.toISO(),
           granularity,
         },
-        context,
-        cache
+        context
       ),
       { setZone: true, zone: context.timezone }
     );
@@ -538,7 +531,7 @@ export function getDateRangeFromCasualRegexMatch(
   });
 
   if (canCacheRange) {
-    cache?.zone(context.timezone).ranges.set(datePart, {
+    context.cache?.zone(context.timezone).ranges.set(datePart, {
       fromDateTimeIso: fromDateTime.toISO(),
       toDateTimeIso: endDateTime.toISO(),
     });

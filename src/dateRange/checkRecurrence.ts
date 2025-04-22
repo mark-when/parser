@@ -5,7 +5,6 @@ import {
 } from "../regex.js";
 import { Range, RangeType } from "../Types.js";
 import { ParsingContext } from "../ParsingContext.js";
-import { Caches } from "../Cache.js";
 import { Options, RRule } from "@markwhen/rrule";
 
 export type DurationUnit =
@@ -71,8 +70,7 @@ export const checkEdtfRecurrence = (
   i: number,
   lengthAtIndex: number[],
   eventStartLineRegexMatch: RegExpMatchArray,
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): RecurrenceInText | undefined => {
   const recurrenceMatch = eventStartLineRegexMatch[edtf_recurrenceMatchIndex];
 
@@ -110,8 +108,7 @@ export const checkRecurrence = (
   i: number,
   lengthAtIndex: number[],
   eventStartLineRegexMatch: RegExpMatchArray,
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): RecurrenceInText | undefined => {
   const recurrenceMatch =
     eventStartLineRegexMatch[recurrence_recurrenceMatchIndex];

@@ -1,6 +1,5 @@
 import { DateTime } from "luxon";
 import { ParsingContext } from "../ParsingContext.js";
-import { Caches } from "../Cache.js";
 import {
   BCEDatePartMatchIndex,
   fromYear_BCEDateIndex,
@@ -22,8 +21,7 @@ export function getDateRangeFromBCEDateRegexMatch(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): DateRangePart | undefined {
   // Check if its this type of event ---------------------------------------------------------------------------------
   const eventStartLineRegexMatch = line.match(BCE_START_REGEX);
@@ -61,7 +59,7 @@ export function getDateRangeFromBCEDateRegexMatch(
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
   });
-  const cached = cache?.zone(context.timezone).ranges.get(datePart);
+  const cached = context.cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const colon = colonRange(RangeType.DateRangeColon);
     context.ranges.push(colon);
@@ -118,8 +116,7 @@ export function getDateRangeFromBCEDateRegexMatch(
           dateTimeIso: fromDateTime.toISO(),
           granularity,
         },
-        context,
-        cache
+        context
       ),
       { setZone: true, zone: context.timezone }
     );
@@ -142,7 +139,7 @@ export function getDateRangeFromBCEDateRegexMatch(
   });
 
   if (canCacheRange) {
-    cache?.zone(context.timezone).ranges.set(datePart, {
+    context.cache?.zone(context.timezone).ranges.set(datePart, {
       fromDateTimeIso: fromDateTime.toISO(),
       toDateTimeIso: endDateTime.toISO(),
     });

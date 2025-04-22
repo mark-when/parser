@@ -19,7 +19,6 @@ import {
 } from "../Types.js";
 import { checkComments } from "./checkComments.js";
 import { checkListItems } from "./checkListItems.js";
-import { Caches } from "../Cache.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
@@ -83,23 +82,20 @@ export function checkEvent(
   lines: string[],
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): number {
   let dateRange = getDateRangeFromEDTFRegexMatch(
     line,
     i,
     lengthAtIndex,
-    context,
-    cache
+    context
   );
   if (!dateRange) {
     dateRange = getDateRangeFromCasualRegexMatch(
       line,
       i,
       lengthAtIndex,
-      context,
-      cache
+      context
     );
   }
   if (!dateRange) {
@@ -107,8 +103,7 @@ export function checkEvent(
       line,
       i,
       lengthAtIndex,
-      context,
-      cache
+      context
     );
   }
   if (!dateRange) {
@@ -119,8 +114,7 @@ export function checkEvent(
     lines,
     lengthAtIndex,
     i + 1,
-    context,
-    cache
+    context
   );
 
   const matchedListItems = [];
@@ -162,10 +156,10 @@ export function checkEvent(
 
   // See if we need to adjust things based on our timezone
   const timezoneProperty = properties.find(([k, v]) => {
-    return (k === "tz" || k === "timezone") && typeof v !== "object" && !!!v;
+    return (k === "tz" || k === "timezone") && typeof v !== "object" && !!v;
   });
   if (timezoneProperty) {
-    const zone = parseZone(timezoneProperty[1], cache);
+    const zone = parseZone(timezoneProperty[1], context.cache);
     if (zone) {
       dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
         keepLocalTime: true,
@@ -190,7 +184,7 @@ export function checkEvent(
       typeof headerTagDef === "object" &&
       typeof headerTagDef.timezone !== "undefined"
     ) {
-      const zone = parseZone(headerTagDef.timezone, cache);
+      const zone = parseZone(headerTagDef.timezone, context.cache);
       if (zone) {
         dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
           keepLocalTime: true,

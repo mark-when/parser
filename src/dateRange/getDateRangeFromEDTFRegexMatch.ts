@@ -1,6 +1,5 @@
 import { DateTime } from "luxon";
 import { ParsingContext } from "../ParsingContext.js";
-import { Caches } from "../Cache.js";
 import {
   EDTF_START_REGEX,
   edtfDatePartMatchIndex,
@@ -50,8 +49,7 @@ export function getDateRangeFromEDTFRegexMatch(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): DateRangePart | undefined {
   const eventStartLineRegexMatch = line.match(EDTF_START_REGEX);
   if (!eventStartLineRegexMatch) {
@@ -110,15 +108,14 @@ export function getDateRangeFromEDTFRegexMatch(
     from: lengthAtIndex[i] + colonIndex,
     to: lengthAtIndex[i] + colonIndex + 1,
   });
-  const cached = cache?.zone(context.timezone).ranges.get(datePart);
+  const cached = context.cache?.zone(context.timezone).ranges.get(datePart);
   if (cached) {
     const recurrence = checkEdtfRecurrence(
       line,
       i,
       lengthAtIndex,
       eventStartLineRegexMatch,
-      context,
-      cache
+      context
     );
     if (recurrence) {
       context.ranges.push(recurrence.range);
@@ -281,10 +278,6 @@ export function getDateRangeFromEDTFRegexMatch(
 
   if (!endDateTime) {
     if (relativeToDate) {
-      // Dependent on other event
-      canCacheRange = false;
-      isRelative = true;
-
       const relativeToEventId =
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
       let relativeTo: DateTime | undefined;
@@ -292,6 +285,19 @@ export function getDateRangeFromEDTFRegexMatch(
         const event = get(context.events, context.ids[relativeToEventId]);
         if (event && isEvent(event)) {
           relativeTo = toDateRange(event.dateRangeIso).toDateTime;
+          // Dependent on other event
+          canCacheRange = false;
+          isRelative = true;
+        } else {
+          const index = line.indexOf(relativeToEventId);
+          context.parseMessages.push({
+            type: "error",
+            message: `Event ${relativeToEventId} not found`,
+            pos: [
+              lengthAtIndex[i] + index,
+              lengthAtIndex[i] + index + relativeToEventId.length,
+            ],
+          });
         }
       }
       if (!relativeTo) {
@@ -330,8 +336,7 @@ export function getDateRangeFromEDTFRegexMatch(
                 ? "month"
                 : "year",
             },
-            context,
-            cache
+            context
           ),
           { setZone: true, zone: context.timezone }
         );
@@ -346,8 +351,7 @@ export function getDateRangeFromEDTFRegexMatch(
           dateTimeIso: fromDateTime.toISO(),
           granularity,
         },
-        context,
-        cache
+        context
       ),
       { setZone: true, zone: context.timezone }
     );
@@ -358,8 +362,7 @@ export function getDateRangeFromEDTFRegexMatch(
     i,
     lengthAtIndex,
     eventStartLineRegexMatch,
-    context,
-    cache
+    context
   );
   const colon = colonRange(RangeType.DateRangeColon);
   if (recurrence) {
@@ -382,7 +385,7 @@ export function getDateRangeFromEDTFRegexMatch(
   });
 
   if (canCacheRange) {
-    cache?.zone(context.timezone).ranges.set(datePart, {
+    context.cache?.zone(context.timezone).ranges.set(datePart, {
       fromDateTimeIso: fromDateTime.toISO(),
       toDateTimeIso: endDateTime.toISO(),
     });

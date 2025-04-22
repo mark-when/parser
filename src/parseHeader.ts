@@ -12,7 +12,6 @@ import {
   EVENT_START_REGEX,
   GROUP_START_REGEX,
 } from "./regex.js";
-import { Caches } from "./Cache.js";
 import { parseZone } from "./zones/parseZone.js";
 import { checkHeaderTags } from "./lineChecks/checkTags.js";
 
@@ -40,8 +39,7 @@ export function parseProperties(
   lines: string[],
   lengthAtIndex: number[],
   i: number,
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ) {
   let propertiesStartLineIndex = i;
   let propertiesEndLineIndex = propertiesStartLineIndex;
@@ -79,6 +77,7 @@ export function parseProperties(
           context.ranges.push(threeDashRanges[0]);
           context.ranges.push(threeDashRanges[1]);
         }
+        line = lines[++propertiesEndLineIndex];
         break;
       }
     }
@@ -113,6 +112,7 @@ export function parseProperties(
         if (firstPropertiesLineIndexWithText === -1) {
           firstPropertiesLineIndexWithText = propertiesEndLineIndex;
         }
+        lastPropertiesLineIndexWithText = propertiesEndLineIndex;
         propertiesEndLineIndex++;
 
         line = lines[propertiesEndLineIndex];
@@ -211,8 +211,7 @@ function mapToArrays(map: Map<any, any>) {
 export function parseHeader(
   lines: string[],
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ) {
   let headerStartLineIndex = 0;
   let headerEndLineIndex = headerStartLineIndex;
@@ -328,26 +327,30 @@ export function parseHeader(
     }
 
     try {
-      if (typeof parsedHeader.timezone !== "undefined") {
-        const tz = parseZone(parsedHeader.timezone, cache);
-        if (tz) {
-          context.timezoneStack = [tz];
-        }
+      if (
+        typeof parsedHeader.timezone !== "undefined" ||
+        typeof parsedHeader.tz !== "undefined"
+      ) {
+        parseZone(parsedHeader.timezone ?? parsedHeader.tz, context.cache);
       }
     } catch (e) {
       for (let i = headerStartLineIndex; i < lines.length; i++) {
-        const timezoneDef = "timezone:";
-        if (lines[i].startsWith(timezoneDef)) {
-          const specifiedTimezone = lines[i]
-            .substring(timezoneDef.length)
-            .trim();
-          const start = lengthAtIndex[i] + lines[i].indexOf(specifiedTimezone);
-          const end = start + specifiedTimezone.length;
-          context.parseMessages.push({
-            type: "error",
-            pos: [start, end],
-            message: `Invalid timezone "${specifiedTimezone}"`,
-          });
+        const timezoneDefs = ["timezone:", "tz:"];
+        for (let j = 0; j < timezoneDefs.length; j++) {
+          const timezoneDef = timezoneDefs[j];
+          if (lines[i].startsWith(timezoneDef)) {
+            const specifiedTimezone = lines[i]
+              .substring(timezoneDef.length)
+              .trim();
+            const start =
+              lengthAtIndex[i] + lines[i].indexOf(specifiedTimezone);
+            const end = start + specifiedTimezone.length;
+            context.parseMessages.push({
+              type: "error",
+              pos: [start, end],
+              message: `Invalid timezone "${specifiedTimezone}"`,
+            });
+          }
         }
       }
     }

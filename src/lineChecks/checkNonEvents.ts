@@ -8,10 +8,9 @@ export function checkNonEvents(
   line: string,
   i: number,
   lengthAtIndex: number[],
-  context: ParsingContext,
-  cache?: Caches
+  context: ParsingContext
 ): boolean {
   return [checkComments, checkTags, checkGroupEnd].some((f) =>
-    f(line, i, lengthAtIndex, context, cache)
+    f(line, i, lengthAtIndex, context)
   );
 }

@@ -164,7 +164,6 @@ export class ParsingContext {
   endCurrentGroup(
     to: number,
     lineTo: { line: number; index: number },
-    cache?: Caches
   ) {
     this.currentPath.pop();
     // Assign text range
