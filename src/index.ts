@@ -1,4 +1,5 @@
 import { parse, parseDateRange, parseHeader, parseICal } from "./parse.js";
+import { incrementalParse } from "./incremental.js";
 import { Cache, Caches } from "./Cache.js";
 import {
   COLORS,
@@ -133,4 +134,5 @@ export {
   toArraySorted,
   headerSet,
   ParseMessage,
+  incrementalParse,
 };
