@@ -53,13 +53,14 @@ export class ParsingContext {
   };
   foldableSections: Foldable[];
   ranges: Range[];
-  header: any;
-  timezoneStack: Zone[];
+  header: Record<string, any>;
   parseMessages: ParseMessage[] = [];
   documentMessages: DocumentMessage[] = [];
+  cache?: Caches;
 
   constructor(
     now?: DateTime | string,
+    cache?: Caches,
     getPriorEvent?: (c: ParsingContext) => Event | undefined
   ) {
     this.events = new EventGroup();
@@ -73,7 +74,7 @@ export class ParsingContext {
     this.foldableSections = [];
     this.ranges = [];
     this.header = { dateFormat: AMERICAN_DATE_FORMAT };
-    this.timezoneStack = [new SystemZone()];
+    this.cache = cache;
 
     if (typeof now === "string") {
       const parsed = DateTime.fromISO(now);
@@ -98,7 +99,7 @@ export class ParsingContext {
   }
 
   public get timezone(): Zone {
-    return this.timezoneStack[this.timezoneStack.length - 1];
+    return this.parentZone();
   }
 
   currentFoldableSection() {
@@ -166,24 +167,6 @@ export class ParsingContext {
     cache?: Caches
   ) {
     this.currentPath.pop();
-    // Pop timezone if necessary
-    if (this.timezoneStack.length > 1) {
-      const group = get(this.events, this.currentPath);
-      if (group && !isEvent(group)) {
-        const lastTagsDefinitionInHeader =
-          group.tags?.length &&
-          this.header[`)${group.tags[group.tags.length - 1]}`];
-        if (
-          typeof lastTagsDefinitionInHeader === "object" &&
-          typeof lastTagsDefinitionInHeader.timezone !== "undefined"
-        ) {
-          const zone = parseZone(lastTagsDefinitionInHeader.timezone, cache);
-          if (zone && this.timezone.equals(zone)) {
-            this.timezoneStack.pop();
-          }
-        }
-      }
-    }
     // Assign text range
     const group = get(this.events, this.currentPath);
     group!.textRanges.whole = {
@@ -217,6 +200,28 @@ export class ParsingContext {
     return this.tail;
   }
 
+  parentZone(): Zone {
+    const p = [...this.currentPath];
+    while (p.length) {
+      const parent = get(this.events, p);
+      const zone = timezoneFromProperties(parent?.properties ?? [], this.cache);
+      if (zone) {
+        return zone;
+      }
+      p.pop();
+    }
+    try {
+      if (
+        typeof this.header.timezone !== "undefined" ||
+        typeof this.header.tz !== "undefined"
+      ) {
+        return parseZone(this.header.timezone ?? this.header.tz, this.cache);
+      }
+    } finally {
+      return SystemZone.instance;
+    }
+  }
+
   priorEventToDateTime() {
     const prior = this.priorEvent();
     if (!prior) {
@@ -231,5 +236,24 @@ export class ParsingContext {
       return;
     }
     return toDateRange(prior.dateRangeIso).fromDateTime;
+  }
+}
+
+export function timezoneFromProperties(
+  properties: [string, any][] | Record<string, any>,
+  cache?: Caches
+) {
+  if (Array.isArray(properties)) {
+    const timezoneProperty = properties.find(([k, v]) => {
+      return (k === "tz" || k === "timezone") && typeof v !== "object" && !!v;
+    });
+    if (timezoneProperty) {
+      return parseZone(timezoneProperty[1], cache);
+    }
+  } else {
+    const tz = properties?.timezone ?? properties?.tz;
+    if (tz) {
+      return parseZone(tz, cache);
+    }
   }
 }
