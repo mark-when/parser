@@ -93,10 +93,45 @@ export const recurrence17 = `2025-04-04 every other week until 2025-12-12: `;
 export const recurrence18 = `2025-04-04 every other day | now: `;
 export const recurrence19 = `2019-01-01/now every other year: event title`;
 
+export const relativeToStart1 = `2025 / 5 months: event title`;
+export const relativeToPrevious1 = `5 months: event title`;
+export const relativeToPreviousAndStart = `5 months / 5 months: event title`;
+export const relativeToId = `Dec 7 1941: date
+id: pearlHarbor
+
+after !pearlHarbor / 100 years: anniversary
+`;
+
 export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `;
 export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `;
 
-export const all = [
+export const eventsWithTz = `
+group West Coast
+tz: -6
+
+2025-09-14: Date
+tz: America/New_York
+
+2025-09-14: dksla
+timezone: +9
+
+2025-09-14: ok
+endGroup
+
+group East Coast
+timezone: America/Seattle
+
+2025-06-13 / 5 months: ok
+tz: Europe/London
+
+5 months / 5 days: nice
+timezone: Europe/Amsterdam
+
+endGroup
+`;
+
+export const all = {
+  eventsWithTz,
   basic86,
   basic78,
   grievous324,
@@ -124,4 +159,8 @@ export const all = [
   recurrence19,
   eventText1,
   eventText2,
-];
+  relativeToStart1,
+  relativeToPrevious1,
+  relativeToPreviousAndStart,
+  relativeToId,
+};
