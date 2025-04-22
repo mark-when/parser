@@ -4,7 +4,7 @@ import { incrementalParse } from "../src/incremental";
 import { DateTime } from "luxon";
 import { performance } from "perf_hooks";
 import { resolve } from "path";
-import { readFileSync } from "fs";
+import { fstat, readFileSync, writeFileSync } from "fs";
 import {
   basic,
   basic78,
@@ -134,8 +134,8 @@ describe("incremental parsing", () => {
   });
 
   test.only("inc parse through document forwards", () => {
-    const from = 150;
-    const ts = eventsWithTz.substring(from, 200).split("");
+    const from = 0;
+    const ts = eventsWithTz.split("");
     const now = DateTime.now();
 
     const base = eventsWithTz.substring(0, from);
@@ -167,10 +167,17 @@ describe("incremental parsing", () => {
         incParseDuration,
         !!parser.incremental,
       ]);
-      expect(np).toMatchObject(ip);
+      try {
+        expect(np).toMatchObject(ip);
+      } finally {
+        writeFileSync(
+          "./inc.csv",
+          "normal,incremental,fallback\n" +
+            incrementalRatio.map((i) => i.join(",")).join("\n")
+        );
+      }
       originalParse = newParse;
     }
-    console.log(incrementalRatio);
   });
 
   test("editing header in doc with events", () => {});

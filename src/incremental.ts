@@ -9,14 +9,12 @@ import {
   isGroup,
   iter,
   iterateTreeFromPath,
-  iterFrom,
   ParseResult,
   Path,
   Range,
 } from "./Types";
 import { parse, parsePastHeader } from "./parse";
 import { Foldable, ParseMessage, ParsingContext } from "./ParsingContext";
-import { parseZone } from "./zones/parseZone";
 
 function touchesRanges(
   rangeA: [number, number] | Range,
@@ -105,20 +103,32 @@ function getCommonAncestor(arrays: Path[]): Path {
   return prefix;
 }
 
-function linesAndLengths(
-  newText: Text,
+function getFromAndTo(
   change: ChangeSet,
   affected: Eventy[],
   preChange: boolean = true
 ) {
-  let min = -1,
+  let min = Number.POSITIVE_INFINITY,
     max = -1;
+
+  if (!affected.length) {
+    change.iterChangedRanges((fromA, toA, fromB, toB) => {
+      if (fromB < min) {
+        min = fromB;
+      }
+      if (toB > max) {
+        max = toB;
+      }
+    });
+    return [min, max];
+  }
+
   for (let i = 0; i < affected.length; i++) {
     const { from, to } = affected[i].textRanges.whole;
-    if (min === -1 || from < min) {
+    if (from < min) {
       min = from;
     }
-    if (max === -1 || to > max) {
+    if (to > max) {
       max = to;
     }
   }
@@ -137,6 +147,16 @@ function linesAndLengths(
     });
   }
 
+  return [newFrom, newTo];
+}
+
+function linesAndLengths(
+  newText: Text,
+  change: ChangeSet,
+  affected: Eventy[],
+  preChange: boolean = true
+) {
+  const [newFrom, newTo] = getFromAndTo(change, affected, preChange);
   const lineFrom = newText.lineAt(newFrom);
   const lineTo = newText.lineAt(newTo);
 
@@ -171,6 +191,22 @@ function getIds(eventies: Eventy[]): string[] {
     }
   }
   return ids;
+}
+
+function getTags(eventies: Eventy[]): string[] {
+  const tags: string[] = [];
+  for (let i = 0; i < eventies.length; i++) {
+    const e = eventies[i];
+    if (isGroup(e)) {
+      tags.push(...e.tags);
+      tags.push(...getIds(e.children));
+    } else {
+      if (e.tags) {
+        tags.push(...e.tags);
+      }
+    }
+  }
+  return tags;
 }
 
 function graft({
@@ -208,30 +244,37 @@ function graft({
 
   let lastUnaffected = { eventy, path };
   let prior = { eventy, path };
+  let noneAffected = false;
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
     lastUnaffected = prior;
     prior = { eventy, path };
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
-      eventyIterator = iterFrom(root, newPath!);
+      if (!newPath) {
+        noneAffected = true;
+        break;
+      }
+      eventyIterator = iterateTreeFromPath(root, newPath!);
     }
     n();
   }
 
   const affected: { path: Path; eventy: Eventy }[] = [];
-  // If we are editing the definition of an event or section, we might ablate it completely,
-  // so we need to assume the prior event will be affected as well
-  if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
-    affected.push(prior);
-  } else {
-    lastUnaffected = prior;
-  }
+  if (!noneAffected) {
+    // If we are editing the definition of an event or section, we might ablate it completely,
+    // so we need to assume the prior event will be affected as well
+    if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
+      affected.push(prior);
+    } else {
+      lastUnaffected = prior;
+    }
 
-  // Now accumulate all the affected eventies
-  do {
-    affected.push({ eventy, path });
-    n();
-  } while (!done && touchesRanges(eventy.textRanges.whole, [fromA, toA]));
+    // Now accumulate all the affected eventies
+    do {
+      affected.push({ eventy, path });
+      n();
+    } while (!done && touchesRanges(eventy.textRanges.whole, [fromA, toA]));
+  }
 
   // If both a parent and children are affected, we can exclude the children
   // as we'll just reparse the whole parent node, children included.
@@ -243,6 +286,12 @@ function graft({
       i--;
     }
   }
+
+  const affectedEventies = affected.map(({ eventy }) => eventy);
+  if (getIds(affectedEventies).length || getTags(affectedEventies).length) {
+    throw new Error("Won't reparse over ided or tagged events");
+  }
+
   const _change = ChangeSet.of(
     { from: fromA, to: toA, insert: inserted },
     previousText.length
@@ -278,6 +327,7 @@ function graft({
         }
       );
       _context.header = previousParse.header;
+      _context.ids = previousParse.ids;
       return _context;
     };
 
@@ -291,7 +341,6 @@ function graft({
       context: c,
       affectedFrom: lengths[0],
       affectedTo: lengths.at(-1)!,
-      affectedIds: getIds(affected.map(({ eventy }) => eventy)),
     };
   };
 
@@ -317,7 +366,6 @@ function graft({
         context: ParsingContext;
         affectedFrom: number;
         affectedTo: number;
-        affectedIds: string[];
       }
     | undefined;
   if (areSiblings(affected.map(({ path }) => path))) {
@@ -325,9 +373,6 @@ function graft({
       affected.map(({ eventy }) => eventy),
       lastUnaffected.eventy
     );
-    if (!result.context.events.children.length) {
-      result = withCommonAncestor();
-    }
   } else {
     result = withCommonAncestor();
   }
@@ -335,25 +380,15 @@ function graft({
   if (!result) {
     throw new Error("No common ancestor found");
   }
-  let { context: c, affectedFrom, affectedTo, affectedIds } = result;
+  let { context: c, affectedFrom, affectedTo } = result;
 
-  if (!c.events.children.length) {
-    throw new Error("No children found");
+  if (c.events.children.length) {
+    splice(
+      root,
+      affected.map(({ path }) => path),
+      c.events.children
+    );
   }
-
-  splice(
-    root,
-    affected.map(({ path }) => path),
-    c.events.children
-  );
-
-  affectedIds.forEach((id) => {
-    delete previousParse.ids[id];
-  });
-  previousParse.ids = {
-    ...previousParse.ids,
-    ...c.ids,
-  };
 
   let lastToBeRelativeTo: Event;
   const relativeContext = new ParsingContext(now, previousParse.cache, (_c) => {
@@ -367,8 +402,8 @@ function graft({
       throw new Error("Last unaffected eventy to relate to is not an event");
     }
   });
-  relativeContext.header = previousParse.header;
-  relativeContext.ids = previousParse.ids;
+  relativeContext.header = { ...previousParse.header };
+  relativeContext.ids = { ...previousParse.ids };
 
   const m = (i: number) => _change.mapPos(i);
   const mapRange = (r: Range): Range => {
@@ -379,52 +414,55 @@ function graft({
     };
   };
 
-  outer: for (const { eventy, path } of iterateTreeFromPath(
-    root,
-    affected.at(-1)!.path
-  )) {
-    for (const { eventy: newEventy } of iter(c.events)) {
-      if (!newEventy.textRanges) {
-        // The root doesn't have text ranges... it probably should though??
-        continue;
+  const from = affected.at(-1);
+  if (from) {
+    outer: for (const { eventy, path } of iterateTreeFromPath(
+      root,
+      from.path
+    )) {
+      for (const { eventy: newEventy } of iter(c.events)) {
+        if (!newEventy.textRanges) {
+          // The root doesn't have text ranges... it probably should though??
+          continue;
+        }
+        if (isEvent(newEventy)) {
+          lastToBeRelativeTo = newEventy;
+        }
+        if (
+          newEventy.textRanges.whole.from === eventy.textRanges.whole.from &&
+          newEventy.textRanges.whole.to === eventy.textRanges.whole.to
+        ) {
+          continue outer;
+        }
       }
-      if (isEvent(newEventy)) {
-        lastToBeRelativeTo = newEventy;
-      }
-      if (
-        newEventy.textRanges.whole.from === eventy.textRanges.whole.from &&
-        newEventy.textRanges.whole.to === eventy.textRanges.whole.to
-      ) {
-        continue outer;
-      }
-    }
-    if (isGroup(eventy)) {
-      eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
-    } else {
-      eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
-      eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
-      eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
-      if (eventy.textRanges.recurrence) {
-        eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
-      }
-      if (eventy.isRelative) {
-        const { from, lines, lengths } = linesAndLengths(
-          newText,
-          _change,
-          [eventy],
-          false
-        );
+      if (isGroup(eventy)) {
+        eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+      } else {
+        eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
+        eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+        eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
+        if (eventy.textRanges.recurrence) {
+          eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
+        }
+        if (eventy.isRelative) {
+          const { from, lines, lengths } = linesAndLengths(
+            newText,
+            _change,
+            [eventy],
+            false
+          );
 
-        const c = parsePastHeader(
-          from,
-          relativeContext,
-          Array(from).concat(lines),
-          Array(from).concat(lengths)
-        );
-        if (c.events.children.length !== 1) {
-          throw new Error("Tried to update relative event and failed");
-        } else {
-          splice(root, [path], c.events.children);
+          const c = parsePastHeader(
+            from,
+            relativeContext,
+            Array(from).concat(lines),
+            Array(from).concat(lengths)
+          );
+          if (c.events.children.length !== 1) {
+            throw new Error("Tried to update relative event and failed");
+          } else {
+            splice(root, [path], c.events.children);
+          }
         }
       }
     }
@@ -543,6 +581,11 @@ function mapRanges(
 }
 
 function splice(root: EventGroup, affectedPaths: Path[], eventies: Eventy[]) {
+  if (!affectedPaths.length) {
+    root.children.splice(root.children.length, 0, ...eventies);
+    return;
+  }
+
   if (!areSiblings(affectedPaths)) {
     throw new Error("Can't splice non-siblings");
   }
@@ -632,7 +675,9 @@ export function incrementalParse(
   try {
     return mapParseThroughChanges(_previousParse, changes, text(), now);
   } catch (e) {
-    console.log(e);
+    if ((e as Error).message === "Won't reparse over ided or tagged events")
+      return bail();
+    console.error(e);
     throw e;
   }
 }
