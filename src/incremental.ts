@@ -138,7 +138,7 @@ function linesAndLengths(
   }
 
   const lineFrom = newText.lineAt(newFrom);
-  const lineTo = newText.lineAt(newTo - 1);
+  const lineTo = newText.lineAt(newTo);
 
   const lines: string[] = [],
     lengths: number[] = [];
@@ -156,6 +156,21 @@ function linesAndLengths(
   lengths.push(runningLength - (lineTo.number === newText.lines ? 1 : 0));
 
   return { from: lineFrom.number - 1, lines, lengths };
+}
+
+function getIds(eventies: Eventy[]): string[] {
+  const ids: string[] = [];
+  for (let i = 0; i < eventies.length; i++) {
+    const e = eventies[i];
+    if (isGroup(e)) {
+      ids.push(...getIds(e.children));
+    } else {
+      if (e.id) {
+        ids.push(e.id);
+      }
+    }
+  }
+  return ids;
 }
 
 function graft({
@@ -177,7 +192,7 @@ function graft({
   previousParse: ParseResult;
   now?: DateTime | string;
 }) {
-  const { events: root, cache } = previousParse;
+  const { events: root } = previousParse;
   const { fromA, toA, fromB, inserted } = changedRange;
 
   const n = () => {
@@ -276,6 +291,7 @@ function graft({
       context: c,
       affectedFrom: lengths[0],
       affectedTo: lengths.at(-1)!,
+      affectedIds: getIds(affected.map(({ eventy }) => eventy)),
     };
   };
 
@@ -301,6 +317,7 @@ function graft({
         context: ParsingContext;
         affectedFrom: number;
         affectedTo: number;
+        affectedIds: string[];
       }
     | undefined;
   if (areSiblings(affected.map(({ path }) => path))) {
@@ -318,26 +335,25 @@ function graft({
   if (!result) {
     throw new Error("No common ancestor found");
   }
-  let { context: c, affectedFrom, affectedTo } = result;
+  let { context: c, affectedFrom, affectedTo, affectedIds } = result;
 
   if (!c.events.children.length) {
     throw new Error("No children found");
   }
-
-  const m = (i: number) => _change.mapPos(i);
-  const mapRange = (r: Range): Range => {
-    return {
-      ...r,
-      from: m(r.from),
-      to: m(r.to),
-    };
-  };
 
   splice(
     root,
     affected.map(({ path }) => path),
     c.events.children
   );
+
+  affectedIds.forEach((id) => {
+    delete previousParse.ids[id];
+  });
+  previousParse.ids = {
+    ...previousParse.ids,
+    ...c.ids,
+  };
 
   let lastToBeRelativeTo: Event;
   const relativeContext = new ParsingContext(now, previousParse.cache, (_c) => {
@@ -353,6 +369,15 @@ function graft({
   });
   relativeContext.header = previousParse.header;
   relativeContext.ids = previousParse.ids;
+
+  const m = (i: number) => _change.mapPos(i);
+  const mapRange = (r: Range): Range => {
+    return {
+      ...r,
+      from: m(r.from),
+      to: m(r.to),
+    };
+  };
 
   outer: for (const { eventy, path } of iterateTreeFromPath(
     root,
@@ -569,7 +594,7 @@ function mapParseThroughChanges(
       path,
     });
   }
-
+  parse.parser.incremental = true;
   return parse;
 }
 
@@ -585,7 +610,9 @@ export function incrementalParse(
       : Text.of(
           Array.isArray(previousText) ? previousText : previousText.split("\n")
         );
-  const bail = () => parse(changes.apply(text()), true, now);
+  const bail = () => {
+    return parse(changes.apply(text()), previousParse?.cache, now);
+  };
 
   if (changes.length !== previousText.length) {
     throw new RangeError(
@@ -593,7 +620,7 @@ export function incrementalParse(
     );
   }
 
-  if (!previousParse) {
+  if (!previousParse || !previousParse.events.children.length) {
     return bail();
   }
 

@@ -1,5 +1,5 @@
 import { ChangeSet, ChangeSpec, Text } from "@codemirror/state";
-import { parse } from "../src/index";
+import { parse, ParseResult } from "../src/index";
 import { incrementalParse } from "../src/incremental";
 import { DateTime } from "luxon";
 import { performance } from "perf_hooks";
@@ -9,6 +9,7 @@ import {
   basic,
   basic78,
   basic86,
+  eventsWithTz,
   grievous256,
   grievous324,
   now10,
@@ -121,9 +122,9 @@ describe("incremental parsing", () => {
         now
       )
     );
-    console.log(
-      `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
-    );
+    // console.log(
+    //   `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
+    // );
     const { cache, ...np } = newParse;
     const { cache: incCaches, ...ip } = incParse;
 
@@ -131,4 +132,46 @@ describe("incremental parsing", () => {
     // versus the other an intance of Caches. Idk
     expect(np).toMatchObject(ip);
   });
+
+  test.only("inc parse through document forwards", () => {
+    const from = 150;
+    const ts = eventsWithTz.substring(from, 200).split("");
+    const now = DateTime.now();
+
+    const base = eventsWithTz.substring(0, from);
+    let originalParse: ParseResult | undefined;
+    const incrementalRatio: [number, number, boolean][] = [];
+    for (let i = 0; i < ts.length; i++) {
+      let acc = base + ts.slice(0, i).join("");
+      const change = ChangeSet.of(
+        { insert: ts[i], from: acc.length },
+        acc.length
+      );
+      const oldDoc = Text.of(acc.split("\n"));
+      const newDoc = change.apply(oldDoc);
+      const [newParse, normalParseDuration] = time(() =>
+        parse(newDoc, true, now)
+      );
+      const [incParse, incParseDuration] = time(() =>
+        incrementalParse(
+          oldDoc,
+          ChangeSet.of(change, oldDoc.length),
+          originalParse,
+          now
+        )
+      );
+      const { cache, ...np } = newParse;
+      const { cache: incCaches, parser, ...ip } = incParse;
+      incrementalRatio.push([
+        normalParseDuration,
+        incParseDuration,
+        !!parser.incremental,
+      ]);
+      expect(np).toMatchObject(ip);
+      originalParse = newParse;
+    }
+    console.log(incrementalRatio);
+  });
+
+  test("editing header in doc with events", () => {});
 });

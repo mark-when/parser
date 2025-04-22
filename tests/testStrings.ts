@@ -106,7 +106,10 @@ export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `;
 export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `;
 
 export const eventsWithTz = `
-group West Coast
+title: this is titel
+description: this si descriptin
+
+group West Coast #hang10
 tz: +6
 
 2025-09-14: Date
@@ -114,20 +117,32 @@ tz: America/New_York
 
 2025-09-14: dksla
 timezone: +9
+id: mae
 
-2025-09-14: ok
+sup party people?
+- [] not done
+
+2025-09-14: [] ok
 endGroup
 
 group East Coast
 timezone: America/Seattle
 
-2025-06-13 / 5 months: ok
+2025-06-13 / 5 months: [x] ok
 tz: Europe/London
+key: value
+
+#coolio
 
 5 months / 5 days: nice
 timezone: Europe/Amsterdam
 
+after !mae - 5 weeks: ok
+id: corn
+
 endGroup
+
+by !corn / 3 days: ok
 `;
 
 export const all = {

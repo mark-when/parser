@@ -512,6 +512,7 @@ export type ParseResult = Timeline & {
   cache?: Caches;
   parser: {
     version: string;
+    incremental?: boolean;
   };
 };
 
