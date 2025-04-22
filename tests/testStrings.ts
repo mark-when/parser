@@ -105,6 +105,13 @@ after !pearlHarbor / 100 years: anniversary
 export const eventText1 = `2019-01-01/now :  e v e n t   t i t l e  `;
 export const eventText2 = `dec 2 1989 - now :  e v e n t   t i t l e  `;
 
+export const ca =
+`2025-09-14: dksla
+timezone: +9
+id: mae
+
+after !mae - 5 weeks: ok`
+
 export const eventsWithTz = `
 title: this is titel
 description: this si descriptin
@@ -131,8 +138,6 @@ timezone: America/Seattle
 2025-06-13 / 5 months: [x] ok
 tz: Europe/London
 key: value
-
-#coolio
 
 5 months / 5 days: nice
 timezone: Europe/Amsterdam

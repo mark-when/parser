@@ -309,13 +309,15 @@ export class EventDescription {
         }
         return "";
       });
-      line = line.replace(EVENT_ID_REGEX, (match, id) => {
-        if (!this.id) {
-          this.id = (id as string).substring(1);
-          return "";
-        }
-        return id;
-      });
+      if (i === 0) {
+        line = line.replace(EVENT_ID_REGEX, (match, id) => {
+          if (!this.id) {
+            this.id = (id as string).substring(1);
+            return "";
+          }
+          return id;
+        });
+      }
       if (!this.percent) {
         const percent = line.match(PERCENT_REGEX);
         if (percent) {
@@ -564,23 +566,23 @@ export function* iterateTreeFromPath(
   }
 }
 
-export function* iterFrom(
-  root: EventGroup,
-  path: number[]
-): Generator<{ eventy: Eventy; path: Path }, void, unknown> {
-  let current: Eventy = root;
-  let currentPath: number[] = [];
+// export function* iterFrom(
+//   root: EventGroup,
+//   path: number[]
+// ): Generator<{ eventy: Eventy; path: Path }, void, unknown> {
+//   let current: Eventy = root;
+//   let currentPath: number[] = [];
 
-  for (let i = 0; i < path.length; i++) {
-    if (!isGroup(current)) return; // invalid path
-    const index = path[i];
-    if (index < 0 || index >= current.children.length) return;
-    current = current.children[index];
-    currentPath = [...currentPath, index];
-  }
+//   for (let i = 0; i < path.length; i++) {
+//     if (!isGroup(current)) return; // invalid path
+//     const index = path[i];
+//     if (index < 0 || index >= current.children.length) return;
+//     current = current.children[index];
+//     currentPath = [...currentPath, index];
+//   }
 
-  yield* iter(current, currentPath);
-}
+//   yield* iter(current, currentPath);
+// }
 
 export function* iter(
   eventy: Eventy,

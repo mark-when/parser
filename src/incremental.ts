@@ -326,6 +326,13 @@ function graft({
           }
         }
       );
+      _context.getById = (id: string) => {
+        const path = previousParse.ids[id];
+        if (!path) {
+          return;
+        }
+        return get(previousParse.events, path);
+      };
       _context.header = previousParse.header;
       _context.ids = previousParse.ids;
       return _context;
@@ -404,6 +411,13 @@ function graft({
   });
   relativeContext.header = { ...previousParse.header };
   relativeContext.ids = { ...previousParse.ids };
+  relativeContext.getById = (id: string) => {
+    const path = previousParse.ids[id];
+    if (!path) {
+      return;
+    }
+    return get(previousParse.events, path);
+  };
 
   const m = (i: number) => _change.mapPos(i);
   const mapRange = (r: Range): Range => {

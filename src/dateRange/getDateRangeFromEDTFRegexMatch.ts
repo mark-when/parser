@@ -185,11 +185,18 @@ export function getDateRangeFromEDTFRegexMatch(
 
     let relativeTo: DateTime | undefined;
     if (relativeToEventId) {
-      const relativeToPath = context.ids[relativeToEventId];
-      if (!relativeToPath) {
+      const event = context.getById(relativeToEventId);
+      if (event && isEvent(event)) {
+        const range = toDateRange(event.dateRangeIso);
+        if (fromBeforeOrAfter === "after") {
+          relativeTo = range.toDateTime;
+        } else {
+          relativeTo = range.fromDateTime;
+        }
+      } else {
         context.parseMessages.push({
           type: "error",
-          message: `Event ${relativeToEventId} is not defined`,
+          message: `Event ${relativeToEventId} not found`,
           pos: [
             lengthAtIndex[i] + line.indexOf(relativeToEventId),
             lengthAtIndex[i] +
@@ -197,27 +204,6 @@ export function getDateRangeFromEDTFRegexMatch(
               relativeToEventId.length,
           ],
         });
-      } else {
-        const event = get(context.events, relativeToPath);
-        if (event && isEvent(event)) {
-          const range = toDateRange(event.dateRangeIso);
-          if (fromBeforeOrAfter === "after") {
-            relativeTo = range.toDateTime;
-          } else {
-            relativeTo = range.fromDateTime;
-          }
-        } else {
-          context.parseMessages.push({
-            type: "error",
-            message: `Event ${relativeToEventId} not found`,
-            pos: [
-              lengthAtIndex[i] + line.indexOf(relativeToEventId),
-              lengthAtIndex[i] +
-                line.indexOf(relativeToEventId) +
-                relativeToEventId.length,
-            ],
-          });
-        }
       }
     }
 
@@ -282,7 +268,7 @@ export function getDateRangeFromEDTFRegexMatch(
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
       let relativeTo: DateTime | undefined;
       if (relativeToEventId) {
-        const event = get(context.events, context.ids[relativeToEventId]);
+        const event = context.getById(relativeToEventId);
         if (event && isEvent(event)) {
           relativeTo = toDateRange(event.dateRangeIso).toDateTime;
           // Dependent on other event

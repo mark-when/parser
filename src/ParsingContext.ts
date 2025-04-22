@@ -9,7 +9,6 @@ import {
   Eventy,
   push,
   get,
-  isEvent,
   Event,
   toDateRange,
 } from "./Types.js";
@@ -198,7 +197,7 @@ export class ParsingContext {
 
   parentZone(): Zone {
     const p = [...this.currentPath];
-    p.pop()
+    p.pop();
     while (p.length) {
       const parent = get(this.events, p);
       const zone = timezoneFromProperties(parent?.properties ?? [], this.cache);
@@ -227,6 +226,14 @@ export class ParsingContext {
       return;
     }
     return toDateRange(prior.dateRangeIso).fromDateTime;
+  }
+
+  getById(id: string) {
+    const path = this.ids[id];
+    if (!path) {
+      return;
+    }
+    return get(this.events, path);
   }
 }
 

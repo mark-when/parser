@@ -207,11 +207,18 @@ export function getDateRangeFromCasualRegexMatch(
 
     let relativeTo: DateTime | undefined;
     if (relativeToEventId) {
-      const relativeToPath = context.ids[relativeToEventId];
-      if (!relativeToPath) {
+      const event = context.getById(relativeToEventId);
+      if (event && isEvent(event)) {
+        const range = toDateRange(event.dateRangeIso);
+        if (fromBeforeOrAfter === "after") {
+          relativeTo = range.toDateTime;
+        } else {
+          relativeTo = range.fromDateTime;
+        }
+      } else {
         context.parseMessages.push({
           type: "error",
-          message: `Event ${relativeToEventId} is not defined`,
+          message: `Event ${relativeToEventId} not found`,
           pos: [
             lengthAtIndex[i] + line.indexOf(relativeToEventId),
             lengthAtIndex[i] +
@@ -219,27 +226,6 @@ export function getDateRangeFromCasualRegexMatch(
               relativeToEventId.length,
           ],
         });
-      } else {
-        const event = get(context.events, relativeToPath);
-        if (event && isEvent(event)) {
-          const range = toDateRange(event.dateRangeIso);
-          if (fromBeforeOrAfter === "after") {
-            relativeTo = range.toDateTime;
-          } else {
-            relativeTo = range.fromDateTime;
-          }
-        } else {
-          context.parseMessages.push({
-            type: "error",
-            message: `Event ${relativeToEventId} not found`,
-            pos: [
-              lengthAtIndex[i] + line.indexOf(relativeToEventId),
-              lengthAtIndex[i] +
-                line.indexOf(relativeToEventId) +
-                relativeToEventId.length,
-            ],
-          });
-        }
       }
     }
 
