@@ -199,7 +199,7 @@ function getTags(eventies: Eventy[]): string[] {
     const e = eventies[i];
     if (isGroup(e)) {
       tags.push(...e.tags);
-      tags.push(...getIds(e.children));
+      tags.push(...getTags(e.children));
     } else {
       if (e.tags) {
         tags.push(...e.tags);
@@ -243,10 +243,12 @@ function graft({
   };
 
   let lastUnaffected = { eventy, path };
-  let prior = { eventy, path };
+  let prior: { eventy: Eventy; path: Path } | undefined;
   let noneAffected = false;
   while (!done && !touchesRanges(eventy.textRanges.whole, [fromA, toA])) {
-    lastUnaffected = prior;
+    if (prior) {
+      lastUnaffected = prior;
+    }
     prior = { eventy, path };
     if (isGroup(eventy)) {
       const newPath = skip(root, path);
@@ -263,10 +265,12 @@ function graft({
   if (!noneAffected) {
     // If we are editing the definition of an event or section, we might ablate it completely,
     // so we need to assume the prior event will be affected as well
-    if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
-      affected.push(prior);
-    } else {
-      lastUnaffected = prior;
+    if (prior) {
+      if (touchesRanges(eventy.textRanges.definition, [fromA, toA])) {
+        affected.push(prior);
+      } else {
+        lastUnaffected = prior;
+      }
     }
 
     // Now accumulate all the affected eventies
@@ -288,8 +292,8 @@ function graft({
   }
 
   const affectedEventies = affected.map(({ eventy }) => eventy);
-  if (getIds(affectedEventies).length || getTags(affectedEventies).length) {
-    throw new Error("Won't reparse over ided or tagged events");
+  if (getIds(affectedEventies).length) {
+    throw new Error("Won't reparse over ided events");
   }
 
   const _change = ChangeSet.of(
@@ -689,7 +693,7 @@ export function incrementalParse(
   try {
     return mapParseThroughChanges(_previousParse, changes, text(), now);
   } catch (e) {
-    if ((e as Error).message === "Won't reparse over ided or tagged events")
+    if ((e as Error).message === "Won't reparse over ided events")
       return bail();
     console.error(e);
     throw e;
