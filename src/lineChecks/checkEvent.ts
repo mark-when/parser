@@ -173,7 +173,7 @@ export function checkEvent(
     } else {
       context.parseMessages.push({
         type: "error",
-        message: "Unable to parse timezone",
+        message: `Unable to parse timezone ${timezoneProperty[1]}`,
         pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
       });
     }

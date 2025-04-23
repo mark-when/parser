@@ -47,7 +47,7 @@ export function checkGroupStart(
       if (!zone) {
         context.parseMessages.push({
           type: "error",
-          message: "Unable to parse timezone",
+          message: `Unable to parse timezone "${timezoneProperty[1]}"`,
           pos: [range.from, range.to],
         });
       }
