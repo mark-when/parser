@@ -33,6 +33,7 @@ import {
   DateTimeGranularity,
   EventGroup,
   RangeType,
+  AMERICAN_DATE_FORMAT,
 } from "../Types.js";
 
 export function getTimeFromRegExpMatch(
@@ -311,6 +312,10 @@ export function parseSlashDate(
   fullFormat: string,
   context: ParsingContext
 ): GranularDateTime | undefined {
+  fullFormat =
+    typeof fullFormat === "string"
+      ? fullFormat || AMERICAN_DATE_FORMAT
+      : AMERICAN_DATE_FORMAT;
   const cacheKey = JSON.stringify({ s, fullFormat });
   const cached = context.cache?.zone(context.timezone).slashDate.get(cacheKey);
   if (cached) {
