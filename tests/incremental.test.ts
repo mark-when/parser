@@ -9,6 +9,7 @@ import {
   basic,
   basic78,
   basic86,
+  ca,
   eventsWithTz,
   grievous256,
   grievous324,
@@ -16,6 +17,7 @@ import {
   recurrence1,
   recurrence10,
   recurrence14,
+  two,
 } from "./testStrings";
 
 const time = <T>(fn: () => T): [T, number] => {
@@ -126,14 +128,14 @@ describe("incremental parsing", () => {
     //   `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
     // );
     const { cache, ...np } = newParse;
-    const { cache: incCaches, ...ip } = incParse;
+    const { cache: incCaches, parser, ...ip } = incParse;
 
     // The caches weren't matching due to one being an Object
     // versus the other an intance of Caches. Idk
     expect(np).toMatchObject(ip);
   });
 
-  test.only("inc parse through document forwards", () => {
+  test("inc parse through document forwards", () => {
     const from = 0;
     const ts = eventsWithTz.split("");
     const now = DateTime.now();
@@ -169,9 +171,11 @@ describe("incremental parsing", () => {
       ]);
       try {
         expect(np).toMatchObject(ip);
+      } catch {
+        debugger;
       } finally {
         writeFileSync(
-          "./inc.csv",
+          "./tests/inc.csv",
           "normal,incremental,fallback\n" +
             incrementalRatio.map((i) => i.join(",")).join("\n")
         );
@@ -180,5 +184,50 @@ describe("incremental parsing", () => {
     }
   });
 
-  test("editing header in doc with events", () => {});
+  test("deleting", () => {
+    const now = DateTime.now();
+
+    const base = eventsWithTz;
+    let originalParse: ParseResult | undefined;
+    const incrementalRatio: [number, number, boolean][] = [];
+    for (let i = 0; i < base.length; i++) {
+      let acc = base.substring(0, base.length - i);
+      const change = ChangeSet.of(
+        { insert: "", from: acc.length - 1, to: acc.length },
+        acc.length
+      );
+      const oldDoc = Text.of(acc.split("\n"));
+      const newDoc = change.apply(oldDoc);
+      const [newParse, normalParseDuration] = time(() =>
+        parse(newDoc, true, now)
+      );
+      const [incParse, incParseDuration] = time(() =>
+        incrementalParse(
+          oldDoc,
+          ChangeSet.of(change, oldDoc.length),
+          originalParse,
+          now
+        )
+      );
+      const { cache, ...np } = newParse;
+      const { cache: incCaches, parser, ...ip } = incParse;
+      incrementalRatio.push([
+        normalParseDuration,
+        incParseDuration,
+        !!parser.incremental,
+      ]);
+      try {
+        expect(np).toMatchObject(ip);
+      } catch {
+        debugger;
+      } finally {
+        writeFileSync(
+          "./tests/inc-delete.csv",
+          "normal,incremental,fallback\n" +
+            incrementalRatio.map((i) => i.join(",")).join("\n")
+        );
+      }
+      originalParse = newParse;
+    }
+  });
 });
