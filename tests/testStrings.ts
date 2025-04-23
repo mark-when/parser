@@ -150,6 +150,9 @@ endGroup
 by !corn / 3 days: ok
 `;
 
+export const two = `2025-03-10: ok
+5 months / 5 months`
+
 export const all = {
   eventsWithTz,
   basic86,
