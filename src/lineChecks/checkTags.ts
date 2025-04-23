@@ -53,12 +53,6 @@ export function checkTags(
         to: from + m[1].length + 1,
         content: { tag: m[1] },
       });
-
-      // Add it to the header as a tag, that is, with a right paren
-      // instead of hash
-      if (!context.header[")" + m[1]]) {
-        context.header[")" + m[1]] = undefined;
-      }
     }
   }
   return false;
