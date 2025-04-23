@@ -218,7 +218,7 @@ export function checkEvent(
   if (event) {
     const path = context.push(event);
     updateParseMetadata(event, path, dateRange, context);
-    if (end - i > 1) {
+    if (end - i > 1 && lengthAtIndex[end - 1] < lengthAtIndex[end]) {
       context.foldables[lengthAtIndex[i]] = {
         startIndex: lengthAtIndex[i + 1] - 1,
         endIndex: lengthAtIndex[end] - 1,

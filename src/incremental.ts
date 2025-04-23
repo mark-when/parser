@@ -160,24 +160,21 @@ function linesAndLengths(
   const lineFrom = newText.lineAt(newFrom);
   const lineTo = newText.lineAt(newTo);
 
-  const lines: string[] = [],
-    lengths: number[] = [];
-  const textIterator = newText
-    .slice(lineFrom.from, newTo)
-    .toString()
-    .split("\n");
+  // Make sure we get complete lines
+  const textSlice = newText.slice(lineFrom.from, newTo);
+  const textLines = textSlice.toString().split("\n");
 
-  // const textIterator = newText.iterLines(lineFrom.number, lineTo.number + 1);
+  const lines: string[] = textLines;
+  const lengths: number[] = [];
+
+  // Initialize with the starting position
+  lengths.push(lineFrom.from);
+
   let runningLength = lineFrom.from;
-  for (const line of textIterator) {
-    lines.push(line);
+  for (let i = 0; i < lines.length; i++) {
+    runningLength += lines[i].length + (i === lines.length - 1 ? 0 : 1);
     lengths.push(runningLength);
-    // plus one for newline
-    runningLength += line.length + 1;
   }
-  // If we are up against the end of the string, we need to undo our
-  // +1 for a newline at the end
-  lengths.push(runningLength - (lineTo.number === newText.lines ? 1 : 0));
 
   return { from: lineFrom.number - 1, lines, lengths };
 }
@@ -538,7 +535,7 @@ function mapRanges(
   // all this foldable shit sucks
   for (const [foldableIndex, foldable] of Object.entries(foldables)) {
     const index = m(parseInt(foldableIndex));
-    if (index < affectedFrom || index > affectedTo) {
+    if (index < affectedFrom || index >= affectedTo) {
       newFoldables[index] = {
         ...foldable,
         endIndex: _change.mapPos(foldable.endIndex),
@@ -697,8 +694,9 @@ export function incrementalParse(
   try {
     return mapParseThroughChanges(_previousParse, changes, text(), now);
   } catch (e) {
-    if ((e as Error).message === "Won't reparse over ided events")
+    if ((e as Error).message === "Won't reparse over ided events") {
       return bail();
+    }
     console.error(e);
     throw e;
   }

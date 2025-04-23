@@ -184,7 +184,7 @@ describe("incremental parsing", () => {
     }
   });
 
-  test("deleting", () => {
+  test("inc parse through document backwards (deleting)", () => {
     const now = DateTime.now();
 
     const base = eventsWithTz;
