@@ -162,8 +162,12 @@ function linesAndLengths(
 
   const lines: string[] = [],
     lengths: number[] = [];
-  const textIterator = newText.iterLines(lineFrom.number, lineTo.number + 1);
+  const textIterator = newText
+    .slice(lineFrom.from, newTo)
+    .toString()
+    .split("\n");
 
+  // const textIterator = newText.iterLines(lineFrom.number, lineTo.number + 1);
   let runningLength = lineFrom.from;
   for (const line of textIterator) {
     lines.push(line);
