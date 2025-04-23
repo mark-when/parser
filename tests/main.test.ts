@@ -1255,27 +1255,11 @@ now - 10 years: an event #1
 1 year: event #2
 3 years: event #third`);
 
-      const tagLiterals = Object.keys(markwhen.header).filter((k) =>
+      const tagLiterals = nthEvent(markwhen, 0).tags.filter((k) =>
         k.startsWith(")")
       );
-      expect(tagLiterals).toHaveLength(1);
-      expect(tagLiterals).toContainEqual(")third");
-    });
-
-    test.each(sp())("skips number only 2", (p) => {
-      const markwhen = p(`title: my timelines
-description: my description
-now - 10 years: an event #1 #3342 #098
-1 year: event #2 #another #tag
-3 years: event #third #fourth #fifth #332334b #5`);
-
-      const tagLiterals = Object.keys(markwhen.header).filter((k) =>
-        k.startsWith(")")
-      );
-      expect(tagLiterals).toHaveLength(6);
-      ["another", "tag", "third", "fourth", "fifth", "332334b"].forEach((i) =>
-        expect(tagLiterals).toContain(")" + i)
-      );
+      expect(tagLiterals).toHaveLength(0);
+      expect(nthEvent(markwhen, 2).tags).toContainEqual("third");
     });
 
     test.each(sp())(
@@ -1290,19 +1274,11 @@ now - 10 years: an event #1 #3342 #098
 3 years: event #third #fourth 
 #fifth #332334b #5
 #other`);
-
-        const tagLiterals = Object.keys(markwhen.header).filter((k) =>
-          k.startsWith(")")
-        );
-        [
-          "another",
-          "tag",
-          "third",
-          "fourth",
-          "fifth",
-          "332334b",
-          "other",
-        ].forEach((i) => expect(tagLiterals).toContain(")" + i));
+        const second = nthEvent(markwhen, 1);
+        expect(second.tags).toContain("another");
+        expect(second.tags).toContain("tag");
+        expect(nthEvent(markwhen, 2).tags).toContain("fifth");
+        expect(nthEvent(markwhen, 2).tags).toContain("other");
       }
     );
   });

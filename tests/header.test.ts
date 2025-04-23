@@ -84,7 +84,7 @@ thirdKey:
   test.each(sp())("small header", () => {
     const mw = parse(small());
 
-    expect(Object.keys(mw.header).length).toBe(46);
+    expect(Object.keys(mw.header).length).toBe(45);
   });
 });
 
