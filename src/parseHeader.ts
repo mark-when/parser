@@ -315,10 +315,12 @@ export function parseHeader(
 
   try {
     const parsedHeader = YAML.parse(headerLines.join("\n"));
-    parsedHeader.dateFormat =
-      parsedHeader.dateFormat === "d/M/y"
-        ? EUROPEAN_DATE_FORMAT
-        : AMERICAN_DATE_FORMAT;
+    if (!parsedHeader.dateFormat) {
+      parsedHeader.dateFormat =
+        parsedHeader.dateFormat === "d/M/y"
+          ? EUROPEAN_DATE_FORMAT
+          : AMERICAN_DATE_FORMAT;
+    }
     if (parsedHeader.view && typeof parsedHeader.view === "string") {
       parsedHeader.view = stringEmailListToArray(parsedHeader.view as string);
     }
