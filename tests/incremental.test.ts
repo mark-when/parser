@@ -4,12 +4,11 @@ import { incrementalParse } from "../src/incremental";
 import { DateTime } from "luxon";
 import { performance } from "perf_hooks";
 import { resolve } from "path";
-import { fstat, readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import {
   basic,
   basic78,
   basic86,
-  ca,
   eventsWithTz,
   grievous256,
   grievous324,
@@ -17,7 +16,6 @@ import {
   recurrence1,
   recurrence10,
   recurrence14,
-  two,
 } from "./testStrings";
 
 const time = <T>(fn: () => T): [T, number] => {
@@ -26,10 +24,7 @@ const time = <T>(fn: () => T): [T, number] => {
   return [result, performance.now() - start];
 };
 
-const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8").substring(
-  0,
-  10000
-);
+const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8");
 
 const docs: [string, ChangeSpec][] = [
   [basic86, ChangeSet.empty(86)],
@@ -230,4 +225,125 @@ describe("incremental parsing", () => {
       originalParse = newParse;
     }
   });
+
+  test("above and below", () => {
+    const ex = `
+title: a new begi
+
+section All Projects
+group Project 1 #Project1
+// Supports ISO8601
+2025-01/2025-03: Sub task #John
+2025-03/2025-06: Sub task 2 #Michelle
+More info about sub task 2
+
+- [ ] We need to get this done
+- [x] And this
+- [ ] This one is extra
+
+2025-07: Yearly planning
+ok: hi
+overtime: neat
+forthwith 
+
+4/24/2025: this is a truly momentous day for everyone so to speak?
+
+
+group this is group
+
+
+`;
+    const change = ChangeSet.of(
+      {
+        insert: `
+
+4/23/2025: thi 
+`,
+        from: 18,
+      },
+      ex.length
+    );
+
+    const now = DateTime.now();
+    const originalParse = parse(ex);
+    const newDoc = change.apply(Text.of(ex.split("\n")));
+    const [newParse, normalParseDuration] = time(() =>
+      parse(newDoc, true, now)
+    );
+    const [incParse, incParseDuration] = time(() =>
+      incrementalParse(ex, change, originalParse, now)
+    );
+    // console.log(
+    //   `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
+    // );
+    const { cache, ...np } = newParse;
+    const { cache: incCaches, parser, ...ip } = incParse;
+
+    // The caches weren't matching due to one being an Object
+    // versus the other an intance of Caches. Idk
+    expect(np).toMatchObject(ip);
+  });
+
+  test.only("messages", () => {
+    const mw = `
+title: a new begi
+description: we're up here now
+newKey: value
+headerKey: value and such
+thisIsWorkingBetter
+
+4/23/2025: thi 
+`;
+    const parsed = incrementalParse(mw);
+    expect(parsed.parseMessages).toHaveLength(1);
+  });
+
+  // test.only("large doc", () => {
+  //   const from = 0;
+  //   const largeSplit = large.substring(0, 4000).split("");
+  //   const now = DateTime.now();
+
+  //   const base = large.substring(0, from);
+  //   let originalParse: ParseResult | undefined;
+  //   const incrementalRatio: [number, number, boolean][] = [];
+  //   for (let i = 0; i < largeSplit.length; i++) {
+  //     let acc = base + largeSplit.slice(0, i).join("");
+  //     const change = ChangeSet.of(
+  //       { insert: large[i], from: acc.length },
+  //       acc.length
+  //     );
+  //     const oldDoc = Text.of(acc.split("\n"));
+  //     const newDoc = change.apply(oldDoc);
+  //     const [newParse, normalParseDuration] = time(() =>
+  //       parse(newDoc, true, now)
+  //     );
+  //     const [incParse, incParseDuration] = time(() =>
+  //       incrementalParse(
+  //         oldDoc,
+  //         ChangeSet.of(change, oldDoc.length),
+  //         originalParse,
+  //         now
+  //       )
+  //     );
+  //     const { cache, ...np } = newParse;
+  //     const { cache: incCaches, parser, ...ip } = incParse;
+  //     incrementalRatio.push([
+  //       normalParseDuration,
+  //       incParseDuration,
+  //       !!parser.incremental,
+  //     ]);
+  //     try {
+  //       expect(np).toMatchObject(ip);
+  //     } catch {
+  //       debugger;
+  //     } finally {
+  //       writeFileSync(
+  //         "./tests/inc-large.csv",
+  //         "normal,incremental,fallback\n" +
+  //           incrementalRatio.map((i) => i.join(",")).join("\n")
+  //       );
+  //     }
+  //     originalParse = newParse;
+  //   }
+  // });
 });

@@ -243,6 +243,14 @@ function graft({
     }
   };
 
+  // If we're above the first event (aka the header area) abort
+  if (
+    toA < eventy.textRanges.whole.from ||
+    fromA < eventy.textRanges.whole.from
+  ) {
+    throw new Error("Can't reparse in header area");
+  }
+
   let lastUnaffected = { eventy, path };
   let prior: { eventy: Eventy; path: Path } | undefined;
   let noneAffected = false;
@@ -672,6 +680,7 @@ export function incrementalParse(
       : Text.of(
           Array.isArray(previousText) ? previousText : previousText.split("\n")
         );
+        
   const bail = () => {
     return parse(changes.apply(text()), previousParse?.cache, now);
   };
@@ -698,6 +707,6 @@ export function incrementalParse(
       return bail();
     }
     console.error(e);
-    throw e;
+    return bail();
   }
 }
