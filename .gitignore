@@ -7,3 +7,4 @@ tests/c.ics
 tests/ical1.ics
 tests/school.ics
 tests/school.mw
+tests/*.csv
