@@ -284,7 +284,7 @@ group this is group
     expect(np).toMatchObject(ip);
   });
 
-  test.only("messages", () => {
+  test("messages", () => {
     const mw = `
 title: a new begi
 description: we're up here now

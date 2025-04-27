@@ -173,7 +173,7 @@ export function checkEvent(
     } else {
       context.parseMessages.push({
         type: "error",
-        message: `Unable to parse timezone ${timezoneProperty[1]}`,
+        message: `Unable to parse timezone "${timezoneProperty[1]}"`,
         pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
       });
     }
@@ -218,10 +218,10 @@ export function checkEvent(
   if (event) {
     const path = context.push(event);
     updateParseMetadata(event, path, dateRange, context);
-    if (end - i > 1 && lengthAtIndex[end - 1] < lengthAtIndex[end]) {
+    if (end - i > 1 && eventRange.to - lengthAtIndex[i + 1] > 0) {
       context.foldables[lengthAtIndex[i]] = {
         startIndex: lengthAtIndex[i + 1] - 1,
-        endIndex: lengthAtIndex[end] - 1,
+        endIndex: eventRange.to - 1,
         type: "event",
         foldStartIndex: lengthAtIndex[i + 1] - 1,
         startLine: i,
