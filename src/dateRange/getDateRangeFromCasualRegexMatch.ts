@@ -369,7 +369,7 @@ export function getDateRangeFromCasualRegexMatch(
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
       let relativeTo: DateTime | undefined;
       if (relativeToEventId) {
-        const event = get(context.events, context.ids[relativeToEventId]);
+        const event = context.getById(relativeToEventId);
         if (event && isEvent(event)) {
           relativeTo = toDateRange(event.dateRangeIso).toDateTime;
         }

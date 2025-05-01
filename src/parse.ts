@@ -13,7 +13,7 @@ import { ParseMessage, ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader as _parseHeader } from "./parseHeader.js";
 import * as ICAL from "ical.js";
-import { DateTime, SystemZone } from "luxon";
+import { DateTime } from "luxon";
 import {
   DateFormap,
   ISOMap,
@@ -24,7 +24,7 @@ import { Text } from "@codemirror/state";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
-const version = "0.14.4";
+const version = "0.14.5";
 
 export function parseDateRange(
   dateRangeString: string
