@@ -13,7 +13,7 @@ import {
   type Path,
   type Range,
 } from "./Types.js";
-import { parse, parsePastHeader } from "./parse";
+import { parse, parsePastHeader } from "./parse.js";
 import { Foldable, ParseMessage, ParsingContext } from "./ParsingContext.js";
 
 function touchesRanges(
