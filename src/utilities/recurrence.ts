@@ -1,7 +1,7 @@
 import { DateRange, Event, toDateRange, toDateRangeIso } from "../Types.js";
 import { DateTime, Duration } from "luxon";
 import { Recurrence, toJsDates } from "../dateRange/checkRecurrence.js";
-import { RRule } from "@markwhen/rrule";
+import * as RRule from "@markwhen/rrule";
 
 export const expand = (
   dateRange: DateRange,
@@ -9,9 +9,9 @@ export const expand = (
   limit: number
 ): DateRange[] => {
   const instanceDuration = dateRange.toDateTime.diff(dateRange.fromDateTime);
-  recurrence.dtstart = dateRange.fromDateTime.toISO()
+  recurrence.dtstart = dateRange.fromDateTime.toISO();
 
-  const rule = new RRule(toJsDates(recurrence));
+  const rule = new RRule.RRule(toJsDates(recurrence));
   const expansion: DateTime[] = [];
   rule.all((d, i) => {
     if (i >= limit) {

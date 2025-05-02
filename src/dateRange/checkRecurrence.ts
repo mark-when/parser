@@ -5,7 +5,9 @@ import {
 } from "../regex.js";
 import { Range, RangeType } from "../Types.js";
 import { ParsingContext } from "../ParsingContext.js";
-import { Options, RRule } from "@markwhen/rrule";
+import * as rrule from "@markwhen/rrule";
+import type { Options } from "@markwhen/rrule";
+const { RRule } = rrule;
 
 export type DurationUnit =
   | "years"
