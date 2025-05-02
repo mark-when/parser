@@ -25,6 +25,18 @@ export const toArray = (node: Eventy | undefined, cutoff: DateTime) => {
   );
 };
 
+const linkRegex = /(?<preceding>^|\s)\[(?<title>[^\]]*)\]\((?<url>\S+\.\S+)\)/g;
+function urlFromString(s: string): string {
+  return s
+    .trim()
+    .replaceAll(linkRegex, (orig, preceding, title) => preceding + title)
+    .split(" ")
+    .slice(0, 4)
+    .map((s) => s.replaceAll(disallowedCharacters, ""))
+    .filter((s) => !!s)
+    .join("-");
+}
+
 export function mapUrls(events: { path: Path; event: Event }[]): {
   path: Path;
   event: Event;
@@ -47,20 +59,9 @@ export function mapUrls(events: { path: Path; event: Event }[]): {
     return withIndex;
   };
 
-  const linkRegex =
-    /(?<preceding>^|\s)\[(?<title>[^\]]*)\]\((?<url>\S+\.\S+)\)/g;
-
   const getUrl = (event: Event, fromDateTimeIso: DateTimeIso): string => {
     if (event.firstLine.rest) {
-      const titleFromFirstLine = event.firstLine.rest
-        .trim()
-        .replaceAll(linkRegex, (orig, preceding, title) => title)
-        .split(" ")
-        .slice(0, 4)
-        .map((s) => s.replaceAll(disallowedCharacters, ""))
-        .filter((s) => !!s)
-        .join("-");
-
+      const titleFromFirstLine = urlFromString(event.firstLine.rest);
       if (titleFromFirstLine.length) {
         return checkForDuplicates(titleFromFirstLine);
       }
@@ -69,13 +70,7 @@ export function mapUrls(events: { path: Path; event: Event }[]): {
     const { supplemental } = event;
     if (supplemental.length && supplemental[0].type === "text") {
       // @ts-ignore
-      const titleFromFirstBlock = (supplemental[0].raw as string)
-        .trim()
-        .split(" ")
-        .slice(0, 4)
-        .map((s) => s.replaceAll(disallowedCharacters, ""))
-        .filter((s) => !!s)
-        .join("-");
+      const titleFromFirstBlock = urlFromString(supplemental[0].raw as string);
       if (titleFromFirstBlock) {
         return checkForDuplicates(titleFromFirstBlock);
       }
