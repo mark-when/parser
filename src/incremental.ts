@@ -1,20 +1,20 @@
 import { ChangeSet, Text } from "@codemirror/state";
 import { DateTime } from "luxon";
 import {
-  Event,
-  EventGroup,
-  Eventy,
+  type Event,
+  type EventGroup,
+  type Eventy,
   get,
   isEvent,
   isGroup,
   iter,
   iterateTreeFromPath,
-  ParseResult,
-  Path,
-  Range,
-} from "./Types";
+  type ParseResult,
+  type Path,
+  type Range,
+} from "./Types.js";
 import { parse, parsePastHeader } from "./parse";
-import { Foldable, ParseMessage, ParsingContext } from "./ParsingContext";
+import { Foldable, ParseMessage, ParsingContext } from "./ParsingContext.js";
 
 function touchesRanges(
   rangeA: [number, number] | Range,
@@ -680,7 +680,7 @@ export function incrementalParse(
       : Text.of(
           Array.isArray(previousText) ? previousText : previousText.split("\n")
         );
-        
+
   const bail = () => {
     return parse(changes.apply(text()), previousParse?.cache, now);
   };
