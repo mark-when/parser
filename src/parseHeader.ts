@@ -77,7 +77,6 @@ export function parseProperties(
           context.ranges.push(threeDashRanges[0]);
           context.ranges.push(threeDashRanges[1]);
         }
-        line = lines[++propertiesEndLineIndex];
         break;
       }
     }
@@ -113,32 +112,13 @@ export function parseProperties(
           firstPropertiesLineIndexWithText = propertiesEndLineIndex;
         }
         lastPropertiesLineIndexWithText = propertiesEndLineIndex;
-        propertiesEndLineIndex++;
-
-        line = lines[propertiesEndLineIndex];
       } else if (!hasThreeDashStart) {
         break;
-      }
-      // const valueMatch = line.match(headerValueRegex);
-      // if (valueMatch) {
-      //   const index = line.indexOf(valueMatch[0]);
-      // propertyRanges.push({
-      //   type: RangeType.PropertyValue,
-      //   from: lengthAtIndex[propertiesEndLineIndex] + index,
-      //   to:
-      //     lengthAtIndex[propertiesEndLineIndex] +
-      //     index +
-      //     valueMatch[0].length,
-      // });
-      // }
-
-      if (keyMatch) {
-        // A key match is what determines if this is a set of properties
-        // We do this here so valueMatch still has access to the line
       }
     } else if (!hasThreeDashStart) {
       break;
     }
+    line = lines[++propertiesEndLineIndex];
   }
 
   let properties: [string, any][] = [];
