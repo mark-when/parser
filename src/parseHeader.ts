@@ -92,19 +92,22 @@ export function parseProperties(
       const keyMatch = line.match(propertyKeyRegex);
       if (keyMatch) {
         const from = lengthAtIndex[propertiesEndLineIndex];
+        const leadingWhitespaceLength =
+          keyMatch.index! + keyMatch[0].indexOf(keyMatch[1]);
+
         propertyRanges.push({
           type: RangeType.PropertyKey,
-          from,
-          to: from + keyMatch[1].length,
+          from: from + leadingWhitespaceLength, // Add the whitespace offset
+          to: from + leadingWhitespaceLength + keyMatch[1].length,
         });
         propertyRanges.push({
           type: RangeType.PropertyKeyColon,
-          from: from + keyMatch[1].length,
-          to: from + keyMatch[1].length + 1,
+          from: from + leadingWhitespaceLength + keyMatch[1].length,
+          to: from + leadingWhitespaceLength + keyMatch[1].length + 1,
         });
         propertyRanges.push({
           type: RangeType.PropertyValue,
-          from: from + keyMatch[1].length + 1,
+          from: from + leadingWhitespaceLength + keyMatch[1].length + 1,
           to: from + line.length,
         });
         propertyLines.push(line);

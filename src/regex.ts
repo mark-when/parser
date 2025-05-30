@@ -222,8 +222,8 @@ export const DATE_FORMAT_REGEX = /dateFormat:\s*d\/M\/y/;
 export const TAG_REGEX = /(?:^|\s)#(?!\d+(?:\s|$))(\w+)/g;
 export const GROUP_START_REGEX = /^(\s*)(group|section)(?:\s|$)/i;
 export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)?/i;
-export const LIST_ITEM_REGEX = /^- .*/;
-export const CHECKLIST_ITEM_REGEX = /^- (\[(x|X| )?\]).*/;
+export const LIST_ITEM_REGEX = /^\s*- .*/;
+export const CHECKLIST_ITEM_REGEX = /^\s*- (\[(x|X| )?\]).*/;
 export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
 
 export const EDTF_DATE_REGEX = new RegExp(

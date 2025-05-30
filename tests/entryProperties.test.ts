@@ -176,6 +176,22 @@ x: something:with colon `;
     }
     expect(visited).toBe(true);
   });
+
+  test.each(sp())("proper ranges 8", () => {
+    const mw = `1999-09: birthday
+  propKey: l`;
+    const parsed = parse(mw);
+    expect(nthEvent(parsed, 0).properties).toEqual([["propKey", "l"]]);
+    let visited = false;
+    for (const range of parsed.ranges) {
+      if (range.type === RangeType.PropertyKey) {
+        visited = true;
+        expect(range.from).toBe(20);
+        expect(range.to).toBe(27);
+      }
+    }
+    expect(visited).toBe(true);
+  });
 });
 
 describe("group properties", () => {
