@@ -1,7 +1,6 @@
 import { ParsingContext } from "../ParsingContext.js";
 import { CHECKLIST_ITEM_REGEX, LIST_ITEM_REGEX } from "../regex.js";
 import { RangeType, Range } from "../Types.js";
-
 export function checkListItems(
   line: string,
   i: number,
@@ -10,11 +9,19 @@ export function checkListItems(
 ): false | Range[] {
   const checklistItemMatch = line.match(CHECKLIST_ITEM_REGEX);
   if (checklistItemMatch) {
+    const dashIndex = line.indexOf("-");
+    const dashPosition = lengthAtIndex[i] + dashIndex;
     const checkboxStart =
       lengthAtIndex[i] + line.indexOf(checklistItemMatch[1]);
     const checkboxEnd = checkboxStart + checklistItemMatch[1].length;
 
-    const indicator: Range = {
+    const dashIndicator: Range = {
+      type: RangeType.listItemIndicator,
+      from: dashPosition,
+      to: dashPosition + 1,
+    };
+
+    const checkboxIndicator: Range = {
       type: RangeType.CheckboxItemIndicator,
       from: checkboxStart,
       to: checkboxEnd,
@@ -27,8 +34,8 @@ export function checkListItems(
       to: lengthAtIndex[i] + line.length,
     };
 
-    context.ranges.push(...[indicator, contents]);
-    return [indicator, contents];
+    context.ranges.push(...[dashIndicator, checkboxIndicator, contents]);
+    return [dashIndicator, checkboxIndicator, contents];
   } else if (line.match(LIST_ITEM_REGEX)) {
     const dashIndex = line.indexOf("-");
     const dashPosition = lengthAtIndex[i] + dashIndex;
