@@ -65,7 +65,7 @@ export function getTimeFromRegExpMatch(
       dateTimeIso: DateTime.fromFormat(
         `${timeMeridiemHour}${timeMeridiemMinute}${timeMeridiem}`,
         "h:mma"
-      ).toISO(),
+      ).toISO()!,
       granularity: timeMeridiemMinute === ":00" ? "hour" : "minute",
     };
   }
@@ -78,7 +78,7 @@ export function getTimeFromRegExpMatch(
       `${
         time24HourHour.length === 2 && time24HourHour[0] === "0" ? "HH" : "H"
       }:mm`
-    ).toISO(),
+    ).toISO()!,
     granularity: time24HourMinute === ":00" ? "hour" : "minute",
   };
 }
@@ -212,7 +212,7 @@ export function fromCasualDate(
           hour: timeMatchIso.hour,
           minute: timeMatchIso.minute,
         })
-        .toISO();
+        .toISO()!;
       date.granularity = timeMatch.granularity;
     }
     return date;
@@ -226,7 +226,7 @@ export function fromCasualDate(
       dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMMM", {
         setZone: true,
         zone: context.timezone,
-      }).toISO(),
+      }).toISO()!,
       granularity: "month",
     };
   }
@@ -236,7 +236,7 @@ export function fromCasualDate(
       dateTimeIso: DateTime.fromFormat(`${year} ${month}`, "y MMM", {
         setZone: true,
         zone: context.timezone,
-      }).toISO(),
+      }).toISO()!,
       granularity: "month",
     };
   }
@@ -250,7 +250,7 @@ export function parseAsCasualDayFullMonth(
     dateTimeIso: DateTime.fromFormat(s, "y MMMM d", {
       setZone: true,
       zone: context.timezone,
-    }).toISO(),
+    }).toISO()!,
     granularity: "day",
   };
 }
@@ -263,7 +263,7 @@ export function parseAsCasualDayAbbrMonth(
     dateTimeIso: DateTime.fromFormat(s, "y MMM d", {
       setZone: true,
       zone: context.timezone,
-    }).toISO(),
+    }).toISO()!,
     granularity: "day",
   };
 }

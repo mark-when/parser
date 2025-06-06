@@ -113,7 +113,7 @@ export function getDateRangeFromBCEDateRegexMatch(
     endDateTime = DateTime.fromISO(
       roundDateUp(
         {
-          dateTimeIso: fromDateTime.toISO(),
+          dateTimeIso: fromDateTime.toISO()!,
           granularity,
         },
         context
@@ -140,8 +140,8 @@ export function getDateRangeFromBCEDateRegexMatch(
 
   if (canCacheRange) {
     context.cache?.zone(context.timezone).ranges.set(datePart, {
-      fromDateTimeIso: fromDateTime.toISO(),
-      toDateTimeIso: endDateTime.toISO(),
+      fromDateTimeIso: fromDateTime.toISO()!,
+      toDateTimeIso: endDateTime.toISO()!,
     });
   }
   return dateRange;

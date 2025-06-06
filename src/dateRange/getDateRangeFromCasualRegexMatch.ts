@@ -418,7 +418,7 @@ export function getDateRangeFromCasualRegexMatch(
           endDateTime = DateTime.fromISO(
             roundDateUp(
               {
-                dateTimeIso: endDateTime.toISO(),
+                dateTimeIso: endDateTime.toISO()!,
                 granularity: timePart.granularity,
               },
               context
@@ -480,7 +480,7 @@ export function getDateRangeFromCasualRegexMatch(
     endDateTime = DateTime.fromISO(
       roundDateUp(
         {
-          dateTimeIso: fromDateTime.toISO(),
+          dateTimeIso: fromDateTime.toISO()!,
           granularity,
         },
         context
@@ -518,8 +518,8 @@ export function getDateRangeFromCasualRegexMatch(
 
   if (canCacheRange) {
     context.cache?.zone(context.timezone).ranges.set(datePart, {
-      fromDateTimeIso: fromDateTime.toISO(),
-      toDateTimeIso: endDateTime.toISO(),
+      fromDateTimeIso: fromDateTime.toISO()!,
+      toDateTimeIso: endDateTime.toISO()!,
     });
   }
 

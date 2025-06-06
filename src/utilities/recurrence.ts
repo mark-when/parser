@@ -9,7 +9,7 @@ export const expand = (
   limit: number
 ): DateRange[] => {
   const instanceDuration = dateRange.toDateTime.diff(dateRange.fromDateTime);
-  recurrence.dtstart = dateRange.fromDateTime.toISO();
+  recurrence.dtstart = dateRange.fromDateTime.toISO()!;
 
   const rule = new RRule.RRule(toJsDates(recurrence));
   const expansion: DateTime[] = [];

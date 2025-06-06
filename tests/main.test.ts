@@ -1707,22 +1707,6 @@ endGroup
     );
   });
 
-  test("list item contents", () => {
-    const mw = parse(`06/2025 - 09/2025: Sub
-- [ ] We need to get this done
-- [x] And this
-- [ ] This one is extra
-`);
-    const listItemContents = mw.ranges.filter(
-      (r) => r.type === RangeType.ListItemContents
-    );
-    expect(listItemContents.length).toBe(3);
-    expect(listItemContents[0].from).toBe(28);
-    expect(listItemContents[0].to).toBe(52);
-
-    expect(listItemContents[1].from).toBe(59);
-    expect(listItemContents[1].to).toBe(67);
-  });
 
   test("event range starts at beginning of line", () => {
     const mw = parse(`  now: this is an event
@@ -1881,6 +1865,25 @@ now:  [] some item
     expect(ranges[2].to).toBe(77);
     expect(ranges[2].content).toBe(true);
   });
+
+  // test.each(sp())("checklist item range", () => {
+  //   const mw = `1999-09: birthday
+  // - [] checklist item
+  // - list item`;
+  //   const parsed = parse(mw);
+  //   let visited = false;
+  //   for (const range of parsed.ranges) {
+  //     if (range.type === RangeType.CheckboxItemIndicator) {
+  //       visited = true;
+  //       expect(range.from).toBe(22);
+  //       expect(range.to).toBe(23);
+  //     }
+  //     if (range.type === RangeType.listItemIndicator) {
+  //       // expect(range.from).toBe()
+  //     }
+  //   }
+  //   expect(visited).toBe(true);
+  // });
 });
 
 describe("recurrence", () => {

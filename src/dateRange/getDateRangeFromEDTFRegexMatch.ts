@@ -334,7 +334,7 @@ export function getDateRangeFromEDTFRegexMatch(
     endDateTime = DateTime.fromISO(
       roundDateUp(
         {
-          dateTimeIso: fromDateTime.toISO(),
+          dateTimeIso: fromDateTime.toISO()!,
           granularity,
         },
         context
@@ -372,8 +372,8 @@ export function getDateRangeFromEDTFRegexMatch(
 
   if (canCacheRange) {
     context.cache?.zone(context.timezone).ranges.set(datePart, {
-      fromDateTimeIso: fromDateTime.toISO(),
-      toDateTimeIso: endDateTime.toISO(),
+      fromDateTimeIso: fromDateTime.toISO()!,
+      toDateTimeIso: endDateTime.toISO()!,
     });
   }
 

@@ -45,10 +45,10 @@ export const recurrenceDurationUnits = [
 
 function makeRecurrenceSerializable(recurrence: Partial<Options>): Recurrence {
   const until = recurrence.until
-    ? DateTime.fromJSDate(recurrence.until).toISO()
+    ? DateTime.fromJSDate(recurrence.until)?.toISO() ?? undefined
     : undefined;
   const dtstart = recurrence.dtstart
-    ? DateTime.fromJSDate(recurrence.dtstart).toISO()
+    ? DateTime.fromJSDate(recurrence.dtstart)?.toISO() ?? undefined
     : undefined;
   return { ...recurrence, until, dtstart };
 }

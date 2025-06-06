@@ -391,9 +391,9 @@ export interface DateRangeIso {
   toDateTimeIso: DateTimeIso;
 }
 
-export const toDateRangeIso = (dr: DateRange) => ({
-  fromDateTimeIso: dr.fromDateTime.toISO(),
-  toDateTimeIso: dr.toDateTime.toISO(),
+export const toDateRangeIso = (dr: DateRange): DateRangeIso => ({
+  fromDateTimeIso: dr.fromDateTime.toISO()!,
+  toDateTimeIso: dr.toDateTime.toISO()!,
 });
 
 export const toDateRange = (dr: DateRangeIso) => ({

@@ -76,7 +76,7 @@ export function mapUrls(events: { path: Path; event: Event }[]): {
       }
     }
 
-    const date = DateTime.fromISO(fromDateTimeIso).toISODate();
+    const date = DateTime.fromISO(fromDateTimeIso).toISODate()!;
     return checkForDuplicates(date);
   };
 
