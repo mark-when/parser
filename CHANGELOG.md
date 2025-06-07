@@ -1,3 +1,7 @@
+## 0.14.13
+
+- iCal production
+
 ## 0.12.0
 
 Support for properties on events and event groups and restructuring of the parser output.
