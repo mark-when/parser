@@ -3,14 +3,17 @@ import { Path, Eventy, iter, isEvent, DateTimeIso, Event } from "../Types.js";
 
 const disallowedCharacters = /[^A-Za-z0-9_-]/g;
 
-export const toArray = (node: Eventy | undefined, cutoff: DateTime) => {
+export const toArray = (node: Eventy | undefined, cutoff?: DateTime) => {
   if (!node) {
     return [];
   }
   const array = [] as { path: Path; event: Event }[];
   for (const { path, eventy } of iter(node)) {
     if (isEvent(eventy)) {
-      if (+DateTime.fromISO(eventy.dateRangeIso.fromDateTimeIso) < +cutoff) {
+      if (
+        !cutoff ||
+        +DateTime.fromISO(eventy.dateRangeIso.fromDateTimeIso) < +cutoff
+      ) {
         array.push({ path, event: eventy });
       }
     }

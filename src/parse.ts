@@ -12,7 +12,7 @@ import { checkEvent } from "./lineChecks/checkEvent.js";
 import { ParseMessage, ParsingContext } from "./ParsingContext.js";
 import { checkNonEvents } from "./lineChecks/checkNonEvents.js";
 import { parseHeader as _parseHeader } from "./parseHeader.js";
-import * as ICAL from "ical.js";
+import ICAL from "ical.js";
 import { DateTime } from "luxon";
 import {
   DateFormap,
@@ -166,10 +166,11 @@ export function parseICal(
   for (const vevent of vevents) {
     const event = new ICAL.Event(vevent);
 
-    const timezone =
+    // @ts-ignore
+    const timezone: string =
       component
         .getFirstSubcomponent("vtimezone")
-        ?.getFirstPropertyValue<string>("tzid") || "";
+        ?.getFirstPropertyValue("tzid") || "";
 
     const fromDateTime = timezone
       ? DateTime.fromISO(event.startDate.toString(), { zone: timezone })

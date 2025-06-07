@@ -67,6 +67,7 @@ import type { Recurrence } from "./dateRange/checkRecurrence.js";
 import { dateRangeToString } from "./utilities/dateRangeToString.js";
 import { mapUrls, toArray as toArraySorted } from "./utilities/urls.js";
 import { set as headerSet } from "./utilities/header.js";
+import { toICal } from "./ical.js";
 
 export {
   parse,
@@ -135,4 +136,5 @@ export {
   headerSet,
   ParseMessage,
   incrementalParse,
+  toICal,
 };
