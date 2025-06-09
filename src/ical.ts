@@ -90,18 +90,32 @@ ${foldLine(`DESCRIPTION:${description}`)}
 END:VEVENT`;
 }
 
-export function toICal(mw: ParseResult): string {
+export function toICal(
+  mw: ParseResult,
+  options?: {
+    name?: string;
+  }
+): string {
   const asArray = toArraySorted(mw.events);
   const events = mapUrls(asArray);
   const body = events.map(eventToIcal).join("\n");
-
-  const ical = `BEGIN:VCALENDAR
+  const pre = `BEGIN:VCALENDAR
 PRODID:-//Markwhen//Version 1.0//EN
 VERSION:2.0
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
-${body}
+`;
+
+  const post = `
 END:VCALENDAR`;
 
-  return ical;
+  return (
+    pre +
+    (options?.name
+      ? `NAME:${options.name}
+`
+      : "") +
+    body +
+    post
+  );
 }
