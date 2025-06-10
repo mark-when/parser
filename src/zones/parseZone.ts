@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { Caches } from "../Cache";
 
-export function parseZone(zoneString: string, cache?: Caches) {
+export function parseZone(zoneString: string | number, cache?: Caches) {
   const tz = `${zoneString}`;
   const cached = cache?.zones.get(tz);
   if (cached) {

@@ -154,40 +154,10 @@ export function checkEvent(
     completed
   );
 
-  // See if we need to adjust things based on our timezone
-  const timezoneProperty = properties.find(([k, v]) => {
-    return (
-      (k === "tz" || k === "timezone") &&
-      (typeof v === "string" || typeof v === "number")
-    );
-  });
-  if (timezoneProperty) {
-    const zone = parseZone(timezoneProperty[1], context.cache);
-    if (zone) {
-      dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
-        keepLocalTime: true,
-      });
-      dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
-        keepLocalTime: true,
-      });
-    } else {
-      context.parseMessages.push({
-        type: "error",
-        message: `Unable to parse timezone "${timezoneProperty[1]}"`,
-        pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
-      });
-    }
-  } else {
-    const headerTagDef =
-      eventDescription.tags.length &&
-      context.header[
-        `)${eventDescription.tags[eventDescription.tags.length - 1]}`
-      ];
-    if (
-      typeof headerTagDef === "object" &&
-      typeof headerTagDef.timezone !== "undefined"
-    ) {
-      const zone = parseZone(headerTagDef.timezone, context.cache);
+  const tz = properties.find(([k, v]) => k === "tz" || k === "timezone");
+  if (tz) {
+    if (typeof tz[1] === "string" || typeof tz[1] === "number") {
+      const zone = parseZone(tz[1], context.cache);
       if (zone) {
         dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
           keepLocalTime: true,
@@ -195,7 +165,58 @@ export function checkEvent(
         dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
           keepLocalTime: true,
         });
+      } else {
+        context.parseMessages.push({
+          type: "error",
+          message: `Unable to parse timezone "${tz[1]}"`,
+          pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+        });
       }
+    } else if (typeof tz[1] === "object" && Array.isArray(tz[1])) {
+      const from = tz[1].find(([k]) => k === "from");
+      const to = tz[1].find(([k]) => k === "to");
+      if (!from && !to) {
+        context.parseMessages.push({
+          type: "error",
+          message:
+            "Unable to parse distinct from and to timezones. Specify 'timezone.from' and/or 'timezone.to' to set zones for the start or end of ranges, respectively.",
+          pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+        });
+      }
+      if (from) {
+        const zone = parseZone(from[1], context.cache);
+        if (zone) {
+          dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
+            keepLocalTime: true,
+          });
+        } else {
+          context.parseMessages.push({
+            type: "error",
+            message: `Unable to parse 'from' timezone "${from}"`,
+            pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+          });
+        }
+      }
+      if (to) {
+        const zone = parseZone(to[1], context.cache);
+        if (zone) {
+          dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
+            keepLocalTime: true,
+          });
+        } else {
+          context.parseMessages.push({
+            type: "error",
+            message: `Unable to parse 'to' timezone "${to}"`,
+            pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+          });
+        }
+      }
+    } else {
+      context.parseMessages.push({
+        type: "error",
+        message: `Unable to parse timezone "${tz[1]}"`,
+        pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
+      });
     }
   }
 
