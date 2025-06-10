@@ -64,12 +64,10 @@ export const UNTIL_REGEX = new RegExp(
   `(\\s+(?:(?:(?:un)?til)|(?:to)|(?:\\|))\\s+(${START_OR_END_TIME_REGEX.source}))?`
 );
 
-export const RECURRENCE_REGEX = new RegExp(
-  `\\s*every[^:]+`
-);
+export const RECURRENCE_REGEX = new RegExp(`\\s*every[^:]+`);
 
 export const DATE_RANGE_REGEX = new RegExp(
-  `((${START_OR_END_TIME_REGEX.source})(?:\\s*(?:-|to)\\s*(${START_OR_END_TIME_REGEX.source}))?)(${RECURRENCE_REGEX.source})?\\s*:`
+  `((${START_OR_END_TIME_REGEX.source})(?:(?:(?:\\s*-\\s*)|(?:\\s+to\\s+))(${START_OR_END_TIME_REGEX.source}))?)(${RECURRENCE_REGEX.source})?\\s*:`
 );
 
 export const EVENT_START_REGEX = new RegExp(
