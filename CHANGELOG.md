@@ -1,3 +1,7 @@
+## 0.14.15
+
+- `from` and `to` for event timezones
+
 ## 0.14.14
 
 - Name for iCal calendar
