@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import { mapUrls, toArraySorted } from ".";
+import { mapUrls, toArray } from "./utilities/urls.js";
 import { Block, Event, Image, ParseResult, toDateRange } from "./Types";
 
 function formatDate(date: DateTime): string {
@@ -96,7 +96,7 @@ export function toICal(
     name?: string;
   }
 ): string {
-  const asArray = toArraySorted(mw.events);
+  const asArray = toArray(mw.events);
   const events = mapUrls(asArray);
   const body = events.map(eventToIcal).join("\n");
   const pre = `BEGIN:VCALENDAR
