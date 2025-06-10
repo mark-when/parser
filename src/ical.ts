@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { mapUrls, toArray } from "./utilities/urls.js";
-import { Block, Event, Image, ParseResult, toDateRange } from "./Types";
+import { Block, Event, Image, ParseResult, toDateRange } from "./Types.js";
 
 function formatDate(date: DateTime): string {
   return (
