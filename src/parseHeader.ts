@@ -25,6 +25,7 @@ const stringEmailListToArray = (s: string) =>
     );
 
 const headerKeyRegex = /^([^:]+)(:)(?:\s|$)/;
+const propertyKeyRegex = /^(?!-)\s*([\w\-\.]+)(:)(?:\s|$)/;
 const headerValueRegex = /(:)\s+(.+)$/;
 
 const eventsStarted = (line: string) =>
@@ -54,8 +55,6 @@ export function parseProperties(
   const threeDashRanges = [];
 
   let line = lines[propertiesStartLineIndex];
-
-  const propertyKeyRegex = /^(?!-)\s*(\w+)(:)(?:\s|$)/;
   while (typeof line !== "undefined") {
     if (!hasThreeDashStart && eventsStarted(line)) {
       break;

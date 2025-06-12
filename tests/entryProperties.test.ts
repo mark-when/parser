@@ -194,6 +194,26 @@ x: something:with colon `;
   });
 });
 
+describe("permitted keys", () => {
+  test("dashes", () => {
+    const mw = `1999: event
+    key-with-dashes: value`;
+
+    const events = parse(mw);
+    const first = nthEvent(events, 0);
+    expect(first.properties[0][0]).toBe("key-with-dashes");
+  });
+
+  test("periods", () => {
+    const mw = `1999: event
+    key-with.period: value`;
+
+    const events = parse(mw);
+    const first = nthEvent(events, 0);
+    expect(first.properties[0][0]).toBe("key-with.period");
+  });
+});
+
 describe("group properties", () => {
   test.each(sp())("group can have properties", () => {
     const mw = `1999-09: birthday
