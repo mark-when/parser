@@ -1,3 +1,7 @@
+## 0.14.18
+
+- Allow periods and dashes in event and group property keys
+
 ## 0.14.17
 
 - And another one
