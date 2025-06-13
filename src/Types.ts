@@ -414,7 +414,8 @@ export class EventGroup {
     whole: Range;
     definition: Range;
   };
-  properties: [string, any][] = [];
+  properties: any;
+  propOrder: string[] = [];
   tags: string[] = [];
   title: string = "";
   range?: GroupRange;
@@ -437,7 +438,8 @@ export class Event {
     definition: Range;
     recurrence?: Range;
   };
-  properties: [string, any][];
+  properties: any;
+  propOrder: string[];
   dateRangeIso: DateRangeIso;
   recurrence?: Recurrence;
   tags: string[];
@@ -450,7 +452,8 @@ export class Event {
 
   constructor(
     firstLine: string,
-    properties: [string, any][],
+    properties: any,
+    propOrder: string[],
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
@@ -464,6 +467,7 @@ export class Event {
       restTrimmed: eventDescription.eventDescription,
     };
     this.properties = properties;
+    this.propOrder = propOrder;
     this.textRanges = {
       whole: rangeInText,
       datePart: dateRangeInText,
@@ -476,9 +480,8 @@ export class Event {
     this.supplemental = eventDescription.supplemental;
     this.matchedListItems = eventDescription.matchedListItems;
     this.id =
-      properties.find(
-        ([key, value]) => key === "id" && typeof value === "string"
-      )?.[1] || eventDescription.id;
+      (typeof properties.id === "string" ? properties.id : undefined) ||
+      eventDescription.id;
     this.percent = eventDescription.percent;
     this.completed = eventDescription.completed;
     this.isRelative = dateRange.isRelative;

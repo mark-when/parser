@@ -110,12 +110,11 @@ export function checkEvent(
     return i;
   }
 
-  const { properties, i: from } = parseProperties(
-    lines,
-    lengthAtIndex,
-    i + 1,
-    context
-  );
+  const {
+    properties,
+    i: from,
+    propOrder,
+  } = parseProperties(lines, lengthAtIndex, i + 1, context);
 
   const matchedListItems = [];
   let end = from - 1;
@@ -154,10 +153,10 @@ export function checkEvent(
     completed
   );
 
-  const tz = properties.find(([k, v]) => k === "tz" || k === "timezone");
+  const tz = properties.timezone || properties.tz;
   if (tz) {
-    if (typeof tz[1] === "string" || typeof tz[1] === "number") {
-      const zone = parseZone(tz[1], context.cache);
+    if (typeof tz === "string" || typeof tz === "number") {
+      const zone = parseZone(tz, context.cache);
       if (zone) {
         dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
           keepLocalTime: true,
@@ -168,13 +167,13 @@ export function checkEvent(
       } else {
         context.parseMessages.push({
           type: "error",
-          message: `Unable to parse timezone "${tz[1]}"`,
+          message: `Unable to parse timezone "${tz}"`,
           pos: [dateRange.dateRangeInText.from, dateRange.dateRangeInText.to],
         });
       }
-    } else if (typeof tz[1] === "object" && Array.isArray(tz[1])) {
-      const from = tz[1].find(([k]) => k === "from");
-      const to = tz[1].find(([k]) => k === "to");
+    } else if (typeof tz === "object") {
+      const from = tz.from;
+      const to = tz.to;
       if (!from && !to) {
         context.parseMessages.push({
           type: "error",
@@ -184,7 +183,7 @@ export function checkEvent(
         });
       }
       if (from) {
-        const zone = parseZone(from[1], context.cache);
+        const zone = parseZone(from, context.cache);
         if (zone) {
           dateRange.fromDateTime = dateRange.fromDateTime.setZone(zone, {
             keepLocalTime: true,
@@ -198,7 +197,7 @@ export function checkEvent(
         }
       }
       if (to) {
-        const zone = parseZone(to[1], context.cache);
+        const zone = parseZone(to, context.cache);
         if (zone) {
           dateRange.toDateTime = dateRange.toDateTime.setZone(zone, {
             keepLocalTime: true,
@@ -229,6 +228,7 @@ export function checkEvent(
   const event = new Event(
     line,
     properties,
+    propOrder,
     dateRange,
     eventRange,
     dateRange.dateRangeInText,

@@ -25,29 +25,27 @@ export function checkGroupStart(
 
     // This should create a new Array<Node> that we can push
     const group = parseGroupFromStartTag(line, groupStart, range);
-    const { properties, i: end } = parseProperties(
-      lines,
-      lengthAtIndex,
-      i + 1,
-      context
-    );
+    const {
+      properties,
+      i: end,
+      propOrder,
+    } = parseProperties(lines, lengthAtIndex, i + 1, context);
 
     group.properties = properties;
-    const timezoneProperty = properties.find(([k, v]) => {
-      return (
-        (k === "tz" || k === "timezone") &&
-        (typeof v === "string" || typeof v === "number")
-      );
-    });
-    if (timezoneProperty) {
-      const zone = parseZone(timezoneProperty[1], context.cache);
+    group.propOrder = propOrder
+    let tz = properties.timezone || properties.tz;
+    if (typeof tz !== "string" && typeof tz !== "number") {
+      tz = undefined;
+    }
+    if (tz) {
+      const zone = parseZone(tz, context.cache);
       // We're not saving it on the group but instead looking it up when needed. Parsing
       // it now will save it in the cache
       // We can, though, indicate whether the zone is erroneous with a parse message.
       if (!zone) {
         context.parseMessages.push({
           type: "error",
-          message: `Unable to parse timezone "${timezoneProperty[1]}"`,
+          message: `Unable to parse timezone "${tz}"`,
           pos: [range.from, range.to],
         });
       }

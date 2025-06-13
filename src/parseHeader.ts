@@ -13,7 +13,10 @@ import {
   GROUP_START_REGEX,
 } from "./regex.js";
 import { parseZone } from "./zones/parseZone.js";
-import { checkHeaderTags, propertyHexReplacer } from "./lineChecks/checkTags.js";
+import {
+  checkHeaderTags,
+  propertyHexReplacer,
+} from "./lineChecks/checkTags.js";
 
 const stringEmailListToArray = (s: string) =>
   s
@@ -88,7 +91,7 @@ export function parseProperties(
     );
 
     if (!isComment) {
-      line = propertyHexReplacer(line)
+      line = propertyHexReplacer(line);
     }
     if (!isComment && !isThreeDash) {
       const keyMatch = line.match(propertyKeyRegex);
@@ -126,13 +129,21 @@ export function parseProperties(
     line = lines[++propertiesEndLineIndex];
   }
 
-  let properties: [string, any][] = [];
+  let properties = {} as any;
+  let propOrder: string[] = [];
   if (propertyLines.length) {
     try {
       const map = YAML.parse(propertyLines.join("\n"), {
         mapAsMap: true,
       }) as Map<any, any>;
-      properties = mapToArrays(map);
+      propOrder = (() => {
+        const o = [];
+        for (const k of map.keys()) {
+          o.push(k);
+        }
+        return o;
+      })();
+      properties = deepMapToObject(map);
       context.ranges.push(...propertyRanges);
     } catch (e) {
       if (e instanceof YAML.YAMLParseError) {
@@ -177,20 +188,27 @@ export function parseProperties(
 
   return {
     properties,
+    propOrder,
     i: propertiesEndLineIndex,
   };
 }
 
-function mapToArrays(map: Map<any, any>) {
-  let arr: [string, any][] = [];
-  map.forEach((value, key) => {
+function deepMapToObject(map: Map<any, any>) {
+  const obj = {} as any;
+  for (const [key, value] of map.entries()) {
     if (value instanceof Map) {
-      arr.push([key, mapToArrays(value)]);
+      obj[key] = deepMapToObject(value);
+    } else if (
+      typeof value === "object" &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
+      obj[key] = deepMapToObject(new Map(Object.entries(value)));
     } else {
-      arr.push([key, value]);
+      obj[key] = value;
     }
-  });
-  return arr;
+  }
+  return obj;
 }
 
 export function parseHeader(

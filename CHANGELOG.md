@@ -1,4 +1,9 @@
-## 0.14.19 
+## 0.15.0
+
+- Breaking because the types of `event.properties` and `group.properties` have changed from `[string, any][]` to `any`.
+- Event and group properties are now objects instead of nested arrays. Both groups and events have a new property `propOrder` which is an array of ordered keys of top level properties.
+
+## 0.14.19
 
 - deal with event prop hastags like we do in the header
 
