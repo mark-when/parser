@@ -1,3 +1,7 @@
+## 0.14.19 
+
+- deal with event prop hastags like we do in the header
+
 ## 0.14.18
 
 - Allow periods and dashes in event and group property keys
