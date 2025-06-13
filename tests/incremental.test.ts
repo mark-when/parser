@@ -167,7 +167,6 @@ describe("incremental parsing", () => {
       try {
         expect(np).toMatchObject(ip);
       } catch {
-        debugger;
       } finally {
         writeFileSync(
           "./tests/inc.csv",
@@ -214,7 +213,6 @@ describe("incremental parsing", () => {
       try {
         expect(np).toMatchObject(ip);
       } catch {
-        debugger;
       } finally {
         writeFileSync(
           "./tests/inc-delete.csv",

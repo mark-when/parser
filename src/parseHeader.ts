@@ -13,7 +13,7 @@ import {
   GROUP_START_REGEX,
 } from "./regex.js";
 import { parseZone } from "./zones/parseZone.js";
-import { checkHeaderTags } from "./lineChecks/checkTags.js";
+import { checkHeaderTags, propertyHexReplacer } from "./lineChecks/checkTags.js";
 
 const stringEmailListToArray = (s: string) =>
   s
@@ -87,6 +87,9 @@ export function parseProperties(
       context
     );
 
+    if (!isComment) {
+      line = propertyHexReplacer(line)
+    }
     if (!isComment && !isThreeDash) {
       const keyMatch = line.match(propertyKeyRegex);
       if (keyMatch) {

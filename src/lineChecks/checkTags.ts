@@ -2,6 +2,22 @@ import { ParsingContext } from "../ParsingContext.js";
 import { TAG_REGEX } from "../regex.js";
 import { RangeType } from "../Types.js";
 
+export function propertyHexReplacer(line: string) {
+  return line.replace(
+    /(^|\W+)#(\w+)/g,
+    (
+      match: string,
+      preHashWhitespace: string,
+      tagName: string,
+      offset: number,
+      str: string
+    ) => {
+      // replace the hash with a right paren so we can parse it
+      return `${preHashWhitespace})${tagName}`;
+    }
+  );
+}
+
 export function checkHeaderTags(
   line: string,
   i: number,

@@ -214,6 +214,17 @@ describe("permitted keys", () => {
   });
 });
 
+describe("hex values", () => {
+  test("replaces hex with right paren", () => {
+    const mw = `2028: event
+    key:  
+      nested: #value`;
+    const events = parse(mw);
+    const first = nthEvent(events, 0);
+    expect(first.properties[0][1][0][1]).toBe(")value");
+  });
+});
+
 describe("group properties", () => {
   test.each(sp())("group can have properties", () => {
     const mw = `1999-09: birthday
