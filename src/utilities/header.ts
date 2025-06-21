@@ -52,7 +52,8 @@ const hashReplacer = (s: string) =>
 export function set(
   mw: string,
   key: string,
-  value: string | Object | string[] | Object[] | undefined
+  value: string | Object | string[] | Object[] | undefined,
+  merge: boolean = false
 ) {
   const path = key.split(".");
   const {
@@ -98,11 +99,11 @@ export function set(
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
 
-    const stringToInsert = () =>
+    const stringToInsert = (valueToInsert: any = value) =>
       stringify(
         objFromKeysAndValue(
           path.slice(i),
-          typeof value === "string" ? hashReplacer(value) : value
+          typeof valueToInsert === "string" ? hashReplacer(valueToInsert) : valueToInsert
         )
       )
         .split("\n")
@@ -146,8 +147,25 @@ export function set(
             break;
           }
         }
+        
+        // Determine if we need to preserve newlines
+        // For simple values (strings, numbers, etc.), we don't want to add newlines
+        const isSimpleValue = typeof value !== "object" || value === null;
+        const preserveNewlines = !isSimpleValue || (typeof obj[key] === "object");
+        
+        // If merge is true and we're at the last key in the path and the current value is an object
+        if (merge && i === path.length - 1 && typeof obj[key] === "object" && value !== undefined && typeof value === "object") {
+          // Merge the new value with the existing object
+          const mergedValue = { ...obj[key], ...value };
+          return {
+            insert: stringToInsert(mergedValue) + (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
+            from: lengthAtIndex[searchRange.startLine] || 0,
+            to: lengthAtIndex[searchRange.endLine] || 0,
+          };
+        }
+        
         return {
-          insert: stringToInsert() + "\n".repeat(additionalNewlines),
+          insert: stringToInsert() + (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
           from: lengthAtIndex[searchRange.startLine] || 0,
           to: lengthAtIndex[searchRange.endLine] || 0,
         };

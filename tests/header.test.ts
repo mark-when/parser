@@ -226,6 +226,95 @@ const replace = (
       (toInsert.to ? originalString.substring(toInsert.to) : 0)
     : originalString;
 
+describe("Merge functionality", () => {
+  test.each(sp())("can merge object with existing object", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`;
+
+    // Set with merge=true should preserve notherKey
+    const toInsert = set(mw, "objectAsValue", { aKey: "new value" }, true);
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: new value
+  notherKey: v
+
+`);
+  });
+
+  test.each(sp())("merge=false should overwrite the entire object", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`;
+
+    // Set with merge=false should overwrite the entire object
+    const toInsert = set(mw, "objectAsValue", { aKey: "new value" }, false);
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: new value
+
+`);
+  });
+
+  test.each(sp())("can merge nested objects", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    nestedKey1: value1
+    nestedKey2: value2
+  notherKey: v
+`;
+
+    // Set with merge=true should preserve nestedKey2
+    const toInsert = set(mw, "objectAsValue.aKey", { nestedKey1: "new value", nestedKey3: "added value" }, true);
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    nestedKey1: new value
+    nestedKey2: value2
+    nestedKey3: added value
+  notherKey: v
+`);
+  });
+
+  test.each(sp())("merge only applies to objects", () => {
+    const mw = `title: this is the title
+description: This is the description
+stringValue: original string
+`;
+
+    // Merge should have no effect when the target is not an object
+    const toInsert = set(mw, "stringValue", "new string", true);
+    expect(replace(mw, toInsert)).toBe(`title: this is the title
+description: This is the description
+stringValue: new string
+`);
+  });
+
+  test.each(sp())("merge with undefined should be handled gracefully", () => {
+    const mw = `title: this is the title
+description: This is the description
+objectAsValue:
+  aKey: value
+  notherKey: v
+`;
+
+    // Merge with undefined should not cause errors
+    const toInsert = set(mw, "objectAsValue", undefined, true);
+    expect(toInsert).toBeDefined();
+  });
+});
+
 describe("Programmatic editing", () => {
   test.each(sp())("can overwrite string", () => {
     const mw = `title: this is the title
