@@ -328,7 +328,7 @@ const replace = (
     : originalString;
 
 describe("setting eventy properties", () => {
-  test.only.each(sp())("can set group property", () => {
+  test.each(sp())("can set group property", () => {
     const mw = `group My group
   2022-04: Birthday month`;
 

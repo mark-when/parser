@@ -1,5 +1,7 @@
 import { stringify } from "yaml";
-import { parseHeader } from "../parse.js";
+import { parse, parseHeader } from "../parse.js";
+import { Eventy, get, isEvent, Path } from "../Types.js";
+import { linesAndLengths } from "../lines.js";
 
 function findLine(lines: string[], regex: RegExp, searchRange: SearchRange) {
   for (let i = searchRange.startLine; i < searchRange.endLine; i++) {
@@ -103,7 +105,9 @@ export function set(
       stringify(
         objFromKeysAndValue(
           path.slice(i),
-          typeof valueToInsert === "string" ? hashReplacer(valueToInsert) : valueToInsert
+          typeof valueToInsert === "string"
+            ? hashReplacer(valueToInsert)
+            : valueToInsert
         )
       )
         .split("\n")
@@ -147,25 +151,35 @@ export function set(
             break;
           }
         }
-        
+
         // Determine if we need to preserve newlines
         // For simple values (strings, numbers, etc.), we don't want to add newlines
         const isSimpleValue = typeof value !== "object" || value === null;
-        const preserveNewlines = !isSimpleValue || (typeof obj[key] === "object");
-        
+        const preserveNewlines = !isSimpleValue || typeof obj[key] === "object";
+
         // If merge is true and we're at the last key in the path and the current value is an object
-        if (merge && i === path.length - 1 && typeof obj[key] === "object" && value !== undefined && typeof value === "object") {
+        if (
+          merge &&
+          i === path.length - 1 &&
+          typeof obj[key] === "object" &&
+          value !== undefined &&
+          typeof value === "object"
+        ) {
           // Merge the new value with the existing object
           const mergedValue = { ...obj[key], ...value };
           return {
-            insert: stringToInsert(mergedValue) + (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
+            insert:
+              stringToInsert(mergedValue) +
+              (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
             from: lengthAtIndex[searchRange.startLine] || 0,
             to: lengthAtIndex[searchRange.endLine] || 0,
           };
         }
-        
+
         return {
-          insert: stringToInsert() + (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
+          insert:
+            stringToInsert() +
+            (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
           from: lengthAtIndex[searchRange.startLine] || 0,
           to: lengthAtIndex[searchRange.endLine] || 0,
         };
@@ -182,3 +196,85 @@ export function set(
     indentation++;
   }
 }
+
+function findEventyLine(
+  eventy: Eventy,
+  lines: string[],
+  lengthAtIndex: number[]
+) {
+  const startIndex = eventy.textRanges.whole.from;
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (lengthAtIndex[i] <= startIndex && lengthAtIndex[i + 1] > startIndex) {
+      return i;
+    }
+  }
+}
+
+export function entrySet(
+  mw: string,
+  path: Path,
+  key: string,
+  value: string | Object | string[] | Object[] | undefined,
+  merge: boolean = false
+) {
+  const { lines, lengthAtIndex } = linesAndLengths(mw);
+
+  const parsed = parse(lines);
+  const eventy = get(parsed.events, path);
+
+  if (!eventy) {
+    console.log("No eventy found at", path);
+    return;
+  }
+
+  const eventyLineIndex = findEventyLine(eventy, lines, lengthAtIndex);
+  if (typeof eventyLineIndex !== "number") {
+    console.log("Unable to find line for eventy", eventy);
+    return;
+  }
+
+  // Find the indentation level based on the path depth
+  const indentation = "  ".repeat(path.length);
+
+  // Find the line index where we should insert the property
+  const insertPosition = lengthAtIndex[eventyLineIndex + 1];
+
+  // Check if the property already exists
+  const properties = eventy.properties || {};
+
+  // If merge is true and the property exists and is an object
+  if (
+    merge &&
+    key in properties &&
+    typeof properties[key] === "object" &&
+    value !== undefined &&
+    typeof value === "object"
+  ) {
+    // Merge the new value with the existing object
+    const mergedValue = { ...properties[key], ...value };
+    return {
+      insert: `${indentation}${key}: ${mergedValue}\n`,
+      from: insertPosition,
+      to: insertPosition,
+    };
+  }
+
+  // Otherwise, just set the property
+  return {
+    insert: `${indentation}${key}: ${value}\n`,
+    from: insertPosition,
+    to: insertPosition,
+  };
+}
+
+// export function entriesSet(
+//   mw: string,
+//   sets: {
+//     path: Path;
+//     key: string;
+//     value: string | Object | string[] | Object[] | undefined;
+//     merge?: boolean;
+//   }[]
+// ) {
+
+// }
