@@ -1,4 +1,5 @@
 import { Event, isEvent, iter, parse, RangeType } from "../src";
+import { entrySet } from "../src/utilities/header";
 import { nthEvent, sp } from "./testUtilities";
 
 const first = (mw: string) => nthEvent(parse(mw), 0);
@@ -313,5 +314,132 @@ abc: 123
 
     expect(nthEvent(events, 0).firstLine.restTrimmed).toBe("birthday");
     expect(nthEvent(events, 1).firstLine.restTrimmed).toBe("another event");
+  });
+});
+
+const replace = (
+  originalString: string,
+  toInsert?: { from: number; insert: string; to: number }
+) =>
+  toInsert
+    ? originalString.substring(0, toInsert.from) +
+      toInsert.insert +
+      (toInsert.to ? originalString.substring(toInsert.to) : 0)
+    : originalString;
+
+describe("setting eventy properties", () => {
+  test.only.each(sp())("can set group property", () => {
+    const mw = `group My group
+  2022-04: Birthday month`;
+
+    const toInsert = entrySet(mw, [0], "key", "value");
+    expect(replace(mw, toInsert)).toBe(`group My group
+  key: value
+  2022-04: Birthday month`);
+  });
+
+  test.each(sp())("can set event property", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+  endGroup
+endGroup`;
+
+    const toInsert = entrySet(mw, [0, 1, 0], "key", "value");
+    expect(replace(mw, toInsert)).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      key: value
+  endGroup
+endGroup`);
+  });
+
+  test.each(sp())("can set nested event property", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+  endGroup
+endGroup`;
+
+    const toInsert = entrySet(mw, [0, 1], "layer.nested", [
+      "array",
+      "of",
+      "values",
+    ]);
+    expect(replace(mw, toInsert)).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    layer:
+      nested: ['array', 'of', 'values']
+    2026-04: Another birthday month
+      key: value
+  endGroup
+endGroup`);
+  });
+
+  test.each(sp())("can set prop on last eventy", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+  endGroup
+endGroup
+
+now: hi`;
+
+    const toInsert = entrySet(mw, [1], "layer.nested", 12);
+    expect(replace(mw, toInsert)).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      key: value
+  endGroup
+endGroup
+
+now: hi
+  layer:
+    nested: 12`);
+  });
+
+  test.each(sp())("adds new properties below others", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      property: value
+      other: thing
+  endGroup
+endGroup
+
+now: hi`;
+
+    const toInsert = entrySet(mw, [0, 1, 1], "layer.nested", 12);
+    expect(replace(mw, toInsert)).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      property: value
+      other: thing
+      layer:
+        nested: 12
+  endGroup
+endGroup
+
+now: hi
+  layer:
+    nested: 12`);
+  });
+
+  test.each(sp())("can use hex values as properties", () => {
+    const mw = `group My group
+  2022-04: Birthday month`;
+
+    const toInsert = entrySet(mw, [0], "key", "#123fde");
+    expect(replace(mw, toInsert)).toBe(`group My group
+  key: #123fde
+  2022-04: Birthday month`);
   });
 });
