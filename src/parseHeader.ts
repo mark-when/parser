@@ -3,6 +3,7 @@ import * as YAML from "yaml";
 import {
   AMERICAN_DATE_FORMAT,
   EUROPEAN_DATE_FORMAT,
+  Range,
   RangeType,
 } from "./Types.js";
 import { checkComments } from "./lineChecks/checkComments.js";
@@ -131,7 +132,15 @@ export function parseProperties(
 
   let properties = {} as any;
   let propOrder: string[] = [];
+  let range: Range | undefined;
   if (propertyLines.length) {
+    range = {
+      from: lengthAtIndex[firstPropertiesLineIndexWithText],
+      to:
+        lengthAtIndex[lastPropertiesLineIndexWithText] +
+        lines[lastPropertiesLineIndexWithText].length,
+      type: RangeType.Properties,
+    };
     try {
       const map = YAML.parse(propertyLines.join("\n"), {
         mapAsMap: true,
@@ -162,10 +171,11 @@ export function parseProperties(
 
   if (threeDashRanges.length === 2) {
     const index = lengthAtIndex[propertiesStartLineIndex];
+    const to = lengthAtIndex[propertiesEndLineIndex] - 1;
     context.foldables[index] = {
       startLine: propertiesStartLineIndex,
       startIndex: index,
-      endIndex: lengthAtIndex[propertiesEndLineIndex] - 1,
+      endIndex: to,
       type: "header",
       foldStartIndex: threeDashRanges.length === 2 ? index + 3 : index,
     };
@@ -175,10 +185,13 @@ export function parseProperties(
       lastPropertiesLineIndexWithText !== firstPropertiesLineIndexWithText
     ) {
       const index = lengthAtIndex[firstPropertiesLineIndexWithText];
+      const to =
+        lengthAtIndex[lastPropertiesLineIndexWithText] +
+        lines[lastPropertiesLineIndexWithText].length;
       const foldable: Foldable = {
         startLine: firstPropertiesLineIndexWithText,
         startIndex: index,
-        endIndex: lengthAtIndex[lastPropertiesLineIndexWithText + 1] - 1,
+        endIndex: to,
         type: "header",
         foldStartIndex: index,
       };
@@ -190,6 +203,7 @@ export function parseProperties(
     properties,
     propOrder,
     i: propertiesEndLineIndex,
+    range,
   };
 }
 

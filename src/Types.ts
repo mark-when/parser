@@ -377,6 +377,7 @@ export enum RangeType {
   PropertyValue = "propertyValue",
   EventDefinition = "eventDefinition",
   SectionDefinition = "sectionDefinition",
+  Properties = "properties",
 }
 
 export type Range = {
@@ -413,9 +414,11 @@ export class EventGroup {
   textRanges!: {
     whole: Range;
     definition: Range;
+    properties?: Range;
   };
   properties: any;
   propOrder: string[] = [];
+  propRange?: Range;
   tags: string[] = [];
   title: string = "";
   range?: GroupRange;
@@ -437,6 +440,7 @@ export class Event {
     datePart: Range;
     definition: Range;
     recurrence?: Range;
+    properties?: Range;
   };
   properties: any;
   propOrder: string[];
@@ -454,6 +458,7 @@ export class Event {
     firstLine: string,
     properties: any,
     propOrder: string[],
+    propRange: Range | undefined,
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
@@ -473,6 +478,7 @@ export class Event {
       datePart: dateRangeInText,
       definition: dateRangeInText,
       recurrence: dateRange.recurrenceRangeInText,
+      properties: propRange,
     };
     this.dateRangeIso = toDateRangeIso(dateRange);
     this.recurrence = dateRange.recurrence;

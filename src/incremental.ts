@@ -462,11 +462,12 @@ function graft({
           continue outer;
         }
       }
-      if (isGroup(eventy)) {
-        eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
-      } else {
+      eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
+      if (eventy.textRanges.properties) {
+        eventy.textRanges.properties = mapRange(eventy.textRanges.properties);
+      }
+      if (!isGroup(eventy)) {
         eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
-        eventy.textRanges.whole = mapRange(eventy.textRanges.whole);
         eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
         if (eventy.textRanges.recurrence) {
           eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);

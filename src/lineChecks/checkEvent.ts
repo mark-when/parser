@@ -114,6 +114,7 @@ export function checkEvent(
     properties,
     i: from,
     propOrder,
+    range: propRange,
   } = parseProperties(lines, lengthAtIndex, i + 1, context);
 
   const matchedListItems = [];
@@ -229,6 +230,7 @@ export function checkEvent(
     line,
     properties,
     propOrder,
+    propRange,
     dateRange,
     eventRange,
     dateRange.dateRangeInText,

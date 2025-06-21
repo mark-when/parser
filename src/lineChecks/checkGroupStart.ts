@@ -29,10 +29,12 @@ export function checkGroupStart(
       properties,
       i: end,
       propOrder,
+      range: propRange,
     } = parseProperties(lines, lengthAtIndex, i + 1, context);
 
     group.properties = properties;
-    group.propOrder = propOrder
+    group.propOrder = propOrder;
+    group.textRanges.properties = propRange;
     let tz = properties.timezone || properties.tz;
     if (typeof tz !== "string" && typeof tz !== "number") {
       tz = undefined;

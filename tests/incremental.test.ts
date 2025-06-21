@@ -9,6 +9,7 @@ import {
   basic,
   basic78,
   basic86,
+  eventsWithFromAndToTz,
   eventsWithTz,
   grievous256,
   grievous324,
@@ -97,6 +98,13 @@ const docs: [string, ChangeSpec][] = [
     ChangeSet.of(
       { insert: "\n 5 years: ok \n", from: recurrence1.length },
       [recurrence1, "5 years: ok", recurrence14].join("\n").length
+    ),
+  ],
+  [
+    eventsWithFromAndToTz,
+    ChangeSet.of(
+      { insert: "Oh: okay", from: 200 },
+      eventsWithFromAndToTz.length
     ),
   ],
 ];
