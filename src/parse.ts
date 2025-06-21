@@ -21,6 +21,7 @@ import {
 } from "./utilities/dateRangeToString.js";
 import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
 import { Text } from "@codemirror/state";
+import { linesAndLengths } from "./lines.js";
 
 // The bump script looks for this line specifically,
 // if you edit it you need to edit the bump script as well
@@ -54,27 +55,6 @@ export function parseDateRange(
   }
   return dateRange;
 }
-
-const linesAndLengths = (timelineString: string | string[] | Text) => {
-  const lines =
-    timelineString instanceof Text
-      ? timelineString.toJSON()
-      : Array.isArray(timelineString)
-      ? timelineString
-      : timelineString.split("\n");
-  let lengthAtIndex: number[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (i === 0) {
-      lengthAtIndex.push(0);
-    }
-    lengthAtIndex.push(
-      (i === lines.length - 1 ? 0 : 1) +
-        lines[i].length +
-        lengthAtIndex[lengthAtIndex.length - 1] || 0
-    );
-  }
-  return { lines, lengthAtIndex };
-};
 
 export function parse(
   timelineString?: string | string[] | Text,
