@@ -27,16 +27,18 @@ const objFromKeysAndValue = (keys: string[], value: any) => {
 };
 
 const parenReplacer = (s: string) =>
-  s.replace(
-    /(^|\W+)\)(\w+)/g,
-    (
-      match: string,
-      preHashWhitespace: string,
-      tagName: string,
-      offset: number,
-      str: string
-    ) => `${preHashWhitespace}#${tagName}`
-  );
+  s
+    .replace(
+      /(^|\W+)\)(\w+)/g,
+      (
+        match: string,
+        preHashWhitespace: string,
+        tagName: string,
+        offset: number,
+        str: string
+      ) => `${preHashWhitespace}#${tagName}`
+    )
+    .replace(/(^|\W+)'(\[.*\])'(?:$|\W+)/g, "$1$2");
 
 const hashReplacer = (s: string) =>
   s.replace(
@@ -203,7 +205,7 @@ function findEventyLine(
   lengthAtIndex: number[]
 ) {
   const startIndex = eventy.textRanges.whole.from;
-  for (let i = 0; i < lines.length - 1; i++) {
+  for (let i = 0; i < lines.length; i++) {
     if (lengthAtIndex[i] <= startIndex && lengthAtIndex[i + 1] > startIndex) {
       return i;
     }
@@ -221,47 +223,42 @@ export function entrySet(
 
   const parsed = parse(lines);
   const eventy = get(parsed.events, path);
-
   if (!eventy) {
-    console.log("No eventy found at", path);
-    return;
+    throw new Error("No eventy found at path");
   }
 
   const eventyLineIndex = findEventyLine(eventy, lines, lengthAtIndex);
   if (typeof eventyLineIndex !== "number") {
-    console.log("Unable to find line for eventy", eventy);
-    return;
+    throw new Error("Unable to find line number for index " + eventyLineIndex);
   }
 
-  // Find the indentation level based on the path depth
-  const indentation = "  ".repeat(path.length);
-
-  // Find the line index where we should insert the property
+  const indentation = path.length;
   const insertPosition = lengthAtIndex[eventyLineIndex + 1];
+  const keyPath = key.split(".");
 
-  // Check if the property already exists
-  const properties = eventy.properties || {};
+  const obj = objFromKeysAndValue(
+    keyPath,
+    typeof value === "string" ? hashReplacer(value) : value
+  );
 
-  // If merge is true and the property exists and is an object
-  if (
-    merge &&
-    key in properties &&
-    typeof properties[key] === "object" &&
-    value !== undefined &&
-    typeof value === "object"
-  ) {
-    // Merge the new value with the existing object
-    const mergedValue = { ...properties[key], ...value };
-    return {
-      insert: `${indentation}${key}: ${mergedValue}\n`,
-      from: insertPosition,
-      to: insertPosition,
-    };
+  let yamlString = stringify(obj, (k, v) => {
+    if (Array.isArray(v)) {
+      return `[${v.map((i) => JSON.stringify(i)).join(", ")}]`;
+    }
+    return v;
+  })
+    .split("\n")
+    .map((line: string) =>
+      !!line ? "  ".repeat(indentation) + parenReplacer(line) : ""
+    )
+    .join("\n");
+
+  if (insertPosition === mw.length && mw.substring(mw.length - 1) !== "\n") {
+    yamlString = "\n" + yamlString;
   }
 
-  // Otherwise, just set the property
   return {
-    insert: `${indentation}${key}: ${value}\n`,
+    insert: yamlString,
     from: insertPosition,
     to: insertPosition,
   };

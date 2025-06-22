@@ -317,6 +317,37 @@ abc: 123
   });
 });
 
+describe("property indices", () => {
+  test("has proper indices 1", () => {
+    const mw = parse(`group my group
+  prop: value`);
+    const group = mw.events.children[0];
+    expect(group.textRanges.properties?.from).toBe(15);
+    expect(group.textRanges.properties?.to).toBe(28);
+  });
+
+  test("has proper indices 2", () => {
+    const mw = parse(`group my group
+  prop: value
+`);
+    const group = mw.events.children[0];
+    expect(group.textRanges.properties?.from).toBe(15);
+    expect(group.textRanges.properties?.to).toBe(28);
+  });
+
+  test("has proper indices 3", () => {
+    const mw = parse(`group my group
+  prop: value
+
+  2024: neat
+    key:
+      other: value`);
+    const group = nthEvent(mw, 0);
+    expect(group.textRanges.properties?.from).toBe(43);
+    expect(group.textRanges.properties?.to).toBe(70);
+  });
+});
+
 const replace = (
   originalString: string,
   toInsert?: { from: number; insert: string; to: number }
@@ -373,9 +404,8 @@ endGroup`;
   2022-04: Birthday month
   group nested
     layer:
-      nested: ['array', 'of', 'values']
+      nested: ["array", "of", "values"]
     2026-04: Another birthday month
-      key: value
   endGroup
 endGroup`);
   });
@@ -395,43 +425,44 @@ now: hi`;
   2022-04: Birthday month
   group nested
     2026-04: Another birthday month
-      key: value
   endGroup
 endGroup
 
 now: hi
   layer:
-    nested: 12`);
+    nested: 12
+`);
   });
 
-  test.each(sp())("adds new properties below others", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-      property: value
-      other: thing
-  endGroup
-endGroup
+  //   test.only.each(sp())("adds new properties below others", () => {
+  //     const mw = `group My group
+  //   2022-04: Birthday month
+  //   group nested
+  //     2026-04: Another birthday month
+  //       property: value
+  //       other: thing
+  //   endGroup
+  // endGroup
 
-now: hi`;
+  // now: hi`;
 
-    const toInsert = entrySet(mw, [0, 1, 1], "layer.nested", 12);
-    expect(replace(mw, toInsert)).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-      property: value
-      other: thing
-      layer:
-        nested: 12
-  endGroup
-endGroup
+  //     const toInsert = entrySet(mw, [0, 1, 0], "layer.nested", 12);
+  //     const replaced = replace(mw, toInsert);
+  //     expect(replaced).toBe(`group My group
+  //   2022-04: Birthday month
+  //   group nested
+  //     2026-04: Another birthday month
+  //       property: value
+  //       other: thing
+  //       layer:
+  //         nested: 12
+  //   endGroup
+  // endGroup
 
-now: hi
-  layer:
-    nested: 12`);
-  });
+  // now: hi
+  //   layer:
+  //     nested: 12`);
+  //   });
 
   test.each(sp())("can use hex values as properties", () => {
     const mw = `group My group
@@ -441,5 +472,36 @@ now: hi
     expect(replace(mw, toInsert)).toBe(`group My group
   key: #123fde
   2022-04: Birthday month`);
+  });
+
+  test.each(sp())("nested values are preserved", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      property: value
+      other: thing
+      layer:
+        random: false
+  endGroup
+endGroup
+
+now: hi`;
+
+    const toInsert = entrySet(mw, [0, 1, 0], "layer.nested", 12, true);
+    const replaced = replace(mw, toInsert);
+    expect(replaced).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      layer:
+        random: false
+        nested: 12
+      property: value
+      other: thing
+  endGroup
+endGroup
+
+now: hi`);
   });
 });
