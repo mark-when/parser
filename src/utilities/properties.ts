@@ -1,4 +1,3 @@
-import { ChangeSpec } from "@codemirror/state";
 import { stringify } from "yaml";
 import { linesAndLengths } from "../lines.js";
 import { Eventy, Path, get } from "../Types.js";

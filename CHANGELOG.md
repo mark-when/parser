@@ -1,3 +1,8 @@
+## 0.15.1
+
+- `entrySet` behaves the same as `headerSet` but for setting properties on an event or group
+- `merge` parameter in both `entrySet` and `headerSet` to preseve other values when setting a new one
+
 ## 0.15.0
 
 - Breaking because the types of `event.properties` and `group.properties` have changed from `[string, any][]` to `any`.
