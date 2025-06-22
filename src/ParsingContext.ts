@@ -72,7 +72,7 @@ export class ParsingContext {
     this.foldables = {};
     this.foldableSections = [];
     this.ranges = [];
-    this.header = { dateFormat: AMERICAN_DATE_FORMAT };
+    this.header = {};
     this.cache = cache;
 
     if (typeof now === "string") {

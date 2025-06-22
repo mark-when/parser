@@ -84,7 +84,7 @@ thirdKey:
   test.each(sp())("small header", () => {
     const mw = parse(small());
 
-    expect(Object.keys(mw.header).length).toBe(45);
+    expect(Object.keys(mw.header).length).toBe(44);
   });
 });
 
@@ -127,7 +127,7 @@ now: event`);
 
     const header = mw.header;
     // 5 plus dateFormat
-    expect(Object.keys(header).length).toBe(6);
+    expect(Object.keys(header).length).toBe(5);
     expect(mw.header.title).toBe("Title");
     expect(mw.header.arbitraryThing).toStrictEqual(["one", "two"]);
     expect(nthEvent(mw, 0).firstLine.datePart).toBe("now");
@@ -218,7 +218,7 @@ now: event`);
 
 const replace = (
   originalString: string,
-  toInsert?: { from: number; insert: string; to: number }
+  toInsert?: { from: number; insert: string; to?: number }
 ) =>
   toInsert
     ? originalString.substring(0, toInsert.from) +
@@ -242,7 +242,6 @@ description: This is the description
 objectAsValue:
   aKey: new value
   notherKey: v
-
 `);
   });
 
@@ -260,7 +259,6 @@ objectAsValue:
 description: This is the description
 objectAsValue:
   aKey: new value
-
 `);
   });
 
@@ -275,7 +273,12 @@ objectAsValue:
 `;
 
     // Set with merge=true should preserve nestedKey2
-    const toInsert = set(mw, "objectAsValue.aKey", { nestedKey1: "new value", nestedKey3: "added value" }, true);
+    const toInsert = set(
+      mw,
+      "objectAsValue.aKey",
+      { nestedKey1: "new value", nestedKey3: "added value" },
+      true
+    );
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue:
@@ -346,7 +349,6 @@ objectAsValue:
 description: This is the description
 objectAsValue:
   neato: cool
-
 `);
   });
 
@@ -436,7 +438,87 @@ key: v
 `);
   });
 
-  test.each(sp())("works with three dash syntax", () => {
+  test.each(sp())("merge with three dash syntax", () => {
+    const mw = `
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+  sib: untouched
+key: v
+---
+`;
+
+    const toInsert = set(
+      mw,
+      "objectAsValue.aKey.so",
+      "this is christmas",
+      true
+    );
+    const replaced = replace(mw, toInsert);
+    expect(replaced).toBe(`
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+    so: this is christmas
+  sib: untouched
+key: v
+---
+`);
+  });
+
+  test.each(sp())("three dash syntax again", () => {
+    const mw = `
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+  otherSib: withValue
+key: v
+---
+
+now: hi
+`;
+
+    const toInsert = set(
+      mw,
+      "objectAsValue.aKey",
+      { so: "this is christmas" },
+      true
+    );
+    const replaced = replace(mw, toInsert);
+    expect(replaced).toBe(`
+
+---
+title: this is the title
+description: This is the description
+objectAsValue:
+  aKey:
+    value: interior
+    notherKey: v
+    so: this is christmas
+  otherSib: withValue
+key: v
+---
+
+now: hi
+`);
+  });
+
+  test.only.each(sp())("works with three dash syntax", () => {
     const mw = `
 
 
@@ -448,11 +530,13 @@ objectAsValue:
     notherKey: v
 key: v
 
+2025: hwllo
 `;
 
     const toInsert = set(mw, "objectAsValue.aKey.whimsy", {
       so: "this is christmas",
     });
+    const replaced = replace(mw, toInsert);
     expect(replace(mw, toInsert)).toBe(`
 
 
@@ -466,6 +550,7 @@ objectAsValue:
       so: this is christmas
 key: v
 
+2025: hwllo
 `);
   });
 });

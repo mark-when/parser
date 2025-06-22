@@ -332,12 +332,6 @@ export function parseHeader(
 
   try {
     const parsedHeader = YAML.parse(headerLines.join("\n"));
-    if (!parsedHeader.dateFormat) {
-      parsedHeader.dateFormat =
-        parsedHeader.dateFormat === "d/M/y"
-          ? EUROPEAN_DATE_FORMAT
-          : AMERICAN_DATE_FORMAT;
-    }
     if (parsedHeader.view && typeof parsedHeader.view === "string") {
       parsedHeader.view = stringEmailListToArray(parsedHeader.view as string);
     }
@@ -383,7 +377,7 @@ export function parseHeader(
         message: e.message,
       });
     }
-    context.header = { dateFormat: AMERICAN_DATE_FORMAT };
+    context.header = {};
   }
 
   let start: number, end: number;

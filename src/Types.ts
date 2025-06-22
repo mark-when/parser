@@ -513,7 +513,7 @@ export function emptyTimeline(): Timeline {
     ranges: [],
     foldables: [],
     ids: {},
-    header: { dateFormat: AMERICAN_DATE_FORMAT },
+    header: {},
     parseMessages: [],
     documentMessages: [],
   };

@@ -26,19 +26,20 @@ const objFromKeysAndValue = (keys: string[], value: any) => {
   return obj;
 };
 
+const parentAndFlowReplacer = (s: string) =>
+  parenReplacer(s).replace(/(^|\W+)'(\[.*\])'(?:$|\W+)/g, "$1$2");
+
 const parenReplacer = (s: string) =>
-  s
-    .replace(
-      /(^|\W+)\)(\w+)/g,
-      (
-        match: string,
-        preHashWhitespace: string,
-        tagName: string,
-        offset: number,
-        str: string
-      ) => `${preHashWhitespace}#${tagName}`
-    )
-    .replace(/(^|\W+)'(\[.*\])'(?:$|\W+)/g, "$1$2");
+  s.replace(
+    /(^|\W+)\)(\w+)/g,
+    (
+      match: string,
+      preHashWhitespace: string,
+      tagName: string,
+      offset: number,
+      str: string
+    ) => `${preHashWhitespace}#${tagName}`
+  );
 
 const hashReplacer = (s: string) =>
   s.replace(
@@ -69,134 +70,51 @@ export function set(
     lengthAtIndex: origLengthAtIndex,
   } = parseHeader(mw);
 
-  let indentation = 0;
-  let searchRange: SearchRange = {
-    startLine: 0,
-    endLine: 0,
-  };
-
-  let headerlines: string[] = [];
+  // Find the header section
+  let headerStartLine = 0;
+  let headerEndLine = headerEndLineIndex;
   let offset = 0;
+
   for (const foldable of Object.values(foldables)) {
     if (foldable.type === "header") {
-      headerlines = lines.slice(foldable.startLine, headerEndLineIndex);
-      searchRange = {
-        startLine: 0,
-        endLine: headerlines.length,
-      };
-      offset = origLengthAtIndex[foldable.startLine];
+      headerStartLine = foldable.startLine;
+      if (lines[headerStartLine].startsWith("---")) {
+        headerStartLine++;
+      }
+      offset = origLengthAtIndex[headerStartLine];
       break;
     }
   }
 
-  const lengthAtIndex: number[] = [];
-  for (let i = 0; i < headerlines.length; i++) {
-    if (i === 0) {
-      lengthAtIndex.push(offset);
-    }
-    lengthAtIndex.push(
-      1 + headerlines[i].length + lengthAtIndex[lengthAtIndex.length - 1] || 0
-    );
-  }
+  // Create updated header object
+  const updatedHeader = setValueAtPath(header, path, value, merge);
 
-  let obj = header;
-  for (let i = 0; i < path.length; i++) {
-    const key = path[i];
+  // Convert to YAML string with proper formatting
+  const yamlString = stringify(updatedHeader)
+    .split("\n")
+    .map((line: string) => (line ? parenReplacer(line) : ""))
+    .join("\n");
 
-    const stringToInsert = (valueToInsert: any = value) =>
-      stringify(
-        objFromKeysAndValue(
-          path.slice(i),
-          typeof valueToInsert === "string"
-            ? hashReplacer(valueToInsert)
-            : valueToInsert
-        )
-      )
-        .split("\n")
-        .map((line: string) =>
-          !!line ? "  ".repeat(indentation) + parenReplacer(line) : ""
-        )
-        .join("\n");
-
-    if (obj[key]) {
-      const from = findLine(
-        headerlines,
-        new RegExp(
-          `^\\s{${indentation * 2}}(${key.replace(")", "\\)")}|${key.replace(
-            ")",
-            "#"
-          )})`
-        ),
-        searchRange
-      );
-      const to = findLine(
-        headerlines,
-        new RegExp(`^\\s{0,${indentation * 2}}\\w+`),
-        {
-          startLine: from + 1,
-          endLine: searchRange.endLine,
-        }
-      );
-      searchRange = {
-        startLine: from === -1 ? searchRange.startLine : from,
-        endLine: to === -1 ? searchRange.endLine : to,
-      };
-
-      // Either this is the last or the current entry does not have children and
-      // so we should replace the whole thing
-      if (i === path.length - 1 || typeof obj[key] !== "object") {
-        let additionalNewlines = 0;
-        for (let j = searchRange.endLine - 1; j >= searchRange.startLine; j--) {
-          if (/^\s*$/.test(headerlines[j])) {
-            additionalNewlines++;
-          } else {
-            break;
-          }
-        }
-
-        // Determine if we need to preserve newlines
-        // For simple values (strings, numbers, etc.), we don't want to add newlines
-        const isSimpleValue = typeof value !== "object" || value === null;
-        const preserveNewlines = !isSimpleValue || typeof obj[key] === "object";
-
-        // If merge is true and we're at the last key in the path and the current value is an object
-        if (
-          merge &&
-          i === path.length - 1 &&
-          typeof obj[key] === "object" &&
-          value !== undefined &&
-          typeof value === "object"
-        ) {
-          // Merge the new value with the existing object
-          const mergedValue = { ...obj[key], ...value };
-          return {
-            insert:
-              stringToInsert(mergedValue) +
-              (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
-            from: lengthAtIndex[searchRange.startLine] || 0,
-            to: lengthAtIndex[searchRange.endLine] || 0,
-          };
-        }
-
-        return {
-          insert:
-            stringToInsert() +
-            (preserveNewlines ? "\n".repeat(additionalNewlines) : ""),
-          from: lengthAtIndex[searchRange.startLine] || 0,
-          to: lengthAtIndex[searchRange.endLine] || 0,
-        };
-      }
+  let additionalNewlines = 0;
+  for (let j = headerEndLine - 1; j >= headerStartLine; j--) {
+    if (/^\s*$/.test(lines[j])) {
+      additionalNewlines++;
     } else {
-      // Insert object here
-      return {
-        insert: stringToInsert(),
-        from: lengthAtIndex[searchRange.endLine] || 0,
-        to: lengthAtIndex[searchRange.endLine] || 0,
-      };
+      break;
     }
-    obj = obj[key];
-    indentation++;
   }
+
+  // Calculate positions for replacement
+  const from = offset;
+  const change: { from: number; to?: number; insert: string } = {
+    insert: yamlString + "\n".repeat(additionalNewlines),
+    from,
+  };
+  const toPos = origLengthAtIndex[headerEndLine];
+  if (toPos) {
+    change.to = toPos;
+  }
+  return change;
 }
 
 function findEventyLine(
