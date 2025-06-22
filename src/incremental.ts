@@ -707,6 +707,9 @@ export function incrementalParse(
     if ((e as Error).message === "Won't reparse over ided events") {
       return bail();
     }
+    if ((e as Error).message === "Can't reparse in header area") {
+      return bail();
+    }
     console.error(e);
     return bail();
   }

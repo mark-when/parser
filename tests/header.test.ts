@@ -518,7 +518,7 @@ now: hi
 `);
   });
 
-  test.only.each(sp())("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax", () => {
     const mw = `
 
 
@@ -537,7 +537,7 @@ key: v
       so: "this is christmas",
     });
     const replaced = replace(mw, toInsert);
-    expect(replace(mw, toInsert)).toBe(`
+    expect(replaced).toBe(`
 
 
 title: this is the title
@@ -549,7 +549,26 @@ objectAsValue:
     whimsy:
       so: this is christmas
 key: v
+2025: hwllo
+`);
+  });
 
+  test.each(sp())("works with three dash syntax", () => {
+    const mw = `title: this is the title
+key: v
+2025: hwllo
+`;
+
+    const toInsert = set(mw, "objectAsValue.aKey.whimsy", {
+      so: "this is christmas",
+    });
+    const replaced = replace(mw, toInsert);
+    expect(replaced).toBe(`title: this is the title
+key: v
+objectAsValue:
+  aKey:
+    whimsy:
+      so: this is christmas
 2025: hwllo
 `);
   });

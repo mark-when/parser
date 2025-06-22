@@ -165,7 +165,6 @@ export function parseProperties(
           message: e.message,
         });
       }
-      console.error(e);
     }
   }
 

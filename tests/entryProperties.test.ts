@@ -1,5 +1,5 @@
 import { Event, isEvent, iter, parse, RangeType } from "../src";
-import { entrySet } from "../src/utilities/header";
+import { entrySet } from "../src/utilities/properties";
 import { nthEvent, sp } from "./testUtilities";
 
 const first = (mw: string) => nthEvent(parse(mw), 0);
@@ -350,12 +350,12 @@ describe("property indices", () => {
 
 const replace = (
   originalString: string,
-  toInsert?: { from: number; insert: string; to: number }
+  toInsert?: { from: number; insert: string; to?: number }
 ) =>
   toInsert
     ? originalString.substring(0, toInsert.from) +
       toInsert.insert +
-      (toInsert.to ? originalString.substring(toInsert.to) : 0)
+      originalString.substring(toInsert.to ? toInsert.to : toInsert.from)
     : originalString;
 
 describe("setting eventy properties", () => {
@@ -494,11 +494,11 @@ now: hi`;
   2022-04: Birthday month
   group nested
     2026-04: Another birthday month
+      property: value
+      other: thing
       layer:
         random: false
         nested: 12
-      property: value
-      other: thing
   endGroup
 endGroup
 
