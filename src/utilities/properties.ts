@@ -1,7 +1,7 @@
 import { stringify } from "yaml";
 import { linesAndLengths } from "../lines.js";
 import { Eventy, Path, get } from "../Types.js";
-import { setValueAtPath, parentAndFlowReplacer } from "./yaml.js";
+import { setValue, parentAndFlowReplacer } from "./yaml.js";
 import { parse } from "../parse.js";
 
 function findEventyLine(
@@ -20,8 +20,7 @@ function findEventyLine(
 export function entrySet(
   mw: string,
   path: Path,
-  key: string,
-  value: string | Object | string[] | Object[] | undefined,
+  value: Record<string, string | Object | string[] | Object[] | undefined>,
   merge: boolean = false
 ) {
   const { lines, lengthAtIndex } = linesAndLengths(mw);
@@ -39,15 +38,9 @@ export function entrySet(
 
   const indentation = path.length;
   const insertPosition = lengthAtIndex[eventyLineIndex + 1];
-  const keyPath = key.split(".");
 
   // Update the eventy's properties
-  const updatedProperties = setValueAtPath(
-    eventy.properties,
-    keyPath,
-    value,
-    merge
-  );
+  const updatedProperties = setValue(eventy.properties, value, merge);
 
   // Generate YAML for the updated properties
   let yamlString = "";
@@ -56,10 +49,13 @@ export function entrySet(
       if (Array.isArray(v)) {
         return `[${v.map((i) => JSON.stringify(i)).join(", ")}]`;
       }
+      if (typeof v === "object" && Object.keys(v).length === 0) {
+        return "";
+      }
       return v;
     })
       .split("\n")
-      .filter(Boolean)
+      .filter((l) => !!l && l !== "{}")
       .map((line: string) =>
         line ? "  ".repeat(indentation) + parentAndFlowReplacer(line) : ""
       )

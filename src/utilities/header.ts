@@ -1,14 +1,12 @@
 import { stringify } from "yaml";
 import { parseHeader } from "../parse.js";
-import { parenReplacer, setValueAtPath } from "./yaml.js";
+import { parenReplacer, setValue } from "./yaml.js";
 
 export function set(
   mw: string,
-  key: string,
-  value: string | Object | string[] | Object[] | undefined,
+  value: Record<string, string | Object | string[] | Object[] | undefined>,
   merge: boolean = false
 ) {
-  const path = key.split(".");
   const {
     header,
     ranges,
@@ -35,7 +33,7 @@ export function set(
   }
 
   // Create updated header object
-  const updatedHeader = setValueAtPath(header, path, value, merge);
+  const updatedHeader = setValue(header, value, merge);
 
   // Convert to YAML string with proper formatting
   const yamlString = stringify(updatedHeader)

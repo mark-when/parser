@@ -116,41 +116,64 @@ export function getMergedValue(
   return newValue;
 }
 
-// Helper function to set a value at a nested path in an object
-export function setValueAtPath(
-  obj: any,
-  keyPath: string[],
-  value: any,
-  merge: boolean
-): any {
-  if (keyPath.length === 0) {
-    return value;
+function _hashReplacer(obj: any): any {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+    return obj;
   }
 
   const result = { ...obj };
-  const [firstKey, ...restPath] = keyPath;
 
-  if (restPath.length === 0) {
-    // Final key - set the value (with merge if needed)
-    const correctedValue =
-      typeof value === "string" ? hashReplacer(value) : value;
-    if (
-      merge &&
-      typeof result[firstKey] === "object" &&
-      typeof value === "object"
-    ) {
-      result[firstKey] = { ...result[firstKey], ...value };
+  for (const k of Object.keys(obj)) {
+    if (typeof obj[k] === "string") {
+      result[k] = hashReplacer(obj[k]);
+    } else if (typeof obj[k] === "object" && obj[k] !== null) {
+      result[k] = _hashReplacer(obj[k]);
     } else {
-      result[firstKey] = correctedValue;
+      result[k] = obj[k];
     }
-  } else {
-    // Intermediate key - recurse
-    result[firstKey] = setValueAtPath(
-      result[firstKey] || {},
-      restPath,
-      value,
-      merge
-    );
+  }
+
+  return result;
+}
+
+// Helper function to deeply merge objects
+export function setValue(existing: any, newObject: any, merge: boolean): any {
+  // If not merging, just return the new object
+  if (!merge) {
+    return _hashReplacer(newObject);
+  }
+
+  // If either value is not an object, return the new value
+  if (
+    typeof existing !== "object" ||
+    existing === null ||
+    typeof newObject !== "object" ||
+    newObject === null
+  ) {
+    return newObject;
+  }
+
+  const result = { ...existing };
+
+  for (const key in newObject) {
+    if (newObject.hasOwnProperty(key)) {
+      const newValue = newObject[key];
+
+      const correctedValue =
+        typeof newValue === "string" ? hashReplacer(newValue) : newValue;
+
+      if (
+        merge &&
+        typeof result[key] === "object" &&
+        result[key] !== null &&
+        typeof correctedValue === "object" &&
+        correctedValue !== null
+      ) {
+        result[key] = setValue(result[key], correctedValue, merge);
+      } else {
+        result[key] = correctedValue;
+      }
+    }
   }
 
   return result;

@@ -363,7 +363,7 @@ describe("setting eventy properties", () => {
     const mw = `group My group
   2022-04: Birthday month`;
 
-    const toInsert = entrySet(mw, [0], "key", "value");
+    const toInsert = entrySet(mw, [0], { key: "value" });
     expect(replace(mw, toInsert)).toBe(`group My group
   key: value
   2022-04: Birthday month`);
@@ -377,7 +377,7 @@ describe("setting eventy properties", () => {
   endGroup
 endGroup`;
 
-    const toInsert = entrySet(mw, [0, 1, 0], "key", "value");
+    const toInsert = entrySet(mw, [0, 1, 0], { key: "value" });
     expect(replace(mw, toInsert)).toBe(`group My group
   2022-04: Birthday month
   group nested
@@ -395,11 +395,9 @@ endGroup`);
   endGroup
 endGroup`;
 
-    const toInsert = entrySet(mw, [0, 1], "layer.nested", [
-      "array",
-      "of",
-      "values",
-    ]);
+    const toInsert = entrySet(mw, [0, 1], {
+      layer: { nested: ["array", "of", "values"] },
+    });
     expect(replace(mw, toInsert)).toBe(`group My group
   2022-04: Birthday month
   group nested
@@ -420,7 +418,7 @@ endGroup
 
 now: hi`;
 
-    const toInsert = entrySet(mw, [1], "layer.nested", 12);
+    const toInsert = entrySet(mw, [1], { layer: { nested: 12 } });
     expect(replace(mw, toInsert)).toBe(`group My group
   2022-04: Birthday month
   group nested
@@ -438,7 +436,7 @@ now: hi
     const mw = `group My group
   2022-04: Birthday month`;
 
-    const toInsert = entrySet(mw, [0], "key", "#123fde");
+    const toInsert = entrySet(mw, [0], { key: "#123fde" });
     expect(replace(mw, toInsert)).toBe(`group My group
   key: #123fde
   2022-04: Birthday month`);
@@ -458,7 +456,7 @@ endGroup
 
 now: hi`;
 
-    const toInsert = entrySet(mw, [0, 1, 0], "layer.nested", 12, true);
+    const toInsert = entrySet(mw, [0, 1, 0], { layer: { nested: 12 } }, true);
     const replaced = replace(mw, toInsert);
     expect(replaced).toBe(`group My group
   2022-04: Birthday month
@@ -490,7 +488,36 @@ endGroup
 
 now: hi`;
 
-    const toInsert = entrySet(mw, [0, 1, 0], "layer", undefined);
+    const toInsert = entrySet(mw, [0, 1, 0], { layer: undefined });
+    const replaced = replace(mw, toInsert);
+    expect(replaced).toBe(`group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+
+  endGroup
+endGroup
+
+now: hi`);
+  });
+
+
+  test("deleting values merge", () => {
+    const mw = `group My group
+  2022-04: Birthday month
+  group nested
+    2026-04: Another birthday month
+      property: value
+      other: thing
+      layer:
+        random: false
+        nested: 12
+  endGroup
+endGroup
+
+now: hi`;
+
+    const toInsert = entrySet(mw, [0, 1, 0], { layer: undefined }, true);
     const replaced = replace(mw, toInsert);
     expect(replaced).toBe(`group My group
   2022-04: Birthday month
