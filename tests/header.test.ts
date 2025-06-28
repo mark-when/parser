@@ -236,7 +236,7 @@ objectAsValue:
 `;
 
     // Set with merge=true should preserve notherKey
-    const toInsert = set(mw, "objectAsValue", { aKey: "new value" }, true);
+    const toInsert = set(mw, { objectAsValue: { aKey: "new value" } }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue:
@@ -254,10 +254,8 @@ objectAsValue:
 `;
 
     // Set with merge=false should overwrite the entire object
-    const toInsert = set(mw, "objectAsValue", { aKey: "new value" }, false);
-    expect(replace(mw, toInsert)).toBe(`title: this is the title
-description: This is the description
-objectAsValue:
+    const toInsert = set(mw, { objectAsValue: { aKey: "new value" } }, false);
+    expect(replace(mw, toInsert)).toBe(`objectAsValue:
   aKey: new value
 `);
   });
@@ -275,8 +273,11 @@ objectAsValue:
     // Set with merge=true should preserve nestedKey2
     const toInsert = set(
       mw,
-      "objectAsValue.aKey",
-      { nestedKey1: "new value", nestedKey3: "added value" },
+      {
+        objectAsValue: {
+          aKey: { nestedKey1: "new value", nestedKey3: "added value" },
+        },
+      },
       true
     );
     expect(replace(mw, toInsert)).toBe(`title: this is the title
@@ -297,7 +298,7 @@ stringValue: original string
 `;
 
     // Merge should have no effect when the target is not an object
-    const toInsert = set(mw, "stringValue", "new string", true);
+    const toInsert = set(mw, { stringValue: "new string" }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 stringValue: new string
@@ -313,7 +314,7 @@ objectAsValue:
 `;
 
     // Merge with undefined should not cause errors
-    const toInsert = set(mw, "objectAsValue", undefined, true);
+    const toInsert = set(mw, { objectAsValue: undefined }, true);
     expect(toInsert).toBeDefined();
   });
 });
@@ -327,7 +328,7 @@ objectAsValue:
   notherKey: v
 `;
 
-    const toInsert = set(mw, "description", "new description");
+    const toInsert = set(mw, { description: "new description" }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: new description
 objectAsValue:
@@ -344,10 +345,12 @@ objectAsValue:
   notherKey: v
 `;
 
-    const toInsert = set(mw, "objectAsValue", { neato: "cool" });
+    const toInsert = set(mw, { objectAsValue: { neato: "cool" } }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue:
+  aKey: value
+  notherKey: v
   neato: cool
 `);
   });
@@ -361,13 +364,21 @@ objectAsValue:
 key: v
 `;
 
-    const toInsert = set(mw, "objectAsValue", {
-      neato: "cool",
-      other: "thing",
-    });
+    const toInsert = set(
+      mw,
+      {
+        objectAsValue: {
+          neato: "cool",
+          other: "thing",
+        },
+      },
+      true
+    );
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue:
+  aKey: value
+  notherKey: v
   neato: cool
   other: thing
 key: v
@@ -383,7 +394,7 @@ objectAsValue:
 key: v
 `;
 
-    const toInsert = set(mw, "objectAsValue", "hi");
+    const toInsert = set(mw, { objectAsValue: "hi" }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue: hi
@@ -401,7 +412,7 @@ objectAsValue:
 key: v
 `;
 
-    const toInsert = set(mw, "objectAsValue.aKey", "hi");
+    const toInsert = set(mw, { objectAsValue: { aKey: "hi" } }, true);
     expect(replace(mw, toInsert)).toBe(`title: this is the title
 description: This is the description
 objectAsValue:
@@ -410,7 +421,7 @@ key: v
 `);
   });
 
-  test.each(sp())("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax 3", () => {
     const mw = `
 
 ---
@@ -424,7 +435,13 @@ key: v
 ---
 `;
 
-    const toInsert = set(mw, "objectAsValue.aKey", { so: "this is christmas" });
+    const toInsert = set(
+      mw,
+      {
+        objectAsValue: { aKey: { so: "this is christmas" } },
+      },
+      true
+    );
     expect(replace(mw, toInsert)).toBe(`
 
 ---
@@ -432,6 +449,8 @@ title: this is the title
 description: This is the description
 objectAsValue:
   aKey:
+    value: interior
+    notherKey: v
     so: this is christmas
 key: v
 ---
@@ -455,8 +474,7 @@ key: v
 
     const toInsert = set(
       mw,
-      "objectAsValue.aKey.so",
-      "this is christmas",
+      { objectAsValue: { aKey: { so: "this is christmas" } } },
       true
     );
     const replaced = replace(mw, toInsert);
@@ -495,8 +513,7 @@ now: hi
 
     const toInsert = set(
       mw,
-      "objectAsValue.aKey",
-      { so: "this is christmas" },
+      { objectAsValue: { aKey: { so: "this is christmas" } } },
       true
     );
     const replaced = replace(mw, toInsert);
@@ -518,7 +535,7 @@ now: hi
 `);
   });
 
-  test.each(sp())("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax 2", () => {
     const mw = `
 
 
@@ -533,9 +550,19 @@ key: v
 2025: hwllo
 `;
 
-    const toInsert = set(mw, "objectAsValue.aKey.whimsy", {
-      so: "this is christmas",
-    });
+    const toInsert = set(
+      mw,
+      {
+        objectAsValue: {
+          aKey: {
+            whimsy: {
+              so: "this is christmas",
+            },
+          },
+        },
+      },
+      true
+    );
     const replaced = replace(mw, toInsert);
     expect(replaced).toBe(`
 
@@ -553,15 +580,25 @@ key: v
 `);
   });
 
-  test.each(sp())("works with three dash syntax", () => {
+  test.each(sp())("works with three dash syntax 1", () => {
     const mw = `title: this is the title
 key: v
 2025: hwllo
 `;
 
-    const toInsert = set(mw, "objectAsValue.aKey.whimsy", {
-      so: "this is christmas",
-    });
+    const toInsert = set(
+      mw,
+      {
+        objectAsValue: {
+          aKey: {
+            whimsy: {
+              so: "this is christmas",
+            },
+          },
+        },
+      },
+      true
+    );
     const replaced = replace(mw, toInsert);
     expect(replaced).toBe(`title: this is the title
 key: v
