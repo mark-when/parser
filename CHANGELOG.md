@@ -1,3 +1,7 @@
+## 0.16.0
+
+- function signature for both `entrySet` and `headerSet` have changed - no longer takes a key path but rather just a whole object
+
 ## 0.15.1
 
 - `entrySet` behaves the same as `headerSet` but for setting properties on an event or group
