@@ -3,9 +3,6 @@ import { toDateRange } from "../src";
 import { DateTime } from "luxon";
 import { firstEvent } from "./testUtilities";
 
-/**
- * NOTE: I find it weird that the expectedTo date is always the next day at 00:00:00. Shouldn't it be the same day at 23:59:59?
- */
 describe("Regular dates parsing", () => {
   // List the case
   const testCases = [

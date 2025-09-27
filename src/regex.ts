@@ -10,11 +10,12 @@ export const WEEK_AMOUNT_REGEX = /(weeks|week|w)/i;
 export const MONTH_AMOUNT_REGEX = /(months|month)/i;
 export const YEAR_AMOUNT_REGEX = /(years|year|y)/i;
 export const AMOUNT_REGEX = new RegExp(
-  `(\\d+\\W*)(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source})(?:\\s*,\\s*|\\s*)`,
+  `(-)?(\\d+\\W*)(${MILLISECOND_AMOUNT_REGEX.source}|${SECOND_AMOUNT_REGEX.source}|${MINUTE_AMOUNT_REGEX.source}|${HOUR_AMOUNT_REGEX.source}|${DAY_AMOUNT_REGEX.source}|${WEEK_AMOUNT_REGEX.source}|${MONTH_AMOUNT_REGEX.source}|${YEAR_AMOUNT_REGEX.source})(?:\\s*,\\s*|\\s*)`,
   "g"
 );
 
-export const EVENT_ID_REGEX = /(?:\W|^)(!\w+)/;
+export const EVENT_ID_REGEX =
+  /(?:\W|^)(?:!(\w+)(\.(start|end))?|\.(start|end))/;
 // So this regex is kind of wrong - we're using the global flag here to make multiple matches for the
 // whole regex, even though we just want any repeated amounts (e.g., 3 days, 4 hours, 6 seconds).
 // This works because the entire front part (`after !eventId plus`) is optional
@@ -105,8 +106,12 @@ export const from_relativeMatchIndex = ++index;
 export const from_beforeOrAfterMatchIndex = ++index;
 export const from_relativeTimeMatchIndex = ++index;
 export const from_relativeEventIdMatchIndex = ++index;
+export const from_relativeEventIdModifierMatchIndex = ++index;
+export const from_relativeEventIdStartOrEndMatchIndex = ++index;
+export const from_relativeEventStartOrEndMatchIndex = ++index;
 export const from_relativeAmountsMatchIndex = ++index;
 export const from_relativeAmountMatchIndex = ++index;
+export const from_relativeAmountNegativeMatchIndex = ++index;
 export const from_relativeAmountUnitMatchIndex = ++index;
 export const from_relativeAmountMillisecondsUnitMatchIndex = ++index;
 export const from_relativeAmountSecondsUnitMatchIndex = ++index;
@@ -167,8 +172,12 @@ export const to_relativeMatchIndex = ++index;
 export const to_beforeOrAfterMatchIndex = ++index;
 export const to_relativeTimeMatchIndex = ++index;
 export const to_relativeEventIdMatchIndex = ++index;
+export const to_relativeEventIdModifierMatchIndex = ++index;
+export const to_relativeEventIdStartOrEndMatchIndex = ++index;
+export const to_relativeEventStartOrEndMatchIndex = ++index;
 export const to_relativeAmountsMatchIndex = ++index;
 export const to_relativeAmountMatchIndex = ++index;
+export const to_relativeAmountNegativeMatchIndex = ++index;
 export const to_relativeAmountUnitMatchIndex = ++index;
 export const to_relativeAmountMillisecondsUnitMatchIndex = ++index;
 export const to_relativeAmountSecondsUnitMatchIndex = ++index;
@@ -264,8 +273,12 @@ export const from_edtfRelativeMatchIndex = ++edtfIndex;
 export const from_edtfBeforeOrAfterMatchIndex = ++edtfIndex;
 export const from_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const from_edtfRelativeEventIdMatchIndex = ++edtfIndex;
+export const from_edtfRelativeEventIdModifierMatchIndex = ++edtfIndex;
+export const from_edtfRelativeEventIdStartOrEndMatchIndex = ++edtfIndex;
+export const from_edtfRelativeEventStartOrEndMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountsMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountMatchIndex = ++edtfIndex;
+export const from_edtfRelativeAmountNegativeMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
 export const from_edtfRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;
@@ -295,8 +308,12 @@ export const to_edtfRelativeMatchIndex = ++edtfIndex;
 export const to_edtfBeforeOrAfterMatchIndex = ++edtfIndex;
 export const to_edtfRelativeTimeMatchIndex = ++edtfIndex;
 export const to_edtfRelativeEventIdMatchIndex = ++edtfIndex;
+export const to_edtfRelativeEventIdModifierMatchIndex = ++edtfIndex;
+export const to_edtfRelativeEventIdStartOrEndMatchIndex = ++edtfIndex;
+export const to_edtfRelativeEventStartOrEndMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountsMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountMatchIndex = ++edtfIndex;
+export const to_edtfRelativeAmountNegativeMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountMillisecondsUnitMatchIndex = ++edtfIndex;
 export const to_edtfRelativeAmountSecondsUnitMatchIndex = ++edtfIndex;

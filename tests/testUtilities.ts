@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { parse } from "../src";
 import { Caches } from "../src/Cache";
-import { ParseResult, Event, isEvent, iter } from "../src/Types";
+import { ParseResult, Event, isEvent, iter, DateRange, flat, toDateRange } from "../src/Types";
 import { performance } from "perf_hooks";
 
 export const firstEvent = (markwhen: ParseResult) => nthEvent(markwhen, 0);
@@ -69,3 +69,16 @@ export const sameParse = <T>(expected: T) =>
   p().map((parse) => [parse, expected] as [(s: string) => ParseResult, T]);
 
 export const sp = () => sameParse([]);
+
+export function checkDateTime(dateTime1: DateTime, dateTime2: DateTime) {
+  expect(dateTime1.year).toBe(dateTime2.year);
+  expect(dateTime1.month).toBe(dateTime2.month);
+  expect(dateTime1.day).toBe(dateTime2.day);
+  expect(dateTime1.hour).toBe(dateTime2.hour);
+  expect(dateTime1.minute).toBe(dateTime2.minute);
+  expect(dateTime1.second).toBe(dateTime2.second);
+}
+
+export function getDateRanges(m: ParseResult): DateRange[] {
+  return flat(m.events).map((n) => toDateRange(n.dateRangeIso));
+}

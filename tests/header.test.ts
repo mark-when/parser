@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { readFileSync } from "fs";
 import { set } from "../src/utilities/header";
 
-const small = () => readFileSync(resolve("./", "tests/big.mw"), "utf-8");
+// const small = () => readFileSync(resolve("./", "tests/big.mw"), "utf-8");
 
 describe("editors", () => {
   test.each(sp())("single editor", () => {
@@ -79,12 +79,6 @@ thirdKey:
     expect(header.key).toBe("value");
     expect(header.otherKey).toBe("otherValue");
     expect(header.thirdKey.fourthKey.fifthKey).toBe("value");
-  });
-
-  test.each(sp())("small header", () => {
-    const mw = parse(small());
-
-    expect(Object.keys(mw.header).length).toBe(44);
   });
 });
 

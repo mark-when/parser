@@ -1,4 +1,4 @@
-import { DateTime, DurationLikeObject } from "luxon";
+import { DateTime, DurationLikeObject, DurationUnit } from "luxon";
 import { Caches } from "./Cache.js";
 import { Recurrence, RecurrenceInText } from "./dateRange/checkRecurrence.js";
 import { DocumentMessage, Foldable, ParseMessage } from "./ParsingContext.js";
@@ -45,66 +45,72 @@ export class RelativeDate {
     const diffObj = {} as DurationLikeObject;
     while (match.value) {
       const value = match.value as RegExpMatchArray;
-      const amount = parseInt(value[1]);
-      if (value[3]) {
-        diffObj["milliseconds"] = (diffObj["milliseconds"] ?? 0) + amount;
-      } else if (value[4]) {
-        diffObj["seconds"] = (diffObj["seconds"] ?? 0) + amount;
-      } else if (value[5]) {
-        diffObj["minutes"] = (diffObj["minutes"] ?? 0) + amount;
-      } else if (value[6]) {
-        diffObj["hours"] = (diffObj["hours"] ?? 0) + amount;
-      } else if (value[7]) {
-        // priorDate = before
-        //   ? removeWeekdays(amount, priorDate)
-        //   : addWeekdays(amount, priorDate);
-      } else if (value[8]) {
-        diffObj["days"] = (diffObj["days"] ?? 0) + amount;
-      } else if (value[9]) {
-        diffObj["weeks"] = (diffObj["weeks"] ?? 0) + amount;
-      } else if (value[10]) {
-        diffObj["months"] = (diffObj["months"] ?? 0) + amount;
-      } else if (value[11]) {
-        diffObj["years"] = (diffObj["years"] ?? 0) + amount;
+      const amount = parseInt(value[2]);
+      const duration: DurationUnit | undefined = !!value[4]
+        ? "milliseconds"
+        : !!value[5]
+        ? "seconds"
+        : !!value[6]
+        ? "minutes"
+        : !!value[7]
+        ? "hours"
+        : !!value[9]
+        ? "days"
+        : !!value[10]
+        ? "weeks"
+        : !!value[11]
+        ? "months"
+        : !!value[12]
+        ? "years"
+        : undefined;
+      if (duration) {
+        diffObj[duration] = (diffObj[duration] ?? 0) + amount;
       }
       match = matches.next();
     }
     return diffObj;
   }
 
+  static fromPlus(raw: string, priorDate: DateTime) {
+    return this.from(raw, priorDate, "plus");
+  }
+
+  static fromMinus(raw: string, priorDate: DateTime) {
+    return this.from(raw, priorDate, "minus");
+  }
+
   static from(
     raw: string,
     priorDate: DateTime,
-    before: boolean = false
+    plusOrMinus: "plus" | "minus" = "plus"
   ): DateTime {
     const matches = raw.matchAll(AMOUNT_REGEX);
     let match = matches.next();
-
-    const plusOrMinus = before ? "minus" : "plus";
-
+    const sign = match && match.value && match.value[1] ? "minus" : plusOrMinus;
     while (match.value) {
       const value = match.value as RegExpMatchArray;
-      const amount = parseInt(value[1]);
-      if (value[3]) {
-        priorDate = priorDate[plusOrMinus]({ milliseconds: amount });
-      } else if (value[4]) {
-        priorDate = priorDate[plusOrMinus]({ seconds: amount });
+      const amount = parseInt(value[2]);
+      if (value[4]) {
+        priorDate = priorDate[sign]({ milliseconds: amount });
       } else if (value[5]) {
-        priorDate = priorDate[plusOrMinus]({ minutes: amount });
+        priorDate = priorDate[sign]({ seconds: amount });
       } else if (value[6]) {
-        priorDate = priorDate[plusOrMinus]({ hours: amount });
+        priorDate = priorDate[sign]({ minutes: amount });
       } else if (value[7]) {
-        priorDate = before
-          ? removeWeekdays(amount, priorDate)
-          : addWeekdays(amount, priorDate);
+        priorDate = priorDate[sign]({ hours: amount });
       } else if (value[8]) {
-        priorDate = priorDate[plusOrMinus]({ days: amount });
+        priorDate =
+          sign === "minus"
+            ? removeWeekdays(amount, priorDate)
+            : addWeekdays(amount, priorDate);
       } else if (value[9]) {
-        priorDate = priorDate[plusOrMinus]({ weeks: amount });
+        priorDate = priorDate[sign]({ days: amount });
       } else if (value[10]) {
-        priorDate = priorDate[plusOrMinus]({ months: amount });
+        priorDate = priorDate[sign]({ weeks: amount });
       } else if (value[11]) {
-        priorDate = priorDate[plusOrMinus]({ years: amount });
+        priorDate = priorDate[sign]({ months: amount });
+      } else if (value[12]) {
+        priorDate = priorDate[sign]({ years: amount });
       }
       match = matches.next();
     }
@@ -312,7 +318,7 @@ export class EventDescription {
       if (i === 0) {
         line = line.replace(EVENT_ID_REGEX, (match, id) => {
           if (!this.id) {
-            this.id = (id as string).substring(1);
+            this.id = id;
             return "";
           }
           return id;

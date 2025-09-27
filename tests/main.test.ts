@@ -23,6 +23,8 @@ import {
   nthEvent,
   sameParse,
   sp,
+  checkDateTime,
+  getDateRanges,
 } from "./testUtilities";
 import { readFileSync } from "fs";
 import { resolve } from "path";
@@ -1707,7 +1709,6 @@ endGroup
     );
   });
 
-
   test("event range starts at beginning of line", () => {
     const mw = parse(`  now: this is an event
     
@@ -2068,10 +2069,6 @@ describe("edtf casual times", () => {
   });
 });
 
-function getDateRanges(m: ParseResult): DateRange[] {
-  return flat(m.events).map((n) => toDateRange(n.dateRangeIso));
-}
-
 function getEvents(m: ParseResult) {
   return flat(m.events);
 }
@@ -2106,13 +2103,4 @@ function checkDate(
   if (second !== undefined) {
     expect(dateTime.second).toBe(second);
   }
-}
-
-function checkDateTime(dateTime1: DateTime, dateTime2: DateTime) {
-  expect(dateTime1.year).toBe(dateTime2.year);
-  expect(dateTime1.month).toBe(dateTime2.month);
-  expect(dateTime1.day).toBe(dateTime2.day);
-  expect(dateTime1.hour).toBe(dateTime2.hour);
-  expect(dateTime1.minute).toBe(dateTime2.minute);
-  expect(dateTime1.second).toBe(dateTime2.second);
 }

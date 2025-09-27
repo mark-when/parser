@@ -31,6 +31,10 @@ import {
   to_edtfDateTimeMeridiemMeridiemMatchIndex,
   from_edtfDateTimeMeridiemMinuteMatchIndex,
   to_edtfDateTimeMeridiemMinuteMatchIndex,
+  from_edtfRelativeEventIdStartOrEndMatchIndex,
+  from_edtfRelativeEventStartOrEndMatchIndex,
+  to_edtfRelativeEventIdStartOrEndMatchIndex,
+  to_edtfRelativeEventStartOrEndMatchIndex,
 } from "../regex.js";
 import {
   DateRangePart,
@@ -44,6 +48,7 @@ import {
 } from "../Types.js";
 import { getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
+import { start } from "repl";
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,
@@ -74,8 +79,6 @@ export function getDateRangeFromEDTFRegexMatch(
 
   const relativeFromBeforeOrAfter =
     eventStartLineRegexMatch[from_edtfBeforeOrAfterMatchIndex];
-  const relativeToBeforeOrAfter =
-    eventStartLineRegexMatch[to_edtfBeforeOrAfterMatchIndex];
 
   const relativeFromDate =
     eventStartLineRegexMatch[from_edtfRelativeMatchIndex];
@@ -85,11 +88,6 @@ export function getDateRangeFromEDTFRegexMatch(
     ? "before"
     : "after";
   const relativeToDate = eventStartLineRegexMatch[to_edtfRelativeMatchIndex];
-  const toBeforeOrAfter = ["before", "by"].includes(
-    relativeToBeforeOrAfter || ""
-  )
-    ? "before"
-    : "after";
 
   const nowFrom = eventStartLineRegexMatch[from_edtfNowMatchIndex];
   const nowTo = eventStartLineRegexMatch[to_edtfNowMatchIndex];
@@ -179,24 +177,29 @@ export function getDateRangeFromEDTFRegexMatch(
     isRelative = true;
 
     const relativeToEventId =
-      eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex]?.substring(
-        1
-      );
+      eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
 
     let relativeTo: DateTime | undefined;
     if (relativeToEventId) {
       const event = context.getById(relativeToEventId);
       if (event && isEvent(event)) {
         const range = toDateRange(event.dateRangeIso);
-        if (fromBeforeOrAfter === "after") {
-          relativeTo = range.toDateTime;
-        } else {
-          relativeTo = range.fromDateTime;
-        }
+        const startOrEnd =
+          eventStartLineRegexMatch[
+            from_edtfRelativeEventIdStartOrEndMatchIndex
+          ];
+        relativeTo =
+          startOrEnd === "start"
+            ? range.fromDateTime
+            : startOrEnd === "end"
+            ? range.toDateTime
+            : fromBeforeOrAfter === "after"
+            ? range.toDateTime
+            : range.fromDateTime;
       } else {
         context.parseMessages.push({
           type: "error",
-          message: `Event ${relativeToEventId} not found`,
+          message: `Event "${relativeToEventId}" not found`,
           pos: [
             lengthAtIndex[i] + line.indexOf(relativeToEventId),
             lengthAtIndex[i] +
@@ -212,10 +215,17 @@ export function getDateRangeFromEDTFRegexMatch(
       if (!priorEvent) {
         relativeTo = context.zonedNow;
       } else {
+        const startOrEnd =
+          eventStartLineRegexMatch[from_edtfRelativeEventStartOrEndMatchIndex];
+        const priorRange = toDateRange(priorEvent.dateRangeIso);
         relativeTo =
-          fromBeforeOrAfter === "after"
-            ? toDateRange(priorEvent.dateRangeIso).toDateTime
-            : toDateRange(priorEvent.dateRangeIso).fromDateTime;
+          startOrEnd === "start"
+            ? priorRange.fromDateTime
+            : startOrEnd === "end"
+            ? priorRange.toDateTime
+            : fromBeforeOrAfter === "after"
+            ? priorRange.toDateTime
+            : priorRange.fromDateTime;
       }
     }
 
@@ -229,7 +239,7 @@ export function getDateRangeFromEDTFRegexMatch(
         // In the case of this being a 'before' relative date, the
         // end date is relativeTo and the start date is `amount` before it.
         endDateTime = relativeTo;
-        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo, true);
+        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo, "minus");
       } else {
         fromDateTime = relativeTo;
         endDateTime = RelativeDate.from(relativeFromDate, relativeTo);
@@ -239,8 +249,16 @@ export function getDateRangeFromEDTFRegexMatch(
         if (relativeToDate) {
           // in this case we're actually determining the end dateTime, with its duration,
           // or start time, to be figured out from the eventEndDate
-          endDateTime = RelativeDate.from(relativeFromDate, relativeTo, true);
-          fromDateTime = RelativeDate.from(relativeToDate, endDateTime, true);
+          endDateTime = RelativeDate.from(
+            relativeFromDate,
+            relativeTo,
+            "minus"
+          );
+          fromDateTime = RelativeDate.from(
+            relativeToDate,
+            endDateTime,
+            "minus"
+          );
         } else {
           // In this case we have an eventEndDate but it is not relative
         }
@@ -270,20 +288,59 @@ export function getDateRangeFromEDTFRegexMatch(
       if (relativeToEventId) {
         const event = context.getById(relativeToEventId);
         if (event && isEvent(event)) {
-          relativeTo = toDateRange(event.dateRangeIso).toDateTime;
           // Dependent on other event
           canCacheRange = false;
           isRelative = true;
+
+          const startOrEnd =
+            eventStartLineRegexMatch[
+              to_edtfRelativeEventIdStartOrEndMatchIndex
+            ];
+          const relativeToEventDateRange = toDateRange(event.dateRangeIso);
+          relativeTo =
+            startOrEnd === "start"
+              ? relativeToEventDateRange.fromDateTime
+              : startOrEnd === "end"
+              ? relativeToEventDateRange.toDateTime
+              : relativeToEventDateRange.fromDateTime;
         } else {
-          const index = line.indexOf(relativeToEventId);
+          const index = line.lastIndexOf(
+            relativeToEventId,
+            dateRangeInText.to + 1
+          );
           context.parseMessages.push({
             type: "error",
-            message: `Event ${relativeToEventId} not found`,
+            message: `Event "${relativeToEventId}" not found`,
             pos: [
               lengthAtIndex[i] + index,
               lengthAtIndex[i] + index + relativeToEventId.length,
             ],
           });
+        }
+      }
+      if (!relativeTo) {
+        const startOrEnd =
+          eventStartLineRegexMatch[to_edtfRelativeEventStartOrEndMatchIndex];
+        if (startOrEnd) {
+          const priorEvent = context.priorEvent();
+          if (priorEvent) {
+            const range = toDateRange(priorEvent.dateRangeIso);
+            relativeTo =
+              startOrEnd === "start" ? range.fromDateTime : range.toDateTime;
+          } else {
+            const lastIndexOfStartOrEnd = line.lastIndexOf(`.${startOrEnd}`);
+            context.parseMessages.push({
+              type: "error",
+              message: `No prior event to reference`,
+              pos: [
+                lengthAtIndex[i] + lastIndexOfStartOrEnd,
+                lengthAtIndex[i] +
+                  lastIndexOfStartOrEnd +
+                  startOrEnd.length +
+                  1,
+              ],
+            });
+          }
         }
       }
       if (!relativeTo) {
@@ -355,6 +412,16 @@ export function getDateRangeFromEDTFRegexMatch(
     context.ranges.push(recurrence.range);
   }
   context.ranges.push(colon);
+  if (+fromDateTime > +endDateTime) {
+    context.parseMessages.push({
+      message: "Illogical date range - start time is later than end time",
+      type: "error",
+      pos: [
+        lengthAtIndex[i] + line.indexOf(datePart),
+        lengthAtIndex[i] + line.indexOf(datePart) + datePart.length,
+      ],
+    });
+  }
   const dateRange = new DateRangePart({
     from: fromDateTime,
     to: endDateTime,
