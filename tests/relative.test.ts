@@ -1,4 +1,4 @@
-import { parse } from "../src";
+import { Event, parse, toDateRange } from "../src";
 import {
   relativeToId,
   relativeToPrevious1,
@@ -48,6 +48,22 @@ id: eventy
     checkDateTime(third.toDateTime, second.fromDateTime);
   });
 
+  test("relative to two events dependencies", () => {
+    const text = `
+2025-07-28 / 2025-08-01: Yearly planning #milestone
+id: event
+
+2025-08-09: event2
+id: eventy
+
+!event / !eventy: hmmm`;
+    const mw = parse(text);
+    const third = mw.events.children[2] as Event;
+
+    expect(third.fromRelativeTo).toEqual([0]);
+    expect(third.toRelativeTo).toEqual([1]);
+  });
+
   test("relative to two events 2", () => {
     const text = `
 2025-07-28 / 2025-08-01: Yearly planning #milestone
@@ -62,6 +78,22 @@ id: eventy
 
     checkDateTime(first.toDateTime, third.fromDateTime);
     checkDateTime(third.toDateTime, second.fromDateTime);
+  });
+
+  test("relative to two events 2 dependencies", () => {
+    const text = `
+2025-07-28 / 2025-08-01: Yearly planning #milestone
+id: event
+
+2025-08-09: event2
+id: eventy
+
+!event - !eventy: hmmm`;
+    const mw = parse(text);
+    const third = mw.events.children[2] as Event;
+
+    expect(third.fromRelativeTo).toEqual([0]);
+    expect(third.toRelativeTo).toEqual([1]);
   });
 
   test("modifiers 1", () => {
@@ -238,5 +270,95 @@ id: eventy
 
     checkDateTime(third.fromDateTime, second.toDateTime.minus({ days: 10 }));
     checkDateTime(third.toDateTime, third.fromDateTime.plus({ days: 1 }));
+  });
+});
+
+describe("dependencies", () => {
+  test("is relative to event by id from", () => {
+    const mw = parse(`
+2025: event
+id: event
+
+!event / 1 day: second`);
+
+    const second = mw.events.children[1] as Event;
+    expect(second.fromRelativeTo).toEqual([0]);
+  });
+
+  test("is relative to event by id to", () => {
+    const mw = parse(`
+2025: event
+id: event
+
+by !event 1 day: second`);
+
+    const second = mw.events.children[1] as Event;
+    expect(second.toRelativeTo).toEqual([0]);
+  });
+
+  test("is relative to event by id to 2", () => {
+    const mw = parse(`
+2025: event
+id: event
+
+before !event 1 day: second`);
+
+    const second = mw.events.children[1] as Event;
+    expect(second.toRelativeTo).toEqual([0]);
+  });
+
+  test("is relative to 2 events by id", () => {
+    const mw = parse(`
+2025: event
+id: ok
+
+2027: event
+id: oops
+
+!ok / !oops: interesting`);
+
+    const third = mw.events.children[2] as Event;
+    expect(third.fromRelativeTo).toEqual([0]);
+    expect(third.toRelativeTo).toEqual([1]);
+  });
+
+  test("anonymous start modifier 1", () => {
+    const mw = parse(`
+2025: event
+
+.start 1 day: event`);
+
+    const first = mw.events.children[0] as Event;
+    const second = mw.events.children[1] as Event;
+    expect(second.fromRelativeTo).toEqual([0]);
+    expect(first.dateRangeIso.fromDateTimeIso).toBe(
+      second.dateRangeIso.fromDateTimeIso
+    );
+  });
+
+  test("anonymous start modifier 2", () => {
+    const mw = parse(`
+2025: event
+
+.end 1 day: event`);
+
+    const first = mw.events.children[0] as Event;
+    const second = mw.events.children[1] as Event;
+    expect(second.fromRelativeTo).toEqual([0]);
+    expect(first.dateRangeIso.toDateTimeIso).toBe(
+      second.dateRangeIso.fromDateTimeIso
+    );
+  });
+
+  test("anonymous end modifier 1", () => {
+    const mw = parse(`
+2025: event
+
+.start / .end: event`);
+
+    const first = mw.events.children[0] as Event;
+    const second = mw.events.children[1] as Event;
+    expect(second.fromRelativeTo).toEqual([0]);
+    expect(second.toRelativeTo).toEqual([0]);
   });
 });

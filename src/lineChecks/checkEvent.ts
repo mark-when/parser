@@ -234,8 +234,7 @@ export function checkEvent(
     dateRange,
     eventRange,
     dateRange.dateRangeInText,
-    eventDescription,
-    dateRange.originalString
+    eventDescription
   );
 
   if (event) {

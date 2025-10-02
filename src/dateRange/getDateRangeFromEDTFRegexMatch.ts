@@ -43,12 +43,12 @@ import {
   RangeType,
   Range,
   toDateRange,
-  get,
   isEvent,
+  Path,
+  Event,
 } from "../Types.js";
 import { getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
-import { start } from "repl";
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,
@@ -141,7 +141,9 @@ export function getDateRangeFromEDTFRegexMatch(
   let granularity: DateTimeGranularity = "instant";
 
   let canCacheRange = true;
-  let isRelative = false;
+  let isDependent = false;
+  let fromDependentPath: Path | undefined;
+  let toDependentPath: Path | undefined;
 
   if (edtfFrom) {
     if (edtfFromHasTime) {
@@ -174,12 +176,12 @@ export function getDateRangeFromEDTFRegexMatch(
   } else if (relativeFromDate) {
     // Dependent on other event
     canCacheRange = false;
-    isRelative = true;
+    isDependent = true;
 
     const relativeToEventId =
       eventStartLineRegexMatch[from_edtfRelativeEventIdMatchIndex];
 
-    let relativeTo: DateTime | undefined;
+    let dependentOn: { dt: DateTime; event?: Event; path?: Path } | undefined;
     if (relativeToEventId) {
       const event = context.getById(relativeToEventId);
       if (event && isEvent(event)) {
@@ -188,44 +190,56 @@ export function getDateRangeFromEDTFRegexMatch(
           eventStartLineRegexMatch[
             from_edtfRelativeEventIdStartOrEndMatchIndex
           ];
-        relativeTo =
-          startOrEnd === "start"
-            ? range.fromDateTime
-            : startOrEnd === "end"
-            ? range.toDateTime
-            : fromBeforeOrAfter === "after"
-            ? range.toDateTime
-            : range.fromDateTime;
+        dependentOn = {
+          dt:
+            startOrEnd === "start"
+              ? range.fromDateTime
+              : startOrEnd === "end"
+              ? range.toDateTime
+              : fromBeforeOrAfter === "after"
+              ? range.toDateTime
+              : range.fromDateTime,
+          event,
+          path: fromDependentPath,
+        };
+        fromDependentPath = context.ids[relativeToEventId];
       } else {
+        const index = line.lastIndexOf(
+          relativeToEventId,
+          dateRangeInText.to + 1
+        );
         context.parseMessages.push({
           type: "error",
           message: `Event "${relativeToEventId}" not found`,
           pos: [
-            lengthAtIndex[i] + line.indexOf(relativeToEventId),
-            lengthAtIndex[i] +
-              line.indexOf(relativeToEventId) +
-              relativeToEventId.length,
+            lengthAtIndex[i] + index,
+            lengthAtIndex[i] + index + relativeToEventId.length,
           ],
         });
       }
     }
 
-    if (!relativeTo) {
+    if (!dependentOn) {
       const priorEvent = context.priorEvent();
       if (!priorEvent) {
-        relativeTo = context.zonedNow;
+        dependentOn = { dt: context.zonedNow };
       } else {
         const startOrEnd =
           eventStartLineRegexMatch[from_edtfRelativeEventStartOrEndMatchIndex];
         const priorRange = toDateRange(priorEvent.dateRangeIso);
-        relativeTo =
-          startOrEnd === "start"
-            ? priorRange.fromDateTime
-            : startOrEnd === "end"
-            ? priorRange.toDateTime
-            : fromBeforeOrAfter === "after"
-            ? priorRange.toDateTime
-            : priorRange.fromDateTime;
+        dependentOn = {
+          dt:
+            startOrEnd === "start"
+              ? priorRange.fromDateTime
+              : startOrEnd === "end"
+              ? priorRange.toDateTime
+              : fromBeforeOrAfter === "after"
+              ? priorRange.toDateTime
+              : priorRange.fromDateTime,
+          event: priorEvent,
+          path: context.currentPath,
+        };
+        fromDependentPath = context.currentPath;
       }
     }
 
@@ -238,20 +252,28 @@ export function getDateRangeFromEDTFRegexMatch(
       if (fromBeforeOrAfter === "before") {
         // In the case of this being a 'before' relative date, the
         // end date is relativeTo and the start date is `amount` before it.
-        endDateTime = relativeTo;
-        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo, "minus");
+        endDateTime = dependentOn.dt;
+        fromDependentPath = undefined;
+        toDependentPath = dependentOn.path;
+        fromDateTime = RelativeDate.from(
+          relativeFromDate,
+          dependentOn.dt,
+          "minus"
+        );
       } else {
-        fromDateTime = relativeTo;
-        endDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+        fromDateTime = dependentOn.dt;
+        endDateTime = RelativeDate.from(relativeFromDate, dependentOn.dt);
       }
     } else {
       if (fromBeforeOrAfter === "before") {
         if (relativeToDate) {
           // in this case we're actually determining the end dateTime, with its duration,
           // or start time, to be figured out from the eventEndDate
+          fromDependentPath = undefined;
+          toDependentPath = dependentOn.path;
           endDateTime = RelativeDate.from(
             relativeFromDate,
-            relativeTo,
+            dependentOn.dt,
             "minus"
           );
           fromDateTime = RelativeDate.from(
@@ -263,7 +285,7 @@ export function getDateRangeFromEDTFRegexMatch(
           // In this case we have an eventEndDate but it is not relative
         }
       } else {
-        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+        fromDateTime = RelativeDate.from(relativeFromDate, dependentOn.dt);
       }
     }
     granularity = "instant";
@@ -281,28 +303,33 @@ export function getDateRangeFromEDTFRegexMatch(
   }
 
   if (!endDateTime) {
+    let dependentOn: { dt: DateTime; event?: Event; path?: Path } | undefined;
     if (relativeToDate) {
       const relativeToEventId =
         eventStartLineRegexMatch[to_edtfRelativeEventIdMatchIndex];
-      let relativeTo: DateTime | undefined;
       if (relativeToEventId) {
         const event = context.getById(relativeToEventId);
         if (event && isEvent(event)) {
           // Dependent on other event
           canCacheRange = false;
-          isRelative = true;
+          isDependent = true;
+          toDependentPath = context.ids[relativeToEventId];
 
           const startOrEnd =
             eventStartLineRegexMatch[
               to_edtfRelativeEventIdStartOrEndMatchIndex
             ];
           const relativeToEventDateRange = toDateRange(event.dateRangeIso);
-          relativeTo =
-            startOrEnd === "start"
-              ? relativeToEventDateRange.fromDateTime
-              : startOrEnd === "end"
-              ? relativeToEventDateRange.toDateTime
-              : relativeToEventDateRange.fromDateTime;
+          dependentOn = {
+            dt:
+              startOrEnd === "start"
+                ? relativeToEventDateRange.fromDateTime
+                : startOrEnd === "end"
+                ? relativeToEventDateRange.toDateTime
+                : relativeToEventDateRange.fromDateTime,
+            event,
+            path: toDependentPath,
+          };
         } else {
           const index = line.lastIndexOf(
             relativeToEventId,
@@ -318,15 +345,21 @@ export function getDateRangeFromEDTFRegexMatch(
           });
         }
       }
-      if (!relativeTo) {
+
+      if (!dependentOn) {
         const startOrEnd =
           eventStartLineRegexMatch[to_edtfRelativeEventStartOrEndMatchIndex];
         if (startOrEnd) {
           const priorEvent = context.priorEvent();
           if (priorEvent) {
             const range = toDateRange(priorEvent.dateRangeIso);
-            relativeTo =
-              startOrEnd === "start" ? range.fromDateTime : range.toDateTime;
+            dependentOn = {
+              event: priorEvent,
+              dt:
+                startOrEnd === "start" ? range.fromDateTime : range.toDateTime,
+              path: context.currentPath,
+            };
+            toDependentPath = context.currentPath;
           } else {
             const lastIndexOfStartOrEnd = line.lastIndexOf(`.${startOrEnd}`);
             context.parseMessages.push({
@@ -343,11 +376,11 @@ export function getDateRangeFromEDTFRegexMatch(
           }
         }
       }
-      if (!relativeTo) {
+      if (!dependentOn) {
         // We do not have an event to refer to by id, use the start of this event
-        relativeTo = fromDateTime;
+        dependentOn = { dt: fromDateTime };
       }
-      endDateTime = RelativeDate.from(relativeToDate, relativeTo);
+      endDateTime = RelativeDate.from(relativeToDate, dependentOn.dt);
     } else if (nowTo) {
       endDateTime = context.zonedNow;
       granularity = "instant";
@@ -429,7 +462,9 @@ export function getDateRangeFromEDTFRegexMatch(
     dateRangeInText,
     eventText: eventStartLineRegexMatch[edtfEventTextMatchIndex],
     recurrence,
-    isRelative,
+    isRelative: isDependent,
+    fromRelativeTo: fromDependentPath,
+    toRelativeTo: toDependentPath,
     definition: {
       ...dateRangeInText,
       type: RangeType.EventDefinition,

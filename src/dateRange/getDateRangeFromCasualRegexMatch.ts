@@ -8,7 +8,6 @@ import {
   from_relativeMatchIndex,
   from_beforeOrAfterMatchIndex,
   to_relativeMatchIndex,
-  to_beforeOrAfterMatchIndex,
   from_slashDateFullMatchIndex,
   to_slashDateFullMatchIndex,
   from_timeOnlyMatchIndex,
@@ -64,8 +63,9 @@ import {
   RangeType,
   Range,
   toDateRange,
-  get,
   isEvent,
+  Path,
+  Event,
 } from "../Types.js";
 import {
   getTimeFromSlashDateFrom,
@@ -199,32 +199,45 @@ export function getDateRangeFromCasualRegexMatch(
   let endDateTime: DateTime | undefined;
   let granularity: DateTimeGranularity = "instant";
   let canCacheRange = true;
-  let isRelative = false;
+  let fromDependentPath: Path | undefined;
+  let toDependentPath: Path | undefined;
+
+  let isDependent = false;
 
   if (relativeFromDate) {
     // Dependent on other events
     canCacheRange = false;
-    isRelative = true;
+    isDependent = true;
 
     const relativeToEventId =
       eventStartLineRegexMatch[from_relativeEventIdMatchIndex];
 
-    let relativeTo: DateTime | undefined;
+    let dependentOn:
+      | {
+          dt: DateTime;
+          event?: Event;
+          path?: Path;
+        }
+      | undefined;
     if (relativeToEventId) {
       const event = context.getById(relativeToEventId);
       if (event && isEvent(event)) {
+        fromDependentPath = context.ids[relativeToEventId];
         const range = toDateRange(event.dateRangeIso);
         const startOrEnd =
           eventStartLineRegexMatch[from_relativeEventIdStartOrEndMatchIndex];
-        if (startOrEnd === "start") {
-          relativeTo = range.fromDateTime;
-        } else if (startOrEnd === "end") {
-          relativeTo = range.toDateTime;
-        } else if (fromBeforeOrAfter === "after") {
-          relativeTo = range.toDateTime;
-        } else {
-          relativeTo = range.fromDateTime;
-        }
+        dependentOn = {
+          dt:
+            startOrEnd === "start"
+              ? range.fromDateTime
+              : startOrEnd === "end"
+              ? range.toDateTime
+              : fromBeforeOrAfter === "after"
+              ? range.toDateTime
+              : range.fromDateTime,
+          event,
+          path: fromDependentPath,
+        };
       } else {
         const index = line.lastIndexOf(
           relativeToEventId,
@@ -241,22 +254,27 @@ export function getDateRangeFromCasualRegexMatch(
       }
     }
 
-    if (!relativeTo) {
+    if (!dependentOn) {
       const priorEvent = context.priorEvent();
       if (!priorEvent) {
-        relativeTo = context.zonedNow;
+        dependentOn = { dt: context.zonedNow };
       } else {
+        fromDependentPath = context.currentPath;
         const startOrEnd =
           eventStartLineRegexMatch[from_relativeEventStartOrEndMatchIndex];
         const priorRange = toDateRange(priorEvent.dateRangeIso);
-        relativeTo =
-          startOrEnd === "start"
-            ? priorRange.fromDateTime
-            : startOrEnd === "end"
-            ? priorRange.toDateTime
-            : fromBeforeOrAfter === "after"
-            ? priorRange.toDateTime
-            : priorRange.fromDateTime;
+        dependentOn = {
+          dt:
+            startOrEnd === "start"
+              ? priorRange.fromDateTime
+              : startOrEnd === "end"
+              ? priorRange.toDateTime
+              : fromBeforeOrAfter === "after"
+              ? priorRange.toDateTime
+              : priorRange.fromDateTime,
+          event: priorEvent,
+          path: context.currentPath,
+        };
       }
     }
 
@@ -264,20 +282,28 @@ export function getDateRangeFromCasualRegexMatch(
       if (fromBeforeOrAfter === "before") {
         // In the case of this being a 'before' relative date, the
         // end date is relativeTo and the start date is `amount` before it.
-        endDateTime = relativeTo;
-        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo, "minus");
+        endDateTime = dependentOn.dt;
+        fromDependentPath = undefined;
+        toDependentPath = dependentOn.path;
+        fromDateTime = RelativeDate.from(
+          relativeFromDate,
+          dependentOn.dt,
+          "minus"
+        );
       } else {
-        fromDateTime = relativeTo;
-        endDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+        fromDateTime = dependentOn.dt;
+        endDateTime = RelativeDate.from(relativeFromDate, dependentOn.dt);
       }
     } else {
       if (fromBeforeOrAfter === "before") {
         if (relativeToDate) {
           // in this case we're actually determining the end dateTime, with its duration,
           // or start time, to be figured out from the eventEndDate
+          fromDependentPath = undefined;
+          toDependentPath = dependentOn.path;
           endDateTime = RelativeDate.from(
             relativeFromDate,
-            relativeTo,
+            dependentOn.dt,
             "minus"
           );
           fromDateTime = RelativeDate.from(
@@ -289,7 +315,7 @@ export function getDateRangeFromCasualRegexMatch(
           // In this case we have an eventEndDate but it is not relative
         }
       } else {
-        fromDateTime = RelativeDate.from(relativeFromDate, relativeTo);
+        fromDateTime = RelativeDate.from(relativeFromDate, dependentOn.dt);
       }
     }
     granularity = "instant";
@@ -344,7 +370,7 @@ export function getDateRangeFromCasualRegexMatch(
   } else if (timeOnlyFrom) {
     // Dependent on previous event
     canCacheRange = false;
-    isRelative = true;
+    isDependent = true;
 
     const timeFrom = getTimeFromRegExpMatch(
       eventStartLineRegexMatch,
@@ -390,11 +416,12 @@ export function getDateRangeFromCasualRegexMatch(
   if (!endDateTime) {
     if (relativeToDate) {
       canCacheRange = false;
-      isRelative = true;
+      isDependent = true;
 
       const relativeToEventId =
         eventStartLineRegexMatch[to_relativeEventIdMatchIndex];
-      let relativeTo: DateTime | undefined;
+      // TODO: Replaec relativeTo with dependentOn
+      let dependentOn: { dt: DateTime; event?: Event; path?: Path } | undefined;
       if (relativeToEventId) {
         const event = context.getById(relativeToEventId);
         if (event && isEvent(event)) {
@@ -404,12 +431,17 @@ export function getDateRangeFromCasualRegexMatch(
             fromDateTime: relativeEventFromDateTime,
             toDateTime: relativeEventToDateTime,
           } = toDateRange(event.dateRangeIso);
-          relativeTo =
-            startOrEnd === "start"
-              ? relativeEventFromDateTime
-              : startOrEnd === "end"
-              ? relativeEventToDateTime
-              : relativeEventFromDateTime;
+          dependentOn = {
+            dt:
+              startOrEnd === "start"
+                ? relativeEventFromDateTime
+                : startOrEnd === "end"
+                ? relativeEventToDateTime
+                : relativeEventFromDateTime,
+            event,
+            path: context.ids[relativeToEventId],
+          };
+          toDependentPath = context.ids[relativeToEventId];
         } else {
           context.parseMessages.push({
             type: "error",
@@ -423,15 +455,21 @@ export function getDateRangeFromCasualRegexMatch(
           });
         }
       }
-      if (!relativeTo) {
+
+      if (!dependentOn) {
         const startOrEnd =
           eventStartLineRegexMatch[to_relativeEventStartOrEndMatchIndex];
         if (startOrEnd) {
           const priorEvent = context.priorEvent();
           if (priorEvent) {
             const range = toDateRange(priorEvent.dateRangeIso);
-            relativeTo =
-              startOrEnd === "start" ? range.fromDateTime : range.toDateTime;
+            dependentOn = {
+              dt:
+                startOrEnd === "start" ? range.fromDateTime : range.toDateTime,
+              event: priorEvent,
+              path: context.currentPath,
+            };
+            toDependentPath = context.currentPath;
           } else {
             const lastIndexOfStartOrEnd = line.lastIndexOf(`.${startOrEnd}`);
             context.parseMessages.push({
@@ -448,11 +486,11 @@ export function getDateRangeFromCasualRegexMatch(
           }
         }
       }
-      if (!relativeTo) {
+      if (!dependentOn) {
         // We do not have an event to refer to by id, use the start of this event
-        relativeTo = fromDateTime;
+        dependentOn = { dt: fromDateTime };
       }
-      endDateTime = RelativeDate.from(eventEndDate, relativeTo);
+      endDateTime = RelativeDate.from(eventEndDate, dependentOn.dt);
     } else if (toCasual) {
       endDateTime = DateTime.fromISO(roundDateUp(toCasual, context), {
         setZone: true,
@@ -592,7 +630,9 @@ export function getDateRangeFromCasualRegexMatch(
     dateRangeInText,
     eventText: eventStartLineRegexMatch[eventTextMatchIndex],
     recurrence,
-    isRelative,
+    isRelative: isDependent,
+    fromRelativeTo: fromDependentPath,
+    toRelativeTo: toDependentPath,
     definition: {
       ...dateRangeInText,
       type: RangeType.EventDefinition,
