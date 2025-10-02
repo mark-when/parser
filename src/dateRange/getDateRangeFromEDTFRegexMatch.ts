@@ -190,6 +190,7 @@ export function getDateRangeFromEDTFRegexMatch(
           eventStartLineRegexMatch[
             from_edtfRelativeEventIdStartOrEndMatchIndex
           ];
+        fromDependentPath = context.ids[relativeToEventId];
         dependentOn = {
           dt:
             startOrEnd === "start"
@@ -202,7 +203,6 @@ export function getDateRangeFromEDTFRegexMatch(
           event,
           path: fromDependentPath,
         };
-        fromDependentPath = context.ids[relativeToEventId];
       } else {
         const index = line.lastIndexOf(
           relativeToEventId,
