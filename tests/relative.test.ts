@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import { Event, parse, toDateRange } from "../src";
 import {
   relativeToId,
@@ -59,9 +60,16 @@ id: eventy
 !event / !eventy: hmmm`;
     const mw = parse(text);
     const third = mw.events.children[2] as Event;
+    const [first, second] = mw.events.children as Event[];
 
-    expect(third.fromRelativeTo).toEqual([0]);
-    expect(third.toRelativeTo).toEqual([1]);
+    expect(third.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
+    expect(third.toRelativeTo).toEqual({
+      path: [1],
+      dt: second.dateRangeIso.fromDateTimeIso,
+    });
   });
 
   test("relative to two events 2", () => {
@@ -91,9 +99,16 @@ id: eventy
 !event - !eventy: hmmm`;
     const mw = parse(text);
     const third = mw.events.children[2] as Event;
+    const [first, second] = mw.events.children as Event[];
 
-    expect(third.fromRelativeTo).toEqual([0]);
-    expect(third.toRelativeTo).toEqual([1]);
+    expect(third.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
+    expect(third.toRelativeTo).toEqual({
+      path: [1],
+      dt: second.dateRangeIso.fromDateTimeIso,
+    });
   });
 
   test("modifiers 1", () => {
@@ -282,7 +297,12 @@ id: event
 !event / 1 day: second`);
 
     const second = mw.events.children[1] as Event;
-    expect(second.fromRelativeTo).toEqual([0]);
+    const first = mw.events.children[0] as Event;
+
+    expect(second.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
   });
 
   test("is relative to event by id to", () => {
@@ -293,7 +313,12 @@ id: event
 by !event 1 day: second`);
 
     const second = mw.events.children[1] as Event;
-    expect(second.toRelativeTo).toEqual([0]);
+    const first = mw.events.children[0] as Event;
+
+    expect(second.toRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.fromDateTimeIso,
+    });
   });
 
   test("is relative to event by id to 2", () => {
@@ -304,7 +329,12 @@ id: event
 before !event 1 day: second`);
 
     const second = mw.events.children[1] as Event;
-    expect(second.toRelativeTo).toEqual([0]);
+    const first = mw.events.children[0] as Event;
+
+    expect(second.toRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.fromDateTimeIso,
+    });
   });
 
   test("is relative to 2 events by id", () => {
@@ -318,8 +348,16 @@ id: oops
 !ok / !oops: interesting`);
 
     const third = mw.events.children[2] as Event;
-    expect(third.fromRelativeTo).toEqual([0]);
-    expect(third.toRelativeTo).toEqual([1]);
+    const [first, second] = mw.events.children as Event[];
+
+    expect(third.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
+    expect(third.toRelativeTo).toEqual({
+      path: [1],
+      dt: second.dateRangeIso.fromDateTimeIso,
+    });
   });
 
   test("anonymous start modifier 1", () => {
@@ -330,7 +368,10 @@ id: oops
 
     const first = mw.events.children[0] as Event;
     const second = mw.events.children[1] as Event;
-    expect(second.fromRelativeTo).toEqual([0]);
+    expect(second.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.fromDateTimeIso,
+    });
     expect(first.dateRangeIso.fromDateTimeIso).toBe(
       second.dateRangeIso.fromDateTimeIso
     );
@@ -344,7 +385,10 @@ id: oops
 
     const first = mw.events.children[0] as Event;
     const second = mw.events.children[1] as Event;
-    expect(second.fromRelativeTo).toEqual([0]);
+    expect(second.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
     expect(first.dateRangeIso.toDateTimeIso).toBe(
       second.dateRangeIso.fromDateTimeIso
     );
@@ -358,7 +402,113 @@ id: oops
 
     const first = mw.events.children[0] as Event;
     const second = mw.events.children[1] as Event;
-    expect(second.fromRelativeTo).toEqual([0]);
-    expect(second.toRelativeTo).toEqual([0]);
+    expect(second.fromRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.fromDateTimeIso,
+    });
+    expect(second.toRelativeTo).toEqual({
+      path: [0],
+      dt: first.dateRangeIso.toDateTimeIso,
+    });
+  });
+
+  test("datetime property in relative references", () => {
+    const text = `
+2025-01-01: First event
+id: first
+
+2025-02-01: Second event
+id: second
+
+!first / !second: Between events`;
+
+    const mw = parse(text);
+    const [first, second, third] = mw.events.children as Event[];
+
+    // Check fromRelativeTo contains the correct datetime
+    expect(third.fromRelativeTo).toBeDefined();
+    expect(third.fromRelativeTo?.path).toEqual([0]);
+    expect(third.fromRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
+
+    // Check toRelativeTo contains the correct datetime
+    expect(third.toRelativeTo).toBeDefined();
+    expect(third.toRelativeTo?.path).toEqual([1]);
+    expect(third.toRelativeTo?.dt).toEqual(second.dateRangeIso.fromDateTimeIso);
+  });
+
+  test("datetime property with modifiers", () => {
+    const text = `
+2025-01-01 / 2025-01-10: First event
+id: first
+
+!first.start / !first.end: Same span`;
+
+    const mw = parse(text);
+    const [first, second] = mw.events.children as Event[];
+
+    // Check fromRelativeTo dt is using the start time
+    expect(second.fromRelativeTo).toBeDefined();
+    expect(second.fromRelativeTo?.path).toEqual([0]);
+    expect(second.fromRelativeTo?.dt).toEqual(
+      first.dateRangeIso.fromDateTimeIso
+    );
+
+    // Check toRelativeTo dt is using the end time
+    expect(second.toRelativeTo).toBeDefined();
+    expect(second.toRelativeTo?.path).toEqual([0]);
+    expect(second.toRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
+  });
+
+  test.skip("datetime property with offsets", () => {
+    const text = `
+2025-01-01: Reference point
+id: ref
+
+!ref -5 days / !ref 10 days: Offset event`;
+
+    const mw = parse(text);
+    const [first, second] = mw.events.children as Event[];
+
+    const expectedFromDt = DateTime.fromISO(
+      first.dateRangeIso.toDateTimeIso
+    ).minus({ days: 5 });
+    const expectedToDt = DateTime.fromISO(
+      first.dateRangeIso.toDateTimeIso
+    ).plus({ days: 10 });
+
+    checkDateTime(
+      DateTime.fromISO(second.dateRangeIso.fromDateTimeIso),
+      expectedFromDt
+    );
+    checkDateTime(
+      DateTime.fromISO(second.dateRangeIso.toDateTimeIso),
+      expectedToDt
+    );
+
+    // But the relative reference should contain the original reference point
+    expect(second.fromRelativeTo).toBeDefined();
+    expect(second.fromRelativeTo?.path).toEqual([0]);
+    expect(second.fromRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
+
+    expect(second.toRelativeTo).toBeDefined();
+    expect(second.toRelativeTo?.path).toEqual([0]);
+    expect(second.toRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
+  });
+
+  test.only("relative last", () => {
+    const mw = parse(`
+2016: Harambe
+  id: harambe
+
+2019 / 2022: Pandemic #era
+  id: pandemic
+
+!harambe 100 days / !pandemic -100 days: event 
+
+199 days / 10 days: amazin`);
+
+    const [harambe, pandemic, event, amazin] = mw.events.children as Event[];
+
+    expect(amazin.fromRelativeTo?.path).toEqual([2]);
   });
 });

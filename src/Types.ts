@@ -187,8 +187,8 @@ export class DateRangePart implements DateRange {
   recurrence?: Recurrence;
   isRelative: boolean;
   recurrenceRangeInText?: Range;
-  fromRelativeTo?: Path;
-  toRelativeTo?: Path;
+  fromRelativeTo?: { path: Path; dt: DateTime };
+  toRelativeTo?: { path: Path; dt: DateTime };
 
   constructor({
     from,
@@ -210,8 +210,8 @@ export class DateRangePart implements DateRange {
     definition: Range;
     isRelative: boolean;
     recurrence?: RecurrenceInText;
-    fromRelativeTo?: Path;
-    toRelativeTo?: Path;
+    fromRelativeTo?: { path: Path; dt: DateTime };
+    toRelativeTo?: { path: Path; dt: DateTime };
   }) {
     this.fromDateTime = from;
     this.toDateTime = to;
@@ -464,8 +464,8 @@ export class Event {
   supplemental: MarkdownBlock[];
   matchedListItems: Range[];
   isRelative: boolean;
-  fromRelativeTo?: Path
-  toRelativeTo?: Path
+  fromRelativeTo?: { path: Path; dt: DateTimeIso };
+  toRelativeTo?: { path: Path; dt: DateTimeIso };
   id?: string;
   percent?: number;
   completed?: boolean;
@@ -478,7 +478,7 @@ export class Event {
     dateRange: DateRangePart,
     rangeInText: Range,
     dateRangeInText: Range,
-    eventDescription: EventDescription,
+    eventDescription: EventDescription
   ) {
     this.firstLine = {
       full: firstLine,
@@ -507,7 +507,17 @@ export class Event {
     this.completed = eventDescription.completed;
     this.isRelative = dateRange.isRelative;
     this.fromRelativeTo = dateRange.fromRelativeTo
+      ? {
+          path: dateRange.fromRelativeTo.path,
+          dt: dateRange.fromRelativeTo.dt.toISO()!,
+        }
+      : undefined;
     this.toRelativeTo = dateRange.toRelativeTo
+      ? {
+          path: dateRange.toRelativeTo.path,
+          dt: dateRange.toRelativeTo.dt.toISO()!,
+        }
+      : undefined;
   }
 }
 
