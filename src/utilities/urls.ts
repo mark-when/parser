@@ -1,7 +1,6 @@
 import { DateTime } from "luxon";
 import { Path, Eventy, iter, isEvent, DateTimeIso, Event } from "../Types.js";
 
-const disallowedCharacters = /[^A-Za-z0-9_-]/g;
 
 export const toArray = (node: Eventy | undefined, cutoff?: DateTime) => {
   if (!node) {
@@ -29,10 +28,13 @@ export const toArray = (node: Eventy | undefined, cutoff?: DateTime) => {
 };
 
 const linkRegex = /(?<preceding>^|\s)\[(?<title>[^\]]*)\]\((?<url>\S+\.\S+)\)/g;
+const rawLinkRegex = /https?:\/\/\S+/g;
+const disallowedCharacters = /[^A-Za-z0-9_-]/g;
 function urlFromString(s: string): string {
   return s
     .trim()
     .replaceAll(linkRegex, (orig, preceding, title) => preceding + title)
+    .replaceAll(rawLinkRegex, "")
     .split(" ")
     .slice(0, 4)
     .map((s) => s.replaceAll(disallowedCharacters, ""))
