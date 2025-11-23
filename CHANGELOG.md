@@ -1,3 +1,7 @@
+## 0.16.4
+
+- Strip raw urls when we're making our own urls
+
 ## 0.16.0
 
 - function signature for both `entrySet` and `headerSet` have changed - no longer takes a key path but rather just a whole object
