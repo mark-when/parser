@@ -25,6 +25,53 @@ const time = <T>(fn: () => T): [T, number] => {
   return [result, performance.now() - start];
 };
 
+const DETERMINISTIC_NOW = DateTime.fromISO("2025-01-01T00:00:00.000Z");
+
+const toText = (raw: string) => Text.of(raw.split("\n"));
+
+const stripParseResult = ({ cache, parser, ...rest }: ParseResult) => rest;
+
+const assertParity = (
+  originalRaw: string,
+  change: ChangeSet,
+  now: DateTime = DETERMINISTIC_NOW
+) => {
+  const originalDoc = toText(originalRaw);
+  const originalParse = parse(originalDoc, true, now);
+  const [fullParse, fullDuration] = time(() =>
+    parse(change.apply(originalDoc), true, now)
+  );
+  const [incremental, incrementalDuration] = time(() =>
+    incrementalParse(originalDoc, change, originalParse, now)
+  );
+  expect(stripParseResult(fullParse)).toEqual(stripParseResult(incremental));
+  return {
+    fullDuration,
+    incrementalDuration,
+    parser: incremental.parser,
+  };
+};
+
+type ParityCase = {
+  name: string;
+  seed: string;
+  buildChange: (ctx: { raw: string; doc: Text }) => ChangeSet;
+  now?: DateTime;
+};
+
+const runParityCase = ({
+  name,
+  seed,
+  buildChange,
+  now = DETERMINISTIC_NOW,
+}: ParityCase) => {
+  test(name, () => {
+    const doc = toText(seed);
+    const change = buildChange({ raw: seed, doc });
+    assertParity(seed, change, now);
+  });
+};
+
 // const large = readFileSync(resolve("./", "tests/school.mw"), "utf-8");
 
 const docs: [string, ChangeSpec][] = [
@@ -111,37 +158,72 @@ const docs: [string, ChangeSpec][] = [
 
 describe("incremental parsing", () => {
   test.each(docs)("is the same", (original, changes) => {
-    const now = DateTime.now();
-    const origParse = parse(original, true, now);
-    const newDoc = ChangeSet.of(changes, original.length).apply(
-      Text.of(original.split("\n"))
-    );
-    const [newParse, normalParseDuration] = time(() =>
-      parse(newDoc, true, now)
-    );
-    const [incParse, incParseDuration] = time(() =>
-      incrementalParse(
-        original,
-        ChangeSet.of(changes, original.length),
-        origParse,
-        now
-      )
-    );
-    // console.log(
-    //   `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
-    // );
-    const { cache, ...np } = newParse;
-    const { cache: incCaches, parser, ...ip } = incParse;
+    const changeSet = ChangeSet.of(changes, original.length);
+    assertParity(original, changeSet);
+  });
 
-    // The caches weren't matching due to one being an Object
-    // versus the other an intance of Caches. Idk
-    expect(np).toMatchObject(ip);
+  describe("targeted parity scenarios", () => {
+    const relativeChain = [recurrence1, "5 years: ok", recurrence14].join(
+      "\n"
+    );
+
+    runParityCase({
+      name: "relative events stay anchored after insertion",
+      seed: relativeChain,
+      buildChange: ({ raw }) => {
+        const insertionPoint = recurrence1.length + 1;
+        return ChangeSet.of(
+          {
+            from: insertionPoint,
+            insert: "5 years: inserted relative\n",
+          },
+          raw.length
+        );
+      },
+    });
+
+    runParityCase({
+      name: "relative events realign after anchor deletion",
+      seed: relativeChain,
+      buildChange: ({ raw }) => {
+        const deleteStart = recurrence1.length + 1;
+        const deleteLength = "5 years: ok".length + 1;
+        return ChangeSet.of(
+          {
+            from: deleteStart,
+            to: deleteStart + deleteLength,
+            insert: "",
+          },
+          raw.length
+        );
+      },
+    });
+
+    runParityCase({
+      name: "timezone updates propagate through nested groups",
+      seed: eventsWithTz,
+      buildChange: ({ raw }) => {
+        const target = "tz: +6";
+        const from = raw.indexOf(target);
+        if (from === -1) {
+          throw new Error("Target substring not found in seed doc");
+        }
+        return ChangeSet.of(
+          {
+            from,
+            to: from + target.length,
+            insert: "tz: +7",
+          },
+          raw.length
+        );
+      },
+    });
   });
 
   test("inc parse through document forwards", () => {
     const from = 0;
     const ts = eventsWithTz.split("");
-    const now = DateTime.now();
+    const now = DETERMINISTIC_NOW;
 
     const base = eventsWithTz.substring(0, from);
     let originalParse: ParseResult | undefined;
@@ -165,15 +247,16 @@ describe("incremental parsing", () => {
           now
         )
       );
-      const { cache, ...np } = newParse;
-      const { cache: incCaches, parser, ...ip } = incParse;
+      const parser = incParse.parser;
       incrementalRatio.push([
         normalParseDuration,
         incParseDuration,
         !!parser.incremental,
       ]);
       try {
-        expect(np).toMatchObject(ip);
+        expect(stripParseResult(newParse)).toMatchObject(
+          stripParseResult(incParse)
+        );
       } catch {
       } finally {
         writeFileSync(
@@ -187,7 +270,7 @@ describe("incremental parsing", () => {
   });
 
   test("inc parse through document backwards (deleting)", () => {
-    const now = DateTime.now();
+    const now = DETERMINISTIC_NOW;
 
     const base = eventsWithTz;
     let originalParse: ParseResult | undefined;
@@ -211,15 +294,16 @@ describe("incremental parsing", () => {
           now
         )
       );
-      const { cache, ...np } = newParse;
-      const { cache: incCaches, parser, ...ip } = incParse;
+      const parser = incParse.parser;
       incrementalRatio.push([
         normalParseDuration,
         incParseDuration,
         !!parser.incremental,
       ]);
       try {
-        expect(np).toMatchObject(ip);
+        expect(stripParseResult(newParse)).toMatchObject(
+          stripParseResult(incParse)
+        );
       } catch {
       } finally {
         writeFileSync(
@@ -269,25 +353,7 @@ group this is group
       },
       ex.length
     );
-
-    const now = DateTime.now();
-    const originalParse = parse(ex);
-    const newDoc = change.apply(Text.of(ex.split("\n")));
-    const [newParse, normalParseDuration] = time(() =>
-      parse(newDoc, true, now)
-    );
-    const [incParse, incParseDuration] = time(() =>
-      incrementalParse(ex, change, originalParse, now)
-    );
-    // console.log(
-    //   `Parse: ${normalParseDuration}, Incremental: ${incParseDuration}`
-    // );
-    const { cache, ...np } = newParse;
-    const { cache: incCaches, parser, ...ip } = incParse;
-
-    // The caches weren't matching due to one being an Object
-    // versus the other an intance of Caches. Idk
-    expect(np).toMatchObject(ip);
+    assertParity(ex, change);
   });
 
   test("messages", () => {
