@@ -1,3 +1,8 @@
+## 0.16.5
+
+- Fix some previously commented out tests
+- Include media urls when stripping out extraneous text when generating urls per entry
+
 ## 0.16.4
 
 - Strip raw urls when we're making our own urls
