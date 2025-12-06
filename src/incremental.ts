@@ -20,7 +20,8 @@ function touchesRanges(
   rangeA: [number, number] | Range,
   [fromB, toB]: [number, number]
 ) {
-  let fromA, toA;
+  let fromA: number;
+  let toA: number;
   if (Array.isArray(rangeA)) {
     [fromA, toA] = rangeA;
   } else {
@@ -47,6 +48,25 @@ type ChangedRange = {
   toB: number;
   inserted: Text;
 };
+
+function getPreviousEventPath(root: EventGroup, path: Path): Path | undefined {
+  let previousPath: Path | undefined;
+  const target = path.join(",");
+
+  for (const { eventy, path: currentPath } of iter(root)) {
+    if (!isEvent(eventy)) {
+      continue;
+    }
+
+    if (currentPath.join(",") === target) {
+      return previousPath ? [...previousPath] : undefined;
+    }
+
+    previousPath = currentPath;
+  }
+
+  return undefined;
+}
 
 function asArray(changes: ChangeSet) {
   const c: ChangedRange[] = [];
@@ -459,6 +479,21 @@ function graft({
           newEventy.textRanges.whole.from === eventy.textRanges.whole.from &&
           newEventy.textRanges.whole.to === eventy.textRanges.whole.to
         ) {
+          if (isEvent(eventy) && eventy.isRelative) {
+            const priorEventPath = getPreviousEventPath(root, path);
+            if (priorEventPath && eventy.fromRelativeTo) {
+              eventy.fromRelativeTo = {
+                ...eventy.fromRelativeTo,
+                path: [...priorEventPath],
+              };
+            }
+            if (priorEventPath && eventy.toRelativeTo) {
+              eventy.toRelativeTo = {
+                ...eventy.toRelativeTo,
+                path: [...priorEventPath],
+              };
+            }
+          }
           continue outer;
         }
       }
@@ -473,6 +508,20 @@ function graft({
           eventy.textRanges.recurrence = mapRange(eventy.textRanges.recurrence);
         }
         if (eventy.isRelative) {
+          const priorEventPath = getPreviousEventPath(root, path);
+          if (priorEventPath) {
+            const priorEvent = get(root, priorEventPath);
+            if (priorEvent && isEvent(priorEvent)) {
+              relativeContext.currentPath = [...priorEventPath];
+              relativeContext.tail = priorEvent;
+            } else {
+              relativeContext.currentPath = [...priorEventPath];
+              relativeContext.tail = undefined;
+            }
+          } else {
+            relativeContext.currentPath = [];
+            relativeContext.tail = undefined;
+          }
           const { from, lines, lengths } = linesAndLengths(
             newText,
             _change,

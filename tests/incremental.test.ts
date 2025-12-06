@@ -109,7 +109,7 @@ const docs: [string, ChangeSpec][] = [
   ],
 ];
 
-describe.skip("incremental parsing", () => {
+describe("incremental parsing", () => {
   test.each(docs)("is the same", (original, changes) => {
     const now = DateTime.now();
     const origParse = parse(original, true, now);
