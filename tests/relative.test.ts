@@ -461,7 +461,7 @@ id: first
 
   test("datetime property with offsets", () => {
     const text = `
-2025-01-01: Reference point
+2025-01-01 / 2025-01-05: Reference span
 id: ref
 
 !ref -5 days / !ref 10 days: Offset event`;
@@ -473,7 +473,7 @@ id: ref
       first.dateRangeIso.toDateTimeIso
     ).minus({ days: 5 });
     const expectedToDt = DateTime.fromISO(
-      first.dateRangeIso.toDateTimeIso
+      first.dateRangeIso.fromDateTimeIso
     ).plus({ days: 10 });
 
     checkDateTime(
@@ -492,7 +492,9 @@ id: ref
 
     expect(second.toRelativeTo).toBeDefined();
     expect(second.toRelativeTo?.path).toEqual([0]);
-    expect(second.toRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
+    expect(second.toRelativeTo?.dt).toEqual(
+      first.dateRangeIso.fromDateTimeIso
+    );
   });
 
   test("relative last", () => {
