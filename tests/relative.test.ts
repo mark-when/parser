@@ -459,7 +459,7 @@ id: first
     expect(second.toRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
   });
 
-  test.skip("datetime property with offsets", () => {
+  test("datetime property with offsets", () => {
     const text = `
 2025-01-01: Reference point
 id: ref
@@ -495,7 +495,7 @@ id: ref
     expect(second.toRelativeTo?.dt).toEqual(first.dateRangeIso.toDateTimeIso);
   });
 
-  test.only("relative last", () => {
+  test("relative last", () => {
     const mw = parse(`
 2016: Harambe
   id: harambe

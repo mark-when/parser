@@ -1285,11 +1285,11 @@ now - 10 years: an event #1 #3342 #098
     );
   });
 
-  describe.skip("due dates & relative dates", () => {
+  describe("due dates & relative dates", () => {
     test.each(sp())("to event 1", (p) => {
       const markwhen = p(`
 2024: !event1 event
-2022/!event1: from 2022 to !event1
+2022 / !event1: from 2022 to !event1
       `);
 
       const [first, second] = getDateRanges(markwhen);
@@ -1318,8 +1318,8 @@ now - 10 years: an event #1 #3342 #098
 
       const [first, second] = getDateRanges(markwhen);
 
-      checkDate(second.fromDateTime, 2022, 1, 1);
-      checkDate(second.toDateTime, 2024, 1, 1);
+      checkDate(second.fromDateTime, 2025, 1, 1);
+      checkDate(second.toDateTime, 2026, 1, 1);
     });
 
     test.each(sp())("to event 4", (p) => {
@@ -1330,8 +1330,8 @@ now - 10 years: an event #1 #3342 #098
 
       const [first, second] = getDateRanges(markwhen);
 
-      checkDate(second.fromDateTime, 2022, 1, 1);
-      checkDate(second.toDateTime, 2024, 1, 1);
+      checkDate(second.fromDateTime, 2025, 1, 1);
+      checkDate(second.toDateTime, 2026, 1, 1);
     });
   });
 
