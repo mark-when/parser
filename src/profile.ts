@@ -1,4 +1,3 @@
-import { performance } from "perf_hooks";
 import { Text } from "@codemirror/state";
 import { DateTime } from "luxon";
 import { linesAndLengths } from "./lines.js";
@@ -15,6 +14,8 @@ export type ParseTimings = {
   body: number;
 };
 
+const perfNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
 const pkgVersion = process.env.npm_package_version || "0.0.0";
 
 export function profileParse(
@@ -22,33 +23,33 @@ export function profileParse(
   cache?: Caches | true,
   now?: DateTime | string
 ): { parseResult: ParseResult; timings: ParseTimings } {
-  const startTotal = performance.now();
+  const startTotal = perfNow();
 
   if (cache === true) {
     cache = new Caches();
   }
 
   if (!timelineString) {
-    const total = performance.now() - startTotal;
+    const total = perfNow() - startTotal;
     return {
       parseResult: { ...emptyTimeline(), cache, parser: { version: pkgVersion } },
       timings: { total, lines: 0, header: 0, body: 0 },
     };
   }
 
-  const startLines = performance.now();
+  const startLines = perfNow();
   const { lines, lengthAtIndex } = linesAndLengths(timelineString);
-  const linesMs = performance.now() - startLines;
+  const linesMs = perfNow() - startLines;
 
   const context = new ParsingContext(now, cache);
 
-  const startHeader = performance.now();
+  const startHeader = perfNow();
   const headerEndLineIndex = parseHeaderImpl(lines, lengthAtIndex, context);
-  const headerMs = performance.now() - startHeader;
+  const headerMs = perfNow() - startHeader;
 
-  const startBody = performance.now();
+  const startBody = perfNow();
   parsePastHeader(headerEndLineIndex, context, lines, lengthAtIndex);
-  const bodyMs = performance.now() - startBody;
+  const bodyMs = perfNow() - startBody;
 
   const parseResult: ParseResult = {
     ...context.toTimeline(),
@@ -56,6 +57,6 @@ export function profileParse(
     parser: { version: pkgVersion },
   };
 
-  const total = performance.now() - startTotal;
+  const total = perfNow() - startTotal;
   return { parseResult, timings: { total, lines: linesMs, header: headerMs, body: bodyMs } };
 }
