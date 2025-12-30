@@ -1,5 +1,6 @@
 import { parse, parseDateRange, parseHeader, parseICal } from "./parse.js";
 import { incrementalParse } from "./incremental.js";
+import { profileParse, type ParseTimings } from "./profile.js";
 import { Cache, Caches } from "./Cache.js";
 import {
   COLORS,
@@ -137,6 +138,8 @@ export {
   headerSet,
   ParseMessage,
   incrementalParse,
+  profileParse,
+  ParseTimings,
   toICal,
   entrySet,
 };
