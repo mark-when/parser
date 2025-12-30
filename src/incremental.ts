@@ -683,37 +683,53 @@ function mapParseThroughChanges(
   previousText: Text,
   now?: DateTime | string
 ): ParseResult {
-  let eventyIterator = iter(parse.events);
-
-  let { done, eventy, path } = next(eventyIterator);
-  if (done || !(eventy as EventGroup).children.length) {
-    throw new Error("unimplemented");
-  }
-  ({ done, eventy, path } = next(eventyIterator));
-
-  if (done || !eventy || !path) {
-    throw new Error("Nothing to graft");
-  }
-
   const changesArray = asArray(changes);
-  if (changesArray.length > 1) {
-    throw new Error(
-      "Can't incrementally parse more than one change at a time (yet)"
-    );
+  if (!changesArray.length) {
+    parse.parser.incremental = true;
+    return parse;
   }
+
+  let text = previousText;
+  let offset = 0;
 
   for (let i = 0; i < changesArray.length; i++) {
+    const { fromA, toA, inserted } = changesArray[i];
+    const adjustedFrom = fromA + offset;
+    const adjustedTo = toA + offset;
+    const adjustedChange: ChangedRange = {
+      fromA: adjustedFrom,
+      toA: adjustedTo,
+      fromB: adjustedFrom,
+      toB: adjustedFrom + inserted.length,
+      inserted,
+    };
+
+    let eventyIterator = iter(parse.events);
+    let { done, eventy, path } = next(eventyIterator);
+    if (done || !(eventy as EventGroup).children.length) {
+      throw new Error("unimplemented");
+    }
+    ({ done, eventy, path } = next(eventyIterator));
+
+    if (done || !eventy || !path) {
+      throw new Error("Nothing to graft");
+    }
+
     graft({
-      changedRange: changesArray[i],
+      changedRange: adjustedChange,
       previousParse: parse,
       now,
       done,
       eventy,
       eventyIterator,
-      previousText,
+      previousText: text,
       path,
     });
+
+    text = text.replace(adjustedFrom, adjustedTo, inserted);
+    offset += inserted.length - (toA - fromA);
   }
+
   parse.parser.incremental = true;
   return parse;
 }

@@ -162,6 +162,50 @@ describe("incremental parsing", () => {
     assertParity(original, changeSet);
   });
 
+  describe("multiple changes in one ChangeSet", () => {
+    test("handles spaced insert and replace", () => {
+      const seed = `2025-01-01: Alpha
+2025-02-01: Beta
+2025-03-01: Gamma
+`;
+
+      const alphaStart = seed.indexOf("Alpha");
+      const betaStart = seed.indexOf("Beta");
+
+      const change = ChangeSet.of(
+        [
+          { from: alphaStart, to: alphaStart + "Alpha".length, insert: "Zeta" },
+          { from: betaStart + "Beta".length, insert: " (cool)" },
+        ],
+        seed.length
+      );
+
+      assertParity(seed, change);
+    });
+
+    test("handles head and tail edits together", () => {
+      const seed = `title: demo
+
+2025-01-01: First event
+2025-02-01: Second event
+`;
+
+      const firstStart = seed.indexOf("First event");
+      const tailPos = seed.length;
+
+      const change = ChangeSet.of(
+        [
+          { from: 0, insert: "// note: multi-change\n" },
+          { from: firstStart, to: firstStart + "First".length, insert: "Initial" },
+          { from: tailPos, insert: "2025-03-01: Third event\n" },
+        ],
+        seed.length
+      );
+
+      assertParity(seed, change);
+    });
+  });
+
   describe("targeted parity scenarios", () => {
     const relativeChain = [recurrence1, "5 years: ok", recurrence14].join(
       "\n"
