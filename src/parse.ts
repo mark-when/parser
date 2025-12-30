@@ -105,6 +105,11 @@ export function parsePastHeader(
       i = possibleGroup.end;
       continue;
     }
+    // Fast skip: event lines must contain a ':' separating date and title; avoid expensive regex if absent
+    if (!line.includes(":")) {
+      i++;
+      continue;
+    }
     i = checkEvent(line, lines, i, lengthAtIndex, context) + 1;
   }
 
