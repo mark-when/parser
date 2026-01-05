@@ -42,10 +42,12 @@ export const CASUAL_MONTH_REGEX = new RegExp(
   `(?:(?:${DAY_FIRST_MONTH_REGEX.source}|${MONTH_FIRST_MONTH_REGEX.source}),?(?:\\s+(\\d{4}),?)?(?:\\s+${TIME_REGEX.source})?)|(${HUMAN_MONTH_REGEX.source}(?:\\s+(\\d{1,4}))?)`
 );
 
+export const ISO_WEEK_DATE_PART = `\\d{4}-?W\\d{2}(?:-?[1-7])?`;
+
 export const ISO8601_REGEX = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2,}(?:\.\d*)?Z/;
 export const NOW_REGEX = /now/;
 export const DATE_REGEX = new RegExp(
-  `(\\d{1,5}(\\/\\d{1,5}(\\/\\d{1,5}(?:(?:,|\\s)+${TIME_REGEX.source})?)?)?)`
+  `(${ISO_WEEK_DATE_PART}|\\d{1,5}(\\/\\d{1,5}(\\/\\d{1,5}(?:(?:,|\\s)+${TIME_REGEX.source})?)?)?)`
 );
 
 export const START_OR_END_TIME_REGEX = new RegExp(
@@ -234,7 +236,7 @@ export const CHECKLIST_ITEM_REGEX = /^\s*- (\[(x|X| )?\]).*/;
 export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;
 
 export const EDTF_DATE_REGEX = new RegExp(
-  `(\\d{4}(-\\d{2}(-\\d{2}(?:\\s+${TIME_REGEX.source})?)?)?)`
+  `(\\d{4}(-\\d{2}(-\\d{2}(?:\\s+${TIME_REGEX.source})?)?)?|${ISO_WEEK_DATE_PART})`
 );
 
 export const EDTF_START_OR_END_REGEX = new RegExp(

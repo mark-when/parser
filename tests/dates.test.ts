@@ -90,3 +90,131 @@ describe("Regular dates parsing", () => {
     });
   });
 });
+
+describe("ISO week date parsing", () => {
+  const isoWeekCases = [
+    {
+      mwInput: "2016-W21-3: Midweek event",
+      expectedFrom: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }),
+      expectedTo: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }).plus({ days: 1 }),
+    },
+    {
+      mwInput: "2016W213: Compact ISO week event",
+      expectedFrom: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }),
+      expectedTo: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }).plus({ days: 1 }),
+    },
+    {
+      mwInput: "2026W01: First week of 2026",
+      expectedFrom: DateTime.fromObject({
+        weekYear: 2026,
+        weekNumber: 1,
+        weekday: 1,
+      }),
+      expectedTo: DateTime.fromObject({
+        weekYear: 2026,
+        weekNumber: 1,
+        weekday: 1,
+      }).plus({ weeks: 1 }),
+    },
+  ];
+
+  isoWeekCases.forEach(({ mwInput, expectedFrom, expectedTo }) => {
+    test(`parseDateRange handles ${mwInput}`, () => {
+      const dateRange = parseDateRange(mwInput);
+      expect(dateRange).toBeTruthy();
+      expect(dateRange?.fromDateTime.toISODate()).toEqual(
+        expectedFrom.toISODate()
+      );
+      expect(dateRange?.toDateTime.toISODate()).toEqual(
+        expectedTo.toISODate()
+      );
+    });
+  });
+
+  isoWeekCases.forEach(({ mwInput, expectedFrom, expectedTo }) => {
+    test(`parse full event for ${mwInput}`, () => {
+      const markwhen = parse(mwInput);
+      const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
+      expect(dateRange.fromDateTime.toISODate()).toEqual(
+        expectedFrom.toISODate()
+      );
+      expect(dateRange.toDateTime.toISODate()).toEqual(
+        expectedTo.toISODate()
+      );
+    });
+  });
+});
+
+describe("ISO week ranges", () => {
+  const rangeCases = [
+    {
+      mwInput: "2016-W21-3 / 2016-05-30: span",
+      expectedFrom: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }),
+      expectedTo: DateTime.fromISO("2016-05-30").plus({ days: 1 }),
+    },
+    {
+      mwInput: "2016-05-23 / 2016W213: span",
+      expectedFrom: DateTime.fromISO("2016-05-23"),
+      expectedTo: DateTime.fromObject({
+        weekYear: 2016,
+        weekNumber: 21,
+        weekday: 3,
+      }).plus({ days: 1 }),
+    },
+    {
+      mwInput: "2026W01 / 2026-01-10: span",
+      expectedFrom: DateTime.fromObject({
+        weekYear: 2026,
+        weekNumber: 1,
+        weekday: 1,
+      }),
+      expectedTo: DateTime.fromISO("2026-01-10").plus({ days: 1 }),
+    },
+  ];
+
+  rangeCases.forEach(({ mwInput, expectedFrom, expectedTo }) => {
+    test(`parseDateRange handles range ${mwInput}`, () => {
+      const dateRange = parseDateRange(mwInput);
+      expect(dateRange).toBeTruthy();
+      expect(dateRange?.fromDateTime.toISODate()).toEqual(
+        expectedFrom.toISODate()
+      );
+      expect(dateRange?.toDateTime.toISODate()).toEqual(
+        expectedTo.toISODate()
+      );
+    });
+  });
+
+  rangeCases.forEach(({ mwInput, expectedFrom, expectedTo }) => {
+    test(`parse full event range ${mwInput}`, () => {
+      const markwhen = parse(mwInput);
+      const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
+      expect(dateRange.fromDateTime.toISODate()).toEqual(
+        expectedFrom.toISODate()
+      );
+      expect(dateRange.toDateTime.toISODate()).toEqual(
+        expectedTo.toISODate()
+      );
+    });
+  });
+});

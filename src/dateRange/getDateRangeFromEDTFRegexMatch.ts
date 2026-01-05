@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { DateTime, WeekdayNumbers, Zone } from "luxon";
 import { ParsingContext } from "../ParsingContext.js";
 import {
   EDTF_START_REGEX,
@@ -35,6 +35,7 @@ import {
   from_edtfRelativeEventStartOrEndMatchIndex,
   to_edtfRelativeEventIdStartOrEndMatchIndex,
   to_edtfRelativeEventStartOrEndMatchIndex,
+  ISO_WEEK_DATE_PART,
 } from "../regex.js";
 import {
   DateRangePart,
@@ -49,6 +50,40 @@ import {
 } from "../Types.js";
 import { getTimeFromRegExpMatch, roundDateUp } from "./utils.js";
 import { checkEdtfRecurrence } from "./checkRecurrence.js";
+
+const ISO_WEEK_REGEX = new RegExp(`^${ISO_WEEK_DATE_PART}$`, "i");
+
+function parseISOWeekDate(
+  raw: string,
+  zone: string | Zone
+): { dateTime: DateTime; granularity: DateTimeGranularity } | undefined {
+  if (!ISO_WEEK_REGEX.test(raw)) {
+    return;
+  }
+  const isoWeekMatch = raw.match(/^(\d{4})-?W(\d{2})(?:-?([1-7]))?$/i);
+  if (!isoWeekMatch) {
+    return;
+  }
+  const [, yearPart, weekPart, weekdayPart] = isoWeekMatch;
+  const weekYear = parseInt(yearPart, 10);
+  const weekNumber = parseInt(weekPart, 10);
+  const weekday: WeekdayNumbers = (weekdayPart
+    ? parseInt(weekdayPart, 10)
+    : 1) as WeekdayNumbers;
+  const dateTime = DateTime.fromObject(
+    {
+      weekYear,
+      weekNumber,
+      weekday,
+    },
+    { zone }
+  );
+  if (!dateTime.isValid) {
+    return;
+  }
+  const granularity: DateTimeGranularity = weekdayPart ? "day" : "week";
+  return { dateTime, granularity };
+}
 
 export function getDateRangeFromEDTFRegexMatch(
   line: string,
@@ -146,7 +181,11 @@ export function getDateRangeFromEDTFRegexMatch(
   let toRelativeTo: { path: Path; dt: DateTime } | undefined;
 
   if (edtfFrom) {
-    if (edtfFromHasTime) {
+    const isoWeekFrom = parseISOWeekDate(edtfFrom, context.timezone);
+    if (isoWeekFrom) {
+      fromDateTime = isoWeekFrom.dateTime;
+      granularity = isoWeekFrom.granularity;
+    } else if (edtfFromHasTime) {
       const time = getTimeFromRegExpMatch(
         eventStartLineRegexMatch,
         from_edtfDateTimeMeridiemHourMatchIndex,
@@ -397,7 +436,13 @@ export function getDateRangeFromEDTFRegexMatch(
       endDateTime = context.zonedNow;
       granularity = "instant";
     } else if (edtfTo) {
-      if (edtfToHasTime) {
+      const isoWeekTo = parseISOWeekDate(edtfTo, context.timezone);
+      if (isoWeekTo) {
+        granularity = isoWeekTo.granularity;
+        endDateTime = isoWeekTo.granularity === "week"
+          ? isoWeekTo.dateTime.plus({ weeks: 1 })
+          : isoWeekTo.dateTime.plus({ days: 1 });
+      } else if (edtfToHasTime) {
         const time = getTimeFromRegExpMatch(
           eventStartLineRegexMatch,
           to_edtfDateTimeMeridiemHourMatchIndex,

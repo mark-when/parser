@@ -497,6 +497,33 @@ id: ref
     );
   });
 
+  test("relative references ISO week event", () => {
+    const text = `
+2026W01: anchor
+id: anchor
+
+before !anchor 2 days: lead-in`;
+
+    const mw = parse(text);
+    const [anchor, leadIn] = mw.events.children as Event[];
+
+    const anchorRange = toDateRange(anchor.dateRangeIso);
+    const leadInRange = toDateRange(leadIn.dateRangeIso);
+    const expectedFromIso = anchorRange.fromDateTime
+      .minus({ days: 2 })
+      .toISODate();
+
+    expect(leadInRange.fromDateTime.toISODate()).toEqual(expectedFromIso);
+    expect(leadInRange.toDateTime.toISODate()).toEqual(
+      anchorRange.fromDateTime.toISODate()
+    );
+
+    expect(leadIn.toRelativeTo).toEqual({
+      path: [0],
+      dt: anchor.dateRangeIso.fromDateTimeIso,
+    });
+  });
+
   test("relative last", () => {
     const mw = parse(`
 2016: Harambe
