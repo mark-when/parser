@@ -375,6 +375,11 @@ export function roundDateUp(
   ) {
     return cacheAndReturn(granularDateTime.dateTimeIso);
   }
+  if (granularDateTime.granularity === "week") {
+    return cacheAndReturn(
+      dt.plus({ weeks: 1 }).toISO()
+    );
+  }
   return cacheAndReturn(
     dt
       .plus({

@@ -14,6 +14,7 @@ export type DateTimeGranularity =
   | "instant"
   | "year"
   | "month"
+  | "week"
   | "day"
   | "hour"
   | "minute";

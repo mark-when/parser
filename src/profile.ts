@@ -14,9 +14,8 @@ export type ParseTimings = {
   body: number;
 };
 
-const perfNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
-
-const pkgVersion = process.env.npm_package_version || "0.0.0";
+const perfNow = () =>
+  typeof performance !== "undefined" ? performance.now() : Date.now();
 
 export function profileParse(
   timelineString?: string | string[] | Text,
@@ -32,7 +31,7 @@ export function profileParse(
   if (!timelineString) {
     const total = perfNow() - startTotal;
     return {
-      parseResult: { ...emptyTimeline(), cache, parser: { version: pkgVersion } },
+      parseResult: { ...emptyTimeline(), cache, parser: { version: "0.0.0" } },
       timings: { total, lines: 0, header: 0, body: 0 },
     };
   }
@@ -54,9 +53,12 @@ export function profileParse(
   const parseResult: ParseResult = {
     ...context.toTimeline(),
     cache,
-    parser: { version: pkgVersion },
+    parser: { version: "0.0.0" },
   };
 
   const total = perfNow() - startTotal;
-  return { parseResult, timings: { total, lines: linesMs, header: headerMs, body: bodyMs } };
+  return {
+    parseResult,
+    timings: { total, lines: linesMs, header: headerMs, body: bodyMs },
+  };
 }
