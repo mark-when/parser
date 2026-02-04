@@ -22,7 +22,7 @@ view: \*
 #Project1: #d336b1
 ---
 
-section Welcome #welcome
+# Welcome #welcome
 now: This example timeline showcases some of markwhen's features.
 
 now: For more information, view the documentation [here](https://docs.markwhen.com) or join the [discord](https://discord.gg/3rTpUD94ac)
@@ -30,10 +30,9 @@ now: For more information, view the documentation [here](https://docs.markwhen.c
 
 now: Note that changes you make here are not saved
 If you want to make a new markwhen you should open a tab at the bottom or click open in the sidebar
-endSection
 
-section All Projects
-group Project 1 #Project1
+# All Projects
+## Project 1 #Project1
 // Supports ISO8601
 2023-01/2023-03: Sub task #John
 2023-03/2023-06: Sub task 2 #Michelle
@@ -44,8 +43,7 @@ More info about sub task 2
 - [ ] This one is extra
 
 2023-07: Yearly planning
-endGroup
- group Project 2 #Project2
+## Project 2 #Project2
 2023-04/4 months: Larger sub task #Danielle
 
 // Supports American date formats
@@ -58,13 +56,10 @@ endGroup
 - [ ] so many checkboxes omg
 
 10/2023 - 2 months: Holiday season
-endGroup
 
-group Project 3
+## Project 3
 01/2024: Project kickoff
 02/2024-04/2024: Other stuff
-endGroup
-endSection
 
 2023-01-03 every 2 weeks for 1 year: Biweekly meeting
 
@@ -121,43 +116,36 @@ now: [More documentation](https://docs.markwhen.com/syntax/event-descriptions.ht
 
 // Events can be grouped together
 
-group
+# Ungrouped
 1/27/2024: Happy birthday
 2020-03: Covid started in the US 
-endGroup
 
-group Group with title
+# Group with title
 
 Feb 2 2025: Interviewing
 Feb 8 2025: Write report
 Feb 19 2025: Presentation
 
-endGroup
+# Groups can contain other groups #big
 
-group Groups can contain other groups #big
-
-group Smaller plan #small #nested
+## Smaller plan #small #nested
 
 1 year: Accomplish something
 
 2 years: Accomplish something else
 
-endGroup
+# Things are accomplished level
 
 1 year: Things are accomplished
 
-endGroup
-
-section Sections extend across the screen
+# Sections extend across the screen
+style: section
 
 2023: Start year
 
-section Nested section #nested
+## Nested section #nested
 
 2025: End year
-
-endSection
-endSection
 
 now: [More documentation](https://docs.markwhen.com/syntax/groups-and-sections.html)
 
@@ -166,7 +154,8 @@ now: [More documentation](https://docs.markwhen.com/syntax/groups-and-sections.h
 
 now: Events and groups can have tags
 
-section Tagged events #Timeline
+# Tagged events #Timeline
+style: section
 Feb 18 1999: back in the day #Past #The90s
 2043: in the future #TheOther90s
 

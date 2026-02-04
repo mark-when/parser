@@ -14,7 +14,7 @@ property: value
 
 hi`;
 
-export const grievous324 = `
+export const grievous345 = `
 timezone: +5
 
 #generalGrievous:
@@ -23,18 +23,16 @@ timezone: +5
 #t:
   timezone: -5
 
-group #generalGrievous
+# generalGrievous section #generalGrievous
 
-group #t
+## t section #t
 
 2023-05-01: this is an event in asia or something
 
 2023-05-01: this is an event in the  uk timezone
 #generalGrievous
 
-endGroup
-
-endGroup
+# UK section
 
 2023-05-01: this is an event in the UK timezone
 
@@ -44,19 +42,17 @@ endGroup
 
 export const now10 = `now: event`;
 
-export const grievous256 = `
-group #generalGrievous
+export const grievous277 = `
+# generalGrievous section #generalGrievous
 
-group #t
+## t section #t
 
 2023-05-01: this is an event in asia or something
 
 2023-05-01: this is an event in the  uk timezone
 #generalGrievous
 
-endGroup
-
-endGroup
+# UK section
 
 2023-05-01: this is an event in the UK timezone
 
@@ -116,7 +112,7 @@ export const eventsWithTz = `
 title: this is titel
 description: this si descriptin
 
-group West Coast #hang10
+# West Coast #hang10
 tz: +6
 
 2025-09-14: Date
@@ -130,9 +126,8 @@ sup party people?
 - [] not done
 
 2025-09-14: [] ok
-endGroup
 
-group East Coast
+# East Coast
 timezone: America/Seattle
 
 2025-06-13 / 5 months: [x] ok
@@ -144,8 +139,6 @@ timezone: Europe/Amsterdam
 
 after !mae - 5 weeks: ok
 id: corn
-
-endGroup
 
 by !corn / 3 days: ok
 `;
@@ -198,9 +191,9 @@ export const all = {
   eventsWithTz,
   basic86,
   basic78,
-  grievous324,
+  grievous345,
   now10,
-  grievous256,
+  grievous277,
   basic,
   recurrence1,
   recurrence2,

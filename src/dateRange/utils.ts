@@ -21,18 +21,13 @@ import {
   to_casualMonthTimeMeridiemMeridiemMatchIndex,
   to_casualMonthTime24HourHourMatchIndex,
   to_casualMonthTime24HourMinuteMatchIndex,
-  GROUP_START_REGEX,
-  TAG_REGEX,
 } from "../regex.js";
 import {
   GranularDateTime,
-  Range,
   DATE_TIME_FORMAT_MONTH_YEAR,
   DATE_TIME_FORMAT_YEAR,
   DateTimeIso,
   DateTimeGranularity,
-  EventGroup,
-  RangeType,
   AMERICAN_DATE_FORMAT,
 } from "../Types.js";
 
@@ -266,45 +261,6 @@ export function parseAsCasualDayAbbrMonth(
     }).toISO()!,
     granularity: "day",
   };
-}
-
-export function parseGroupFromStartTag(
-  s: string,
-  regexMatch: RegExpMatchArray,
-  range: Range
-): EventGroup {
-  const group: EventGroup = new EventGroup();
-  group.tags = [];
-  group.style = "group";
-  group.textRanges = {
-    whole: range,
-    definition: {
-      from: range.from,
-      to: range.from + s.length,
-      type: RangeType.SectionDefinition,
-    },
-  };
-
-  s = s
-    .replace(GROUP_START_REGEX, (match, startToken, groupOrSection) => {
-      // Start expanded if this start tag is not indented
-      group.startExpanded = !startToken.length;
-      group.style = groupOrSection as "group" | "section";
-      group.textRanges.definition.to =
-        group.textRanges.definition.from +
-        startToken.length +
-        groupOrSection.length;
-      return "";
-    })
-    .replace(TAG_REGEX, (match, tag) => {
-      if (!group.tags!.includes(tag)) {
-        group.tags!.push(tag);
-      }
-      return "";
-    });
-
-  group.title = s.trim();
-  return group;
 }
 
 export function parseSlashDate(

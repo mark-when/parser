@@ -11,8 +11,8 @@ import {
   basic86,
   eventsWithFromAndToTz,
   eventsWithTz,
-  grievous256,
-  grievous324,
+  grievous277,
+  grievous345,
   now10,
   recurrence1,
   recurrence10,
@@ -87,17 +87,17 @@ const docs: [string, ChangeSpec][] = [
     ),
   ],
   [
-    grievous324,
+    grievous345,
     ChangeSet.of(
       {
         from: 300,
         insert: " ",
       },
-      324
+      345
     ),
   ],
   [now10, ChangeSet.of({ from: 10, insert: "!" }, 10)],
-  [grievous256, ChangeSet.of({ insert: "now: ", from: 85 }, 256)],
+  [grievous277, ChangeSet.of({ insert: "now: ", from: 85 }, 277)],
   // [large, ChangeSet.of({ insert: "hello", from: 1000 }, large.length)],
   // [
   //   large.substring(1800),
@@ -364,8 +364,8 @@ describe("incremental parsing", () => {
     const ex = `
 title: a new begi
 
-section All Projects
-group Project 1 #Project1
+# All Projects
+## Project 1 #Project1
 // Supports ISO8601
 2025-01/2025-03: Sub task #John
 2025-03/2025-06: Sub task 2 #Michelle
@@ -383,7 +383,7 @@ forthwith
 4/24/2025: this is a truly momentous day for everyone so to speak?
 
 
-group this is group
+## this is group
 
 
 `;

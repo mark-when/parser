@@ -5,8 +5,7 @@ import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   BCE_START_REGEX,
-  GROUP_START_REGEX,
-  GROUP_END_REGEX,
+  MARKDOWN_SECTION_REGEX,
   COMPLETION_REGEX,
 } from "../regex.js";
 import {
@@ -128,8 +127,7 @@ export function checkEvent(
       nextLine.match(EDTF_START_REGEX) ||
       nextLine.match(EVENT_START_REGEX) ||
       nextLine.match(BCE_START_REGEX) ||
-      nextLine.match(GROUP_START_REGEX) ||
-      (context.currentPath.length > 1 && nextLine.match(GROUP_END_REGEX))
+      nextLine.match(MARKDOWN_SECTION_REGEX)
     ) {
       break;
     }

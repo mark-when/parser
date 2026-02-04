@@ -229,8 +229,11 @@ export const DATE_FORMAT_REGEX = /dateFormat:\s*d\/M\/y/;
 // Edited so that number only tags are excluded - #1, #21, etc.
 // A negative lookbehind would have worked... if it was supported in safari: /(?: |^)#(\w+)(?<!\d+)/
 export const TAG_REGEX = /(?:^|\s)#(?!\d+(?:\s|$))(\w+)/g;
-export const GROUP_START_REGEX = /^(\s*)(group|section)(?:\s|$)/i;
-export const GROUP_END_REGEX = /^(\s*)end(?:Group|Section)?/i;
+
+// Markdown-style section headers: # through ######
+// Captures: [1] = hashes (to determine level), [2] = title text
+export const MARKDOWN_SECTION_REGEX = /^(#{1,6})\s+(.*)$/;
+
 export const LIST_ITEM_REGEX = /^\s*- .*/;
 export const CHECKLIST_ITEM_REGEX = /^\s*- (\[(x|X| )?\]).*/;
 export const COMPLETION_REGEX = /^\s*(\[(x|X| )?\]).*/;

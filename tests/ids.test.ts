@@ -6,12 +6,10 @@ describe("ided events", () => {
     const mw = parse(`title: hello
 2025-04: !id hi
 
-group Group
+# Group
 2025-06: !otherId hello
-section Section
-2026: !thirdId hello
-end
-end`);
+## Section
+2026: !thirdId hello`);
 
     expect(mw.ids["id"]).toEqual([0]);
     expect(mw.ids["otherId"]).toEqual([1, 0]);

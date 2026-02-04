@@ -1,7 +1,6 @@
 import { Caches } from "../Cache.js";
 import { ParsingContext } from "../ParsingContext.js";
 import { checkComments } from "./checkComments.js";
-import { checkGroupEnd } from "./checkGroupEnd.js";
 import { checkTags } from "./checkTags.js";
 
 export function checkNonEvents(
@@ -10,7 +9,7 @@ export function checkNonEvents(
   lengthAtIndex: number[],
   context: ParsingContext
 ): boolean {
-  return [checkComments, checkTags, checkGroupEnd].some((f) =>
+  return [checkComments, checkTags].some((f) =>
     f(line, i, lengthAtIndex, context)
   );
 }

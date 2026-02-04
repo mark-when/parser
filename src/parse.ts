@@ -19,7 +19,7 @@ import {
   ISOMap,
   dateRangeToString,
 } from "./utilities/dateRangeToString.js";
-import { checkGroupStart } from "./lineChecks/checkGroupStart.js";
+import { checkMarkdownSection } from "./lineChecks/checkMarkdownSection.js";
 import { Text } from "@codemirror/state";
 import { linesAndLengths } from "./lines.js";
 
@@ -100,9 +100,9 @@ export function parsePastHeader(
       i++;
       continue;
     }
-    const possibleGroup = checkGroupStart(lines, i, lengthAtIndex, context);
-    if (possibleGroup) {
-      i = possibleGroup.end;
+    const possibleSection = checkMarkdownSection(lines, i, lengthAtIndex, context);
+    if (possibleSection) {
+      i = possibleSection.end;
       continue;
     }
     // Fast skip: event lines must contain a ':' separating date and title; avoid expensive regex if absent
@@ -115,11 +115,35 @@ export function parsePastHeader(
 
   if (to === undefined) {
     const lastLineIndex = i - 1;
+    const endPos = lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length;
+    const endLineTo = { line: lastLineIndex, index: lines[lastLineIndex].length };
+    
+    // Close all open sections (tracked by sectionLevels)
+    // Each sectionLevel corresponds to a path depth, so we need to pop
+    // back to that depth before closing
+    while (context.sectionLevels.length > 0) {
+      context.sectionLevels.pop();
+      
+      // The section is at depth equal to current sectionLevels.length
+      // (after popping, since sectionLevels[0] = depth 1, etc.)
+      // We need to pop currentPath back to that depth, then close the section
+      // Note: currentPath has an extra element for "where children go", so we
+      // need to account for that (+2 instead of +1)
+      const targetDepth = context.sectionLevels.length;
+      
+      // Pop to the section level (not including events inside)
+      // +2 accounts for: +1 for 0-indexing vs depth, +1 for child placeholder
+      while (context.currentPath.length > targetDepth + 2) {
+        context.currentPath.pop();
+      }
+      
+      context.endCurrentGroup(endPos, endLineTo);
+    }
+    
+    // Close any remaining nested groups (shouldn't happen with pure markdown sections,
+    // but keeps backward compatibility)
     while (context.currentPath.length > 1) {
-      context.endCurrentGroup(
-        lengthAtIndex[lastLineIndex] + lines[lastLineIndex].length,
-        { line: lastLineIndex, index: lines[lastLineIndex].length }
-      );
+      context.endCurrentGroup(endPos, endLineTo);
     }
   }
   return context;

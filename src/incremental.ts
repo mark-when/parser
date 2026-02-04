@@ -501,7 +501,12 @@ function graft({
       if (eventy.textRanges.properties) {
         eventy.textRanges.properties = mapRange(eventy.textRanges.properties);
       }
-      if (!isGroup(eventy)) {
+      if (isGroup(eventy)) {
+        // Groups (sections) have a definition range for their header line
+        if (eventy.textRanges.definition) {
+          eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
+        }
+      } else {
         eventy.textRanges.datePart = mapRange(eventy.textRanges.datePart);
         eventy.textRanges.definition = mapRange(eventy.textRanges.definition);
         if (eventy.textRanges.recurrence) {

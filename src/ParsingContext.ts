@@ -56,6 +56,7 @@ export class ParsingContext {
   parseMessages: ParseMessage[] = [];
   documentMessages: DocumentMessage[] = [];
   cache?: Caches;
+  sectionLevels: number[] = [];
 
   constructor(
     now?: DateTime | string,
@@ -161,13 +162,18 @@ export class ParsingContext {
   }
 
   endCurrentGroup(to: number, lineTo: { line: number; index: number }) {
+    // Assign text range to the group being closed (before popping)
+    // currentPath has an extra index for where children would go, so we need to
+    // slice off the last element to get the actual group path
+    const groupPath = this.currentPath.slice(0, -1);
+    const group = get(this.events, groupPath);
+    if (group && group.textRanges) {
+      group.textRanges.whole = {
+        ...group.textRanges.whole,
+        to: to,
+      };
+    }
     this.currentPath.pop();
-    // Assign text range
-    const group = get(this.events, this.currentPath);
-    group!.textRanges.whole = {
-      ...group!.textRanges.whole,
-      to: to,
-    };
     this.finishFoldableSection(lineTo.line, to);
   }
 

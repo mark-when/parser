@@ -230,11 +230,11 @@ describe("prop order", () => {
   test("propOrder is correct 1", () => {
     const mw = `1999-09: birthday
 
-group Happy events
+# Happy events
 someKey: some value
 otherKey: other value
 
-group Sad events
+# Sad events
 property: value
 abc: 123
 
@@ -280,11 +280,11 @@ describe("group properties", () => {
   test.each(sp())("group can have properties", () => {
     const mw = `1999-09: birthday
 
-group Happy events
+# Happy events
 someKey: some value
 otherKey: other value
 
-group Sad events
+# Sad events
 property: value
 abc: 123
 
@@ -319,32 +319,32 @@ abc: 123
 
 describe("property indices", () => {
   test("has proper indices 1", () => {
-    const mw = parse(`group my group
-  prop: value`);
+    const mw = parse(`# my group
+prop: value`);
     const group = mw.events.children[0];
-    expect(group.textRanges.properties?.from).toBe(15);
-    expect(group.textRanges.properties?.to).toBe(28);
+    expect(group.textRanges.properties?.from).toBe(11);
+    expect(group.textRanges.properties?.to).toBe(22);
   });
 
   test("has proper indices 2", () => {
-    const mw = parse(`group my group
-  prop: value
+    const mw = parse(`# my group
+prop: value
 `);
     const group = mw.events.children[0];
-    expect(group.textRanges.properties?.from).toBe(15);
-    expect(group.textRanges.properties?.to).toBe(28);
+    expect(group.textRanges.properties?.from).toBe(11);
+    expect(group.textRanges.properties?.to).toBe(22);
   });
 
   test("has proper indices 3", () => {
-    const mw = parse(`group my group
-  prop: value
+    const mw = parse(`# my group
+prop: value
 
-  2024: neat
-    key:
-      other: value`);
+2024: neat
+key:
+  other: value`);
     const group = nthEvent(mw, 0);
-    expect(group.textRanges.properties?.from).toBe(43);
-    expect(group.textRanges.properties?.to).toBe(70);
+    expect(group.textRanges.properties?.from).toBe(35);
+    expect(group.textRanges.properties?.to).toBe(54);
   });
 });
 
@@ -360,173 +360,149 @@ const replace = (
 
 describe("setting eventy properties", () => {
   test.each(sp())("can set group property", () => {
-    const mw = `group My group
-  2022-04: Birthday month`;
+    const mw = `# My group
+2022-04: Birthday month`;
 
     const toInsert = entrySet(mw, [0], { key: "value" });
-    expect(replace(mw, toInsert)).toBe(`group My group
+    expect(replace(mw, toInsert)).toBe(`# My group
   key: value
-  2022-04: Birthday month`);
+2022-04: Birthday month`);
   });
 
   test.each(sp())("can set event property", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-  endGroup
-endGroup`;
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month`;
 
     const toInsert = entrySet(mw, [0, 1, 0], { key: "value" });
-    expect(replace(mw, toInsert)).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
+    expect(replace(mw, toInsert)).toBe(`# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
       key: value
-  endGroup
-endGroup`);
+`);
   });
 
   test.each(sp())("can set nested event property", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-  endGroup
-endGroup`;
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month`;
 
     const toInsert = entrySet(mw, [0, 1], {
       layer: { nested: ["array", "of", "values"] },
     });
-    expect(replace(mw, toInsert)).toBe(`group My group
-  2022-04: Birthday month
-  group nested
+    expect(replace(mw, toInsert)).toBe(`# My group
+2022-04: Birthday month
+## nested
     layer:
       nested: ["array", "of", "values"]
-    2026-04: Another birthday month
-  endGroup
-endGroup`);
+2026-04: Another birthday month`);
   });
 
   test.each(sp())("can set prop on last eventy", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-  endGroup
-endGroup
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
 
 now: hi`;
 
-    const toInsert = entrySet(mw, [1], { layer: { nested: 12 } });
-    expect(replace(mw, toInsert)).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-  endGroup
-endGroup
+    const toInsert = entrySet(mw, [0, 1, 1], { layer: { nested: 12 } });
+    expect(replace(mw, toInsert)).toBe(`# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
 
 now: hi
-  layer:
-    nested: 12
+      layer:
+        nested: 12
 `);
   });
 
   test.each(sp())("can use hex values as properties", () => {
-    const mw = `group My group
-  2022-04: Birthday month`;
+    const mw = `# My group
+2022-04: Birthday month`;
 
     const toInsert = entrySet(mw, [0], { key: "#123fde" });
-    expect(replace(mw, toInsert)).toBe(`group My group
+    expect(replace(mw, toInsert)).toBe(`# My group
   key: #123fde
-  2022-04: Birthday month`);
+2022-04: Birthday month`);
   });
 
   test.each(sp())("nested values are preserved", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-      property: value
-      other: thing
-      layer:
-        random: false
-  endGroup
-endGroup
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
+property: value
+other: thing
+layer:
+  random: false
 
 now: hi`;
 
     const toInsert = entrySet(mw, [0, 1, 0], { layer: { nested: 12 } }, true);
     const replaced = replace(mw, toInsert);
-    expect(replaced).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
+    expect(replaced).toBe(`# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
       property: value
       other: thing
       layer:
         random: false
         nested: 12
-  endGroup
-endGroup
 
 now: hi`);
   });
 
   test("deleting values", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-      property: value
-      other: thing
-      layer:
-        random: false
-        nested: 12
-  endGroup
-endGroup
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
+property: value
+other: thing
+layer:
+  random: false
+  nested: 12
 
 now: hi`;
 
     const toInsert = entrySet(mw, [0, 1, 0], { layer: undefined });
     const replaced = replace(mw, toInsert);
-    expect(replaced).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
+    expect(replaced).toBe(`# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
 
-  endGroup
-endGroup
 
 now: hi`);
   });
 
-
   test("deleting values merge", () => {
-    const mw = `group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
-      property: value
-      other: thing
-      layer:
-        random: false
-        nested: 12
-  endGroup
-endGroup
+    const mw = `# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
+property: value
+other: thing
+layer:
+  random: false
+  nested: 12
 
 now: hi`;
 
     const toInsert = entrySet(mw, [0, 1, 0], { layer: undefined }, true);
     const replaced = replace(mw, toInsert);
-    expect(replaced).toBe(`group My group
-  2022-04: Birthday month
-  group nested
-    2026-04: Another birthday month
+    expect(replaced).toBe(`# My group
+2022-04: Birthday month
+## nested
+2026-04: Another birthday month
       property: value
       other: thing
-  endGroup
-endGroup
 
 now: hi`);
   });

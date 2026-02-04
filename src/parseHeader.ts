@@ -1,8 +1,6 @@
 import { Foldable, ParsingContext } from "./ParsingContext.js";
 import * as YAML from "yaml";
 import {
-  AMERICAN_DATE_FORMAT,
-  EUROPEAN_DATE_FORMAT,
   Range,
   RangeType,
 } from "./Types.js";
@@ -11,7 +9,7 @@ import {
   BCE_START_REGEX,
   EDTF_START_REGEX,
   EVENT_START_REGEX,
-  GROUP_START_REGEX,
+  MARKDOWN_SECTION_REGEX,
 } from "./regex.js";
 import { parseZone } from "./zones/parseZone.js";
 import {
@@ -36,7 +34,7 @@ const eventsStarted = (line: string) =>
   !!line.match(EDTF_START_REGEX) ||
   !!line.match(EVENT_START_REGEX) ||
   !!line.match(BCE_START_REGEX) ||
-  !!line.match(GROUP_START_REGEX);
+  !!line.match(MARKDOWN_SECTION_REGEX);
 
 const threeDashRegex = /^---/;
 

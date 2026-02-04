@@ -3,25 +3,20 @@ import { Foldable, parse } from "../src";
 describe("foldables", () => {
   test("group foldables", () => {
     const mw = parse(`
-  group 1
-  group 2
-  group 3
-  group 4
-  group 5
-  2021: an event
-  endGroup
-  endGroup
-  endGroup
-  endGroup
-  endGroup
-  
-  2022: last event`);
+# 1
+## 2
+### 3
+#### 4
+##### 5
+2021: an event
+
+2022: last event`);
 
     const foldables = mw.foldables;
-    expect(Object.keys(foldables).length).toBe(5);
+    expect(Object.keys(foldables).length).toBe(6);
     expect(foldables[1]).toEqual({
-      foldStartIndex: 10,
-      endIndex: 122,
+      foldStartIndex: 4,
+      endIndex: 63,
       startIndex: 1,
       startLine: 1,
       type: "section",
