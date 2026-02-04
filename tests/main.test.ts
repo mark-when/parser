@@ -13,6 +13,7 @@ import {
   toArray,
   iter,
   isEvent,
+  isGroup,
   get,
   EventGroup,
 } from "../src/Types";
@@ -2072,6 +2073,415 @@ describe("edtf casual times", () => {
 function getEvents(m: ParseResult) {
   return flat(m.events);
 }
+
+describe("markdown-style sections", () => {
+  test.each(sp())("single # section creates a group", (p) => {
+    const mw = p(`
+# My Section
+2024: event inside section
+`);
+
+    const group = mw.events.children[0] as EventGroup;
+    expect(isGroup(group)).toBe(true);
+    expect(group.title).toBe("My Section");
+    expect(group.children).toHaveLength(1);
+    expect(isEvent(group.children[0])).toBe(true);
+  });
+
+  test.each(sp())("## creates nested section", (p) => {
+    const mw = p(`
+# Parent Section
+2024: event in parent
+
+## Child Section
+2025: event in child
+`);
+
+    const parent = mw.events.children[0] as EventGroup;
+    expect(isGroup(parent)).toBe(true);
+    expect(parent.title).toBe("Parent Section");
+    expect(parent.children).toHaveLength(2);
+
+    const child = parent.children[1] as EventGroup;
+    expect(isGroup(child)).toBe(true);
+    expect(child.title).toBe("Child Section");
+    expect(child.children).toHaveLength(1);
+  });
+
+  test.each(sp())("same-level section closes previous section", (p) => {
+    const mw = p(`
+# Section A
+2024: event A
+
+# Section B
+2025: event B
+`);
+
+    expect(mw.events.children).toHaveLength(2);
+
+    const sectionA = mw.events.children[0] as EventGroup;
+    expect(sectionA.title).toBe("Section A");
+    expect(sectionA.children).toHaveLength(1);
+
+    const sectionB = mw.events.children[1] as EventGroup;
+    expect(sectionB.title).toBe("Section B");
+    expect(sectionB.children).toHaveLength(1);
+  });
+
+  test.each(sp())("higher-level section closes all nested sections", (p) => {
+    const mw = p(`
+# Section A
+2024: event A
+
+## Subsection A1
+2025: event A1
+
+### Sub-subsection A1a
+2026: event A1a
+
+# Section B
+2027: event B
+`);
+
+    // Should have 2 top-level sections
+    expect(mw.events.children).toHaveLength(2);
+
+    const sectionA = mw.events.children[0] as EventGroup;
+    expect(sectionA.title).toBe("Section A");
+    // Section A has: event A, Subsection A1
+    expect(sectionA.children).toHaveLength(2);
+
+    const subsectionA1 = sectionA.children[1] as EventGroup;
+    expect(subsectionA1.title).toBe("Subsection A1");
+    // Subsection A1 has: event A1, Sub-subsection A1a
+    expect(subsectionA1.children).toHaveLength(2);
+
+    const subsubsection = subsectionA1.children[1] as EventGroup;
+    expect(subsubsection.title).toBe("Sub-subsection A1a");
+    expect(subsubsection.children).toHaveLength(1);
+
+    const sectionB = mw.events.children[1] as EventGroup;
+    expect(sectionB.title).toBe("Section B");
+    expect(sectionB.children).toHaveLength(1);
+  });
+
+  test.each(sp())("## before # is valid (flexible ordering)", (p) => {
+    const mw = p(`
+## Starting with level 2
+2024: event 1
+
+# Then level 1
+2025: event 2
+`);
+
+    expect(mw.events.children).toHaveLength(2);
+
+    const first = mw.events.children[0] as EventGroup;
+    expect(first.title).toBe("Starting with level 2");
+
+    const second = mw.events.children[1] as EventGroup;
+    expect(second.title).toBe("Then level 1");
+  });
+
+  test.each(sp())("### can close ## and start new sibling", (p) => {
+    const mw = p(`
+# Main
+## Sub 1
+2024: event
+
+## Sub 2
+2025: event
+`);
+
+    const main = mw.events.children[0] as EventGroup;
+    expect(main.title).toBe("Main");
+    expect(main.children).toHaveLength(2);
+
+    const sub1 = main.children[0] as EventGroup;
+    expect(sub1.title).toBe("Sub 1");
+
+    const sub2 = main.children[1] as EventGroup;
+    expect(sub2.title).toBe("Sub 2");
+  });
+
+  test.each(sp())("section titles are trimmed", (p) => {
+    const mw = p(`
+#    Lots of spaces   
+2024: event
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.title).toBe("Lots of spaces");
+  });
+
+  test.each(sp())("sections support properties", (p) => {
+    const mw = p(`
+# My Section
+color: blue
+description: A nice section
+
+2024: event
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.title).toBe("My Section");
+    expect(section.properties.color).toBe("blue");
+    expect(section.properties.description).toBe("A nice section");
+    expect(section.children).toHaveLength(1);
+  });
+
+  test.each(sp())("style property defaults to group", (p) => {
+    const mw = p(`
+# My Section
+2024: event
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    // style should be undefined or 'group' by default
+    expect(section.style).toBeUndefined();
+  });
+
+  test.each(sp())("style: section is respected", (p) => {
+    const mw = p(`
+# My Section
+style: section
+
+2024: event
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.style).toBe("section");
+  });
+
+  test.each(sp())("style: group is respected", (p) => {
+    const mw = p(`
+# My Section
+style: group
+
+2024: event
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.style).toBe("group");
+  });
+
+  test.each(sp())("deep nesting up to 6 levels", (p) => {
+    const mw = p(`
+# Level 1
+## Level 2
+### Level 3
+#### Level 4
+##### Level 5
+###### Level 6
+2024: deeply nested event
+`);
+
+    let current: EventGroup = mw.events;
+    const titles = [
+      "Level 1",
+      "Level 2",
+      "Level 3",
+      "Level 4",
+      "Level 5",
+      "Level 6",
+    ];
+
+    for (let i = 0; i < 6; i++) {
+      current = current.children[0] as EventGroup;
+      expect(isGroup(current)).toBe(true);
+      expect(current.title).toBe(titles[i]);
+    }
+
+    expect(isEvent(current.children[0])).toBe(true);
+  });
+
+  test.each(sp())("events at root level before any section", (p) => {
+    const mw = p(`
+2024: root event
+
+# Section
+2025: section event
+`);
+
+    expect(mw.events.children).toHaveLength(2);
+    expect(isEvent(mw.events.children[0])).toBe(true);
+
+    const section = mw.events.children[1] as EventGroup;
+    expect(isGroup(section)).toBe(true);
+    expect(section.title).toBe("Section");
+  });
+
+  test.each(sp())("events after section ends (at root)", (p) => {
+    const mw = p(`
+# Section A
+2024: inside section
+
+# Section B
+2025: in section B
+`);
+
+    // Both sections should be at root level
+    expect(mw.events.children).toHaveLength(2);
+    const sectionA = mw.events.children[0] as EventGroup;
+    const sectionB = mw.events.children[1] as EventGroup;
+
+    expect(sectionA.children).toHaveLength(1);
+    expect(sectionB.children).toHaveLength(1);
+  });
+
+  test.each(sp())("complex nesting with siblings at multiple levels", (p) => {
+    const mw = p(`
+# Chapter 1
+## Section 1.1
+2024: event 1.1
+
+## Section 1.2
+2025: event 1.2
+
+### Subsection 1.2.1
+2026: event 1.2.1
+
+# Chapter 2
+## Section 2.1
+2027: event 2.1
+`);
+
+    expect(mw.events.children).toHaveLength(2);
+
+    const chapter1 = mw.events.children[0] as EventGroup;
+    expect(chapter1.title).toBe("Chapter 1");
+    expect(chapter1.children).toHaveLength(2); // Section 1.1 and 1.2
+
+    const section11 = chapter1.children[0] as EventGroup;
+    expect(section11.title).toBe("Section 1.1");
+    expect(section11.children).toHaveLength(1);
+
+    const section12 = chapter1.children[1] as EventGroup;
+    expect(section12.title).toBe("Section 1.2");
+    expect(section12.children).toHaveLength(2); // event and Subsection 1.2.1
+
+    const subsection121 = section12.children[1] as EventGroup;
+    expect(subsection121.title).toBe("Subsection 1.2.1");
+    expect(subsection121.children).toHaveLength(1);
+
+    const chapter2 = mw.events.children[1] as EventGroup;
+    expect(chapter2.title).toBe("Chapter 2");
+    expect(chapter2.children).toHaveLength(1); // Section 2.1
+
+    const section21 = chapter2.children[0] as EventGroup;
+    expect(section21.title).toBe("Section 2.1");
+  });
+
+  test.each(sp())("jumping from deep level to shallow closes all intermediate", (p) => {
+    const mw = p(`
+# Level 1
+## Level 2
+### Level 3
+#### Level 4
+2024: deep event
+
+## Back to Level 2
+2025: level 2 event
+`);
+
+    const level1 = mw.events.children[0] as EventGroup;
+    expect(level1.title).toBe("Level 1");
+    expect(level1.children).toHaveLength(2); // Level 2 and "Back to Level 2"
+
+    const level2 = level1.children[0] as EventGroup;
+    expect(level2.title).toBe("Level 2");
+
+    const level3 = level2.children[0] as EventGroup;
+    expect(level3.title).toBe("Level 3");
+
+    const level4 = level3.children[0] as EventGroup;
+    expect(level4.title).toBe("Level 4");
+    expect(level4.children).toHaveLength(1);
+
+    const backToLevel2 = level1.children[1] as EventGroup;
+    expect(backToLevel2.title).toBe("Back to Level 2");
+    expect(backToLevel2.children).toHaveLength(1);
+  });
+
+  test.each(sp())("empty section (no events)", (p) => {
+    const mw = p(`
+# Empty Section
+
+# Section With Event
+2024: an event
+`);
+
+    expect(mw.events.children).toHaveLength(2);
+
+    const emptySection = mw.events.children[0] as EventGroup;
+    expect(emptySection.title).toBe("Empty Section");
+    expect(emptySection.children).toHaveLength(0);
+
+    const sectionWithEvent = mw.events.children[1] as EventGroup;
+    expect(sectionWithEvent.title).toBe("Section With Event");
+    expect(sectionWithEvent.children).toHaveLength(1);
+  });
+
+  test.each(sp())("section with only nested sections (no direct events)", (p) => {
+    const mw = p(`
+# Parent
+## Child 1
+2024: event 1
+
+## Child 2
+2025: event 2
+`);
+
+    const parent = mw.events.children[0] as EventGroup;
+    expect(parent.title).toBe("Parent");
+    expect(parent.children).toHaveLength(2);
+
+    // Both children should be groups, not events
+    expect(isGroup(parent.children[0])).toBe(true);
+    expect(isGroup(parent.children[1])).toBe(true);
+  });
+
+  test.each(sp())("flat iteration includes all events in sections", (p) => {
+    const mw = p(`
+# Section 1
+2024: event 1
+2025: event 2
+
+# Section 2
+2026: event 3
+`);
+
+    const allEvents = flat(mw.events);
+    expect(allEvents).toHaveLength(3);
+  });
+
+  test.each(sp())("section with timezone property", (p) => {
+    const mw = p(`
+# Tokyo Events
+timezone: Asia/Tokyo
+
+2024-01-01 12:00: New Year in Tokyo
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.title).toBe("Tokyo Events");
+    expect(section.properties.timezone).toBe("Asia/Tokyo");
+  });
+
+  test.each(sp())("multiple events in a section", (p) => {
+    const mw = p(`
+# Project Timeline
+2024-01: Planning
+2024-02: Development
+2024-03: Testing
+2024-04: Launch
+`);
+
+    const section = mw.events.children[0] as EventGroup;
+    expect(section.children).toHaveLength(4);
+    expect(flat(mw.events)).toHaveLength(4);
+  });
+});
 
 function checkDate(
   dateTime: DateTime,
