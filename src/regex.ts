@@ -232,7 +232,8 @@ export const TAG_REGEX = /(?:^|\s)#(?!\d+(?:\s|$))(\w+)/g;
 
 // Markdown-style section headers: # through ######
 // Captures: [1] = hashes (to determine level), [2] = title text
-export const MARKDOWN_SECTION_REGEX = /^(#{1,6})\s+(.*)$/;
+// Leading whitespace is allowed (e.g., "  ## Section" is valid)
+export const MARKDOWN_SECTION_REGEX = /^\s*(#{1,6})\s+(.*)$/;
 
 export const LIST_ITEM_REGEX = /^\s*- .*/;
 export const CHECKLIST_ITEM_REGEX = /^\s*- (\[(x|X| )?\]).*/;
