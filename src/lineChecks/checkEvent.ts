@@ -2,6 +2,11 @@ import { getDateRangeFromCasualRegexMatch } from "../dateRange/getDateRangeFromC
 import { getDateRangeFromEDTFRegexMatch } from "../dateRange/getDateRangeFromEDTFRegexMatch.js";
 import { getDateRangeFromBCEDateRegexMatch } from "../dateRange/getDateRangeFromBCEDateRegexMatch.js";
 import {
+  customDateSyntaxPriority,
+  getDateRangeFromCustomDateSyntaxMatch,
+  isCustomDateSyntaxEventStart,
+} from "../dateRange/customDateSyntax.js";
+import {
   EDTF_START_REGEX,
   EVENT_START_REGEX,
   BCE_START_REGEX,
@@ -22,6 +27,80 @@ import { ParsingContext } from "../ParsingContext.js";
 import { checkTags } from "./checkTags.js";
 import { parseZone } from "../zones/parseZone.js";
 import { parseProperties } from "../parseHeader.js";
+
+function getDateRangeFromBuiltInParsers(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  context: ParsingContext
+) {
+  let dateRange = getDateRangeFromEDTFRegexMatch(line, i, lengthAtIndex, context);
+  if (!dateRange) {
+    dateRange = getDateRangeFromCasualRegexMatch(
+      line,
+      i,
+      lengthAtIndex,
+      context
+    );
+  }
+  if (!dateRange) {
+    dateRange = getDateRangeFromBCEDateRegexMatch(
+      line,
+      i,
+      lengthAtIndex,
+      context
+    );
+  }
+  return dateRange;
+}
+
+function getDateRangeFromLine(
+  line: string,
+  i: number,
+  lengthAtIndex: number[],
+  context: ParsingContext
+) {
+  const priority = customDateSyntaxPriority(context);
+  if (priority !== "last") {
+    const custom = getDateRangeFromCustomDateSyntaxMatch(
+      line,
+      i,
+      lengthAtIndex,
+      context
+    );
+    if (custom || priority === "only") {
+      return custom;
+    }
+  }
+
+  const builtIn = getDateRangeFromBuiltInParsers(
+    line,
+    i,
+    lengthAtIndex,
+    context
+  );
+  if (builtIn || priority === "last") {
+    return builtIn;
+  }
+
+  return getDateRangeFromCustomDateSyntaxMatch(line, i, lengthAtIndex, context);
+}
+
+function isEventStart(line: string, context: ParsingContext) {
+  const priority = customDateSyntaxPriority(context);
+  if (priority !== "last" && isCustomDateSyntaxEventStart(line, context)) {
+    return true;
+  }
+  if (
+    priority !== "only" &&
+    (line.match(EDTF_START_REGEX) ||
+      line.match(EVENT_START_REGEX) ||
+      line.match(BCE_START_REGEX))
+  ) {
+    return true;
+  }
+  return priority === "last" && isCustomDateSyntaxEventStart(line, context);
+}
 
 function updateParseMetadata(
   event: Event,
@@ -83,28 +162,7 @@ export function checkEvent(
   lengthAtIndex: number[],
   context: ParsingContext
 ): number {
-  let dateRange = getDateRangeFromEDTFRegexMatch(
-    line,
-    i,
-    lengthAtIndex,
-    context
-  );
-  if (!dateRange) {
-    dateRange = getDateRangeFromCasualRegexMatch(
-      line,
-      i,
-      lengthAtIndex,
-      context
-    );
-  }
-  if (!dateRange) {
-    dateRange = getDateRangeFromBCEDateRegexMatch(
-      line,
-      i,
-      lengthAtIndex,
-      context
-    );
-  }
+  let dateRange = getDateRangeFromLine(line, i, lengthAtIndex, context);
   if (!dateRange) {
     return i;
   }
@@ -124,9 +182,7 @@ export function checkEvent(
     nextLine = lines[++end];
     if (
       typeof nextLine !== "string" ||
-      nextLine.match(EDTF_START_REGEX) ||
-      nextLine.match(EVENT_START_REGEX) ||
-      nextLine.match(BCE_START_REGEX) ||
+      isEventStart(nextLine, context) ||
       nextLine.match(MARKDOWN_SECTION_REGEX)
     ) {
       break;

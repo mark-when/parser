@@ -14,6 +14,7 @@ import {
 } from "./Types.js";
 import { parseZone } from "./zones/parseZone.js";
 import { Caches } from "./Cache.js";
+import type { CompiledCustomDateSyntax } from "./dateRange/customDateSyntax.js";
 
 export interface Foldable {
   endIndex: number;
@@ -56,6 +57,7 @@ export class ParsingContext {
   parseMessages: ParseMessage[] = [];
   documentMessages: DocumentMessage[] = [];
   cache?: Caches;
+  customDateSyntax?: CompiledCustomDateSyntax;
   sectionLevels: number[] = [];
 
   constructor(
