@@ -346,7 +346,7 @@ export function getDateRangeFromCasualRegexMatch(
 
     const parsed = parseSlashDate(
       slashPart,
-      context.header.dateFormat,
+      undefined,
       context
     );
     if (parsed) {
@@ -521,7 +521,7 @@ export function getDateRangeFromCasualRegexMatch(
 
       const parsed = parseSlashDate(
         slashPart,
-        context.header.dateFormat,
+        undefined,
         context
       );
       if (parsed) {

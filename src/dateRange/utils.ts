@@ -265,7 +265,7 @@ export function parseAsCasualDayAbbrMonth(
 
 export function parseSlashDate(
   s: string,
-  fullFormat: string,
+  fullFormat: string | undefined,
   context: ParsingContext
 ): GranularDateTime | undefined {
   fullFormat =

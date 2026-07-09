@@ -27,7 +27,7 @@ describe("Custom header date syntax", () => {
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^\\d{2}\\.\\d{2}\\.\\d{4}$'
     fromFormat: MM.dd.yyyy
     duration: 1 day
@@ -43,7 +43,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^week (\\d{2})/(\\d{4})$'
     from: '$2-W$1'
     fromFormat: "kkkk-'W'WW"
@@ -69,7 +69,7 @@ week 03/2026: Third week
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^release (\\d{4}_\\d{2}_\\d{2})$'
     from:
       group: 1
@@ -86,7 +86,7 @@ release 2026_04_03: Ship it
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^(\\d{2}\\.\\d{2}\\.\\d{4})\\s+-\\s+(\\d{2}\\.\\d{2}\\.\\d{4})$'
     from:
       group: 1
@@ -105,7 +105,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^term (\\d{4})-(\\d{2}) to (\\d{4})-(\\d{2})$'
     from: '$1-$2'
     fromFormat: yyyy-MM
@@ -122,7 +122,7 @@ term 2026-01 to 2026-03: First term
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^sprint (\\d+)$'
     from: '2026-01-05'
     fromFormat: yyyy-MM-dd
@@ -144,7 +144,7 @@ milestone 03.12.2026: Milestone
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^(\\d{4})$'
     from: '1999-01-01'
     fromFormat: yyyy-MM-dd
@@ -160,7 +160,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   priority: first
   rules:
     - pattern: '^(\\d{4})$'
@@ -178,7 +178,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   priority: only
   rules:
     - pattern: '^custom (\\d{4}-\\d{2}-\\d{2})$'
@@ -199,7 +199,7 @@ custom 2026-02-03: Custom date
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^day (\\d{4}-\\d{2}-\\d{2})$'
     from: '$1'
     fromFormat: yyyy-MM-dd
@@ -221,7 +221,7 @@ day 2026-01-02: Second
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^custom (\\d{4}-\\d{2}-\\d{2})$'
     from: '$1'
     fromFormat: yyyy-MM-dd
@@ -240,7 +240,7 @@ custom 2026-02-03: Custom date
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '['
     fromFormat: yyyy-MM-dd
     duration: 1 day
@@ -253,7 +253,7 @@ dateSyntax:
       expect.arrayContaining([
         expect.objectContaining({
           type: "error",
-          message: expect.stringContaining("dateSyntax"),
+          message: expect.stringContaining("dateFormat"),
         }),
       ]),
     );
@@ -263,7 +263,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^custom (\\d{4}-\\d{2}-\\d{2})$'
     from: '$1'
     fromFormat: not-a-date-format
@@ -279,7 +279,7 @@ custom 2026-02-03: Bad custom format
       expect.arrayContaining([
         expect.objectContaining({
           type: "error",
-          message: expect.stringContaining("dateSyntax"),
+          message: expect.stringContaining("dateFormat"),
         }),
       ]),
     );
@@ -289,7 +289,7 @@ custom 2026-02-03: Bad custom format
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   - pattern: '^custom (\\d{4}-\\d{2}-\\d{2})$'
     from: '$1'
     fromFormat: yyyy-MM-dd
@@ -305,7 +305,7 @@ custom 2026-99-99: Bad custom date
       expect.arrayContaining([
         expect.objectContaining({
           type: "error",
-          message: expect.stringContaining("dateSyntax"),
+          message: expect.stringContaining("dateFormat"),
         }),
       ]),
     );
@@ -315,7 +315,7 @@ custom 2026-99-99: Bad custom date
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   priority: sideways
   rules:
     - pattern: '^(\\d{4})$'
@@ -337,11 +337,11 @@ dateSyntax:
     );
   });
 
-  test("malformed expanded dateSyntax rules report an error and preserve built-ins", () => {
+  test("malformed expanded dateFormat rules report an error and preserve built-ins", () => {
     const markwhen = parse(`
 ---
 timezone: UTC
-dateSyntax:
+dateFormat:
   priority: only
   rules: nope
 ---
@@ -363,7 +363,7 @@ dateSyntax:
     const markwhen = parse(`
 ---
 timezone: America/New_York
-dateSyntax:
+dateFormat:
   - pattern: '^custom (\\d{4}-\\d{2}-\\d{2})$'
     from: '$1'
     fromFormat: yyyy-MM-dd

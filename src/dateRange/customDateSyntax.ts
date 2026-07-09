@@ -34,7 +34,7 @@ export type CompiledCustomDateSyntax = {
 const validPriorities = new Set(["first", "last", "only"]);
 
 function syntaxConfig(context: ParsingContext) {
-  const config = context.header?.dateSyntax;
+  const config = context.header?.dateFormat;
   if (!config) {
     return;
   }
@@ -52,10 +52,10 @@ function syntaxConfig(context: ParsingContext) {
   }
 }
 
-function dateSyntaxError(context: ParsingContext, message: string) {
+function dateFormatError(context: ParsingContext, message: string) {
   context.parseMessages.push({
     type: "error",
-    message: `Invalid dateSyntax: ${message}`,
+    message: `Invalid dateFormat: ${message}`,
     pos: [0, 0],
   });
 }
@@ -77,7 +77,7 @@ export function getCustomDateSyntax(
     if (validPriorities.has(config.priority)) {
       priority = config.priority as CustomDateSyntaxPriority;
     } else {
-      dateSyntaxError(
+      dateFormatError(
         context,
         `priority must be one of "first", "last", or "only"`
       );
@@ -88,7 +88,7 @@ export function getCustomDateSyntax(
   if (Array.isArray(config.rules)) {
     rules = config.rules;
   } else {
-    dateSyntaxError(context, "rules must be a list");
+    dateFormatError(context, "rules must be a list");
     priority = "last";
   }
   const compiledRules: CompiledCustomDateSyntaxRule[] = [];
@@ -100,7 +100,7 @@ export function getCustomDateSyntax(
     if (typeof rule.pattern !== "string") {
       context.parseMessages.push({
         type: "error",
-        message: `Invalid dateSyntax rule ${index + 1}: pattern must be a string`,
+        message: `Invalid dateFormat rule ${index + 1}: pattern must be a string`,
         pos: [0, 0],
       });
       return;
@@ -114,7 +114,7 @@ export function getCustomDateSyntax(
     } catch (e) {
       context.parseMessages.push({
         type: "error",
-        message: `Invalid dateSyntax rule ${index + 1} pattern: ${
+        message: `Invalid dateFormat rule ${index + 1} pattern: ${
           e instanceof Error ? e.message : `${e}`
         }`,
         pos: [0, 0],
@@ -145,23 +145,23 @@ function matchCustomDateSyntaxRule(line: string, context: ParsingContext) {
     return;
   }
 
-  const lineMatch = line.match(/^(\s*)([^:]+)\s*:(.*)$/);
-  if (!lineMatch) {
-    return;
-  }
-  const [, leadingWhitespace, rawDatePart, eventText] = lineMatch;
-  const datePart = rawDatePart.trimEnd();
-  for (const rule of syntax.rules) {
-    const match = datePart.match(rule.regex);
-    if (match) {
-      return {
-        datePart,
-        eventText,
-        indexOfDateRange: leadingWhitespace.length,
-        match,
-        rule,
-      };
+  const leadingWhitespace = line.match(/^\s*/)?.[0] ?? "";
+  let colonIndex = line.indexOf(":", leadingWhitespace.length);
+  while (colonIndex !== -1) {
+    const datePart = line.slice(leadingWhitespace.length, colonIndex).trimEnd();
+    for (const rule of syntax.rules) {
+      const match = datePart.match(rule.regex);
+      if (match) {
+        return {
+          datePart,
+          eventText: line.slice(colonIndex + 1),
+          indexOfDateRange: leadingWhitespace.length,
+          match,
+          rule,
+        };
+      }
     }
+    colonIndex = line.indexOf(":", colonIndex + 1);
   }
 }
 
@@ -176,6 +176,12 @@ function template(raw: unknown, match: RegExpMatchArray): string | undefined {
 }
 
 function granularityFromFormat(format: string): DateTimeGranularity {
+  if (/[ms]/.test(format)) {
+    return "minute";
+  }
+  if (/[Hh]/.test(format)) {
+    return "hour";
+  }
   if (/[dD]/.test(format)) {
     return "day";
   }
@@ -198,10 +204,16 @@ function parseDateTime(
 ): GranularDateTime | undefined {
   let dateTime: DateTime;
   try {
-    dateTime = DateTime.fromFormat(value, format, {
-      setZone: true,
-      zone: context.timezone,
-    });
+    dateTime =
+      format.toLowerCase() === "iso"
+        ? DateTime.fromISO(value, {
+            setZone: true,
+            zone: context.timezone,
+          })
+        : DateTime.fromFormat(value, format, {
+            setZone: true,
+            zone: context.timezone,
+          });
   } catch {
     return;
   }
@@ -210,7 +222,7 @@ function parseDateTime(
   }
   return {
     dateTimeIso: dateTime.toISO()!,
-    granularity: granularityFromFormat(format),
+    granularity: format.toLowerCase() === "iso" ? "instant" : granularityFromFormat(format),
   };
 }
 
@@ -315,7 +327,7 @@ export function getDateRangeFromCustomDateSyntaxMatch(
   if (!from) {
     context.parseMessages.push({
       type: "error",
-      message: `Invalid dateSyntax rule${
+      message: `Invalid dateFormat rule${
         matched.rule.name ? ` "${matched.rule.name}"` : ""
       }: unable to parse start date`,
       pos: [dateRangeInText.from, dateRangeInText.to],

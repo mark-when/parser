@@ -1,3 +1,11 @@
+## 1.1.0
+
+- Breaking: `dateFormat` no longer accepts the legacy string form like `dateFormat: d/M/y`.
+- Added header-defined `dateFormat` rules for custom date range parsing. Rules support `pattern`, `fromFormat`, `toFormat`, `from`, `to`, `duration`, and `priority: first | last | only`.
+- `dateFormat` rules can be provided as shorthand lists or expanded objects with `rules`.
+- Custom date formats now participate in normal event parsing, event boundary detection, editor ranges, and timezone handling.
+- Added `iso` as a supported custom rule format for ISO date/time captures.
+
 ## 0.16.5
 
 - Fix some previously commented out tests

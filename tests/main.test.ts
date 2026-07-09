@@ -30,6 +30,75 @@ import {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
+const europeanDateFormat = `dateFormat:
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})$'
+    fromFormat: d/M/yyyy
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})\\s+(\\d{1,2}:\\d{2})$'
+    from: '$1 $2'
+    fromFormat: d/M/yyyy H:mm
+  - pattern: '^(\\d{4})\\s+-\\s+(\\d{1,2}/\\d{1,2}/\\d{4})$'
+    from:
+      group: 1
+      format: yyyy
+    to:
+      group: 2
+      format: d/M/yyyy
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})\\s+-\\s+(\\d{1,2}/\\d{4})$'
+    from:
+      group: 1
+      format: d/M/yyyy
+    to:
+      group: 2
+      format: M/yyyy
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})\\s+-\\s+(\\d{4}-\\d{2}-\\d{2})$'
+    from:
+      group: 1
+      format: d/M/yyyy
+    to:
+      group: 2
+      format: yyyy-MM-dd
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})\\s+-\\s+(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z)$'
+    from:
+      group: 1
+      format: d/M/yyyy
+    to:
+      group: 2
+      format: iso
+  - pattern: '^(\\d{4}-\\d{2}-\\d{2})\\s+-\\s+(\\d{1,2}/\\d{1,2}/\\d{4})$'
+    from:
+      group: 1
+      format: yyyy-MM-dd
+    to:
+      group: 2
+      format: d/M/yyyy
+  - pattern: '^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z)\\s+-\\s+(\\d{1,2}/\\d{1,2}/\\d{4})$'
+    from:
+      group: 1
+      format: iso
+    to:
+      group: 2
+      format: d/M/yyyy
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4})\\s+(\\d{1,2}:\\d{2})\\s+-\\s+([A-Za-z]+\\s+\\d{1,2}\\s+\\d{4})\\s+(\\d{1,2}(?::\\d{2})?[ap]m)$'
+    from: '$1 $2'
+    fromFormat: d/M/yyyy H:mm
+    to: '$3 $4'
+    toFormat: MMMM d yyyy ha
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4}),\\s*(\\d{1,2}:\\d{2})\\s+-\\s+([A-Za-z]+\\s+\\d{1,2}\\s+\\d{4}),\\s*(\\d{1,2}(?::\\d{2})?[ap]m)$'
+    from: '$1 $2'
+    fromFormat: d/M/yyyy H:mm
+    to: '$3 $4'
+    toFormat: MMMM d yyyy ha
+  - pattern: '^([A-Za-z]+\\s+\\d{1,2}\\s+\\d{4}),\\s*(\\d{1,2}(?::\\d{2})?[ap]m)\\s+-\\s+(\\d{1,2}/\\d{1,2}/\\d{4}),\\s*(\\d{1,2}:\\d{2})$'
+    from: '$1 $2'
+    fromFormat: MMMM d yyyy ha
+    to: '$3 $4'
+    toFormat: d/M/yyyy H:mm
+  - pattern: '^(\\d{1,2}/\\d{1,2}/\\d{4}),\\s*(\\d{1,2}(?::\\d{2})?[ap]m)\\s+-\\s+(\\d{1,2}/\\d{1,2}/\\d{4}),\\s*(\\d{1,2}:\\d{2})$'
+    from: '$1 $2'
+    fromFormat: d/M/yyyy ha
+    to: '$3 $4'
+    toFormat: d/M/yyyy H:mm`;
+
 describe("parsing", () => {
   test.each(sameParse(DateTime.fromISO("2022-05-01T12:13:14.00Z")))(
     "ISO dates",
@@ -278,7 +347,7 @@ describe("parsing", () => {
   });
 
   test.each(sameParse([]))("european slash day 1", async (p) => {
-    const markwhen = p("dateFormat: d/M/y\n2000 - 09/12/2010: event");
+    const markwhen = p(europeanDateFormat + "\n2000 - 09/12/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -300,7 +369,7 @@ describe("parsing", () => {
   });
 
   test.each(sameParse([]))("european slash day 2", async (p) => {
-    const markwhen = p("dateFormat: d/M/y\n5/9/2009 - 09/2010: event");
+    const markwhen = p(europeanDateFormat + "\n5/9/2009 - 09/2010: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -323,7 +392,7 @@ describe("parsing", () => {
 
   test.each(sameParse([]))("european slash day 3", async (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009 - 2024-01-27T18:13:59.00Z: event",
+      europeanDateFormat + "\n5/9/2009 - 2024-01-27T18:13:59.00Z: event",
     );
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -350,7 +419,7 @@ describe("parsing", () => {
 
   test.each(sameParse([]))("european slash day 4", async (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n2024-01-27T18:13:59.00Z - 5/9/2009: event",
+      europeanDateFormat + "\n2024-01-27T18:13:59.00Z - 5/9/2009: event",
     );
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -376,7 +445,7 @@ describe("parsing", () => {
   });
 
   test.each(sameParse([]))("european slash day 5", async (p) => {
-    const markwhen = p("dateFormat: d/M/y\n5/9/2009: event");
+    const markwhen = p(europeanDateFormat + "\n5/9/2009: event");
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
     const from = dateRange.fromDateTime;
@@ -399,7 +468,7 @@ describe("parsing", () => {
 
   test.each(sameParse([]))("relative dates 1", async (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 week: next event",
+      europeanDateFormat + "\n5/9/2009: event\n1 week: next event",
     );
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -437,7 +506,7 @@ describe("parsing", () => {
 
   test.each(sameParse([]))("relative dates 2", async (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
+      europeanDateFormat + "\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
     );
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -468,7 +537,7 @@ describe("parsing", () => {
 
   test.each(sameParse([]))("relative dates 3", async (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
+      europeanDateFormat + "\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
     );
 
     const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -521,7 +590,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
   test.each(sameParse([]))("event title", (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
+      europeanDateFormat + "\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
     );
     const first = firstEvent(markwhen);
     expect(first.firstLine.restTrimmed).toBe("event");
@@ -533,7 +602,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
   test.each(sameParse([]))("event title", (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\ndec 1 1989 every day for 10 days: recurring event",
+      europeanDateFormat + "\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\ndec 1 1989 every day for 10 days: recurring event",
     );
     const first = firstEvent(markwhen);
     expect(first.firstLine.restTrimmed).toBe("event");
@@ -553,7 +622,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
   test.each(sameParse([]))("supplemental descriptions", (p) => {
     const markwhen = p(
-      "dateFormat: d/M/y\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\nmore text\neven more text",
+      europeanDateFormat + "\n5/9/2009: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event\nmore text\neven more text",
     );
     const third = nthEvent(markwhen, 2);
     expect(third.firstLine.restTrimmed).toBe("third event");
@@ -562,7 +631,7 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   test.each(sameParse([]))("list items", (p) => {
-    const markwhen = p(`dateFormat: d/M/y
+    const markwhen = p(`${europeanDateFormat}
 5/9/2009: event
 1 month 1 day: next event
 - item 1
@@ -589,7 +658,7 @@ after !firstEvent 3 years 8 days 1 month: third event
   });
 
   test.each(sameParse([]))("checkbox items", (p) => {
-    const markwhen = p(`dateFormat: d/M/y
+    const markwhen = p(`${europeanDateFormat}
 5/9/2009: event
 1 month 1 day: next event
 - [] item 1
@@ -633,7 +702,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
   describe("casual dates", () => {
     test.each(sp())("casual dates via month words 1", (p) => {
-      const markwhen = p("dateFormat: d/M/y\n5 June 2009: event");
+      const markwhen = p(europeanDateFormat + "\n5 June 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
@@ -643,7 +712,7 @@ after !firstEvent 3 years 8 days 1 month: third event
     });
 
     test.each(sp())("casual dates via month words 2", (p) => {
-      const markwhen = p("dateFormat: d/M/y\nJune 5 2009: event");
+      const markwhen = p(europeanDateFormat + "\nJune 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
@@ -653,7 +722,7 @@ after !firstEvent 3 years 8 days 1 month: third event
     });
 
     test.each(sp())("casual dates via month words 3", (p) => {
-      const markwhen = p("dateFormat: d/M/y\nJun 5 2009: event");
+      const markwhen = p(europeanDateFormat + "\nJun 5 2009: event");
       const first = firstEvent(markwhen);
       const startOfDay = DateTime.fromISO("2009-06-05");
       expect(+toDateRange(first.dateRangeIso).fromDateTime).toBe(+startOfDay);
@@ -829,7 +898,7 @@ after !firstEvent 3 years 8 days 1 month: third event
   describe("slash dates and times", () => {
     test.each(sp())("1", (p) => {
       const markwhen = p(
-        "dateFormat: d/M/y\n5/9/2009 18:00: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
+        europeanDateFormat + "\n5/9/2009 18:00: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
       );
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -842,7 +911,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
     test.each(sp())("2", (p) => {
       const markwhen = p(
-        "dateFormat: d/M/y\n5/9/2009 18:00 - May 12 2011 6pm: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
+        europeanDateFormat + "\n5/9/2009 18:00 - May 12 2011 6pm: event\n1 month 1 day: next event\n3 years 8 days 1 month: third event",
       );
 
       const dateRange = toDateRange(firstEvent(markwhen).dateRangeIso);
@@ -855,7 +924,7 @@ after !firstEvent 3 years 8 days 1 month: third event
 
     test.each(sp())("with commas", (p) => {
       const markwhen = p(`
-dateFormat: d/M/y
+${europeanDateFormat}
 5/9/2009, 18:00 - May 12 2011, 6pm: event
 May 12 2011, 6pm - 5/9/2099, 18:00: event
 5/12/2011, 6pm - 5/9/2099, 18:00: event
@@ -1197,7 +1266,7 @@ endGroup
     });
 
     test.each(sp())("Before 6", (p) => {
-      const markwhen = p(`dateFormat: d/M/y
+      const markwhen = p(`${europeanDateFormat}
 #announcements: red
 10/4/2023: ANNUAL CHURCH MEETING !ACM
 
