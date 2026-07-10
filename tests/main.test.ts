@@ -148,6 +148,24 @@ describe("parsing", () => {
     expect(+dateRange.toDateTime).toBe(+toDateTime);
   });
 
+  test.each(
+    sameParse([
+      DateTime.fromISO("2026-06-27T23:30"),
+      DateTime.fromISO("2026-06-28T00:30"),
+    ]),
+  )("ISO date range crossing midnight", async (p, [fromDateTime, toDateTime]) => {
+    const markwhen = p(
+      "2026-06-27 23:30 / 2026-06-28 00:30: Did a thing",
+    );
+
+    const dateRange = toDateRange(
+      firstEvent(markwhen).dateRangeIso,
+    ) as DateRange;
+
+    expect(+dateRange.fromDateTime).toBe(+fromDateTime);
+    expect(+dateRange.toDateTime).toBe(+toDateTime);
+  });
+
   test.each(sameParse([]))("year by itself", async (p) => {
     const markwhen = p("1999: event");
 

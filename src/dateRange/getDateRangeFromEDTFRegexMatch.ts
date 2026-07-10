@@ -452,7 +452,7 @@ export function getDateRangeFromEDTFRegexMatch(
           to_edtfDateTime24HourMinuteMatchIndex
         );
         const timeDateTime = DateTime.fromISO(time.dateTimeIso);
-        endDateTime = DateTime.fromISO(edtfFrom.substring(0, 10), {
+        endDateTime = DateTime.fromISO(edtfTo.substring(0, 10), {
           zone: context.timezone,
         }).set({
           hour: timeDateTime.hour,
