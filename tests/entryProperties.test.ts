@@ -30,9 +30,11 @@ otherKey: value
       });
 
       expect(firstEvent.firstLine.restTrimmed).toBe("a year of events");
-      expect(firstEvent.supplemental.length).toBe(2);
-      expect(firstEvent.supplemental[0].type).toBe("checkbox");
-      expect(firstEvent.supplemental[1].type).toBe("checkbox");
+      expect(firstEvent.supplemental.map((block) => block.type)).toEqual([
+        "paragraphBreak",
+        "checkbox",
+        "checkbox",
+      ]);
     }
   );
 

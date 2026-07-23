@@ -241,6 +241,7 @@ export enum BlockType {
   LIST_ITEM = "listItem",
   CHECKBOX = "checkbox",
   IMAGE = "image",
+  PARAGRAPH_BREAK = "paragraphBreak",
 }
 
 export interface MarkdownBlock {
@@ -285,6 +286,10 @@ export class Image implements MarkdownBlock {
     this.altText = altText;
     this.link = link;
   }
+}
+
+export class ParagraphBreak implements MarkdownBlock {
+  type = BlockType.PARAGRAPH_BREAK;
 }
 
 export class EventDescription {
@@ -342,25 +347,36 @@ export class EventDescription {
       lines[i] = line;
     }
     this.eventDescription = lines[0];
-    this.supplemental = this.supplemental.concat(
-      lines
-        .slice(1)
-        .filter((l) => !l.match(COMMENT_REGEX) && !!l.trim())
-        .map((raw) => {
-          raw = raw.replace(TAG_REGEX, (match, tag) => {
-            if (!this.tags.includes(tag)) {
-              this.tags.push(tag);
-            }
-            return "";
-          });
-          const image = raw.match(IMAGE_REGEX);
-          if (image) {
-            return new Image(image[1], addHttpIfNeeded(image[2]));
-          } else {
-            return new Block(raw.trim());
+    const supplemental = lines
+      .slice(1)
+      .filter((l) => !l.match(COMMENT_REGEX))
+      .map((raw) => {
+        if (!raw.trim()) {
+          return new ParagraphBreak();
+        }
+
+        raw = raw.replace(TAG_REGEX, (match, tag) => {
+          if (!this.tags.includes(tag)) {
+            this.tags.push(tag);
           }
-        })
-    );
+          return "";
+        });
+        const image = raw.match(IMAGE_REGEX);
+        if (image) {
+          return new Image(image[1], addHttpIfNeeded(image[2]));
+        } else {
+          return new Block(raw.trim());
+        }
+      });
+
+    // Blank lines between events are parsed as part of the preceding event.
+    // They are separators rather than content, so only retain paragraph breaks
+    // that occur before another supplemental block.
+    while (supplemental.at(-1)?.type === BlockType.PARAGRAPH_BREAK) {
+      supplemental.pop();
+    }
+
+    this.supplemental = this.supplemental.concat(supplemental);
     this.completed = completed;
   }
 }

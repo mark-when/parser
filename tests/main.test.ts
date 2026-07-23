@@ -648,6 +648,31 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect((third.supplemental[1] as Block).raw).toBe("even more text");
   });
 
+  test.each(sameParse([]))("paragraph breaks in supplemental descriptions", (p) => {
+    const markwhen = p(`5/9/2009: event
+first paragraph
+
+
+second paragraph
+
+third paragraph
+
+10/9/2009: next event`);
+    const [event] = getEvents(markwhen);
+
+    expect(event.supplemental.map((block) => block.type)).toEqual([
+      "text",
+      "paragraphBreak",
+      "paragraphBreak",
+      "text",
+      "paragraphBreak",
+      "text",
+    ]);
+    expect((event.supplemental[0] as Block).raw).toBe("first paragraph");
+    expect((event.supplemental[3] as Block).raw).toBe("second paragraph");
+    expect((event.supplemental[5] as Block).raw).toBe("third paragraph");
+  });
+
   test.each(sameParse([]))("list items", (p) => {
     const markwhen = p(`${europeanDateFormat}
 5/9/2009: event
@@ -668,11 +693,14 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect(second.supplemental[1].type).toBe("listItem");
     expect((second.supplemental[1] as Block).raw).toBe("item 2");
 
-    expect(third.supplemental.length).toBe(2);
-    expect(third.supplemental[0].type).toBe("listItem");
-    expect((third.supplemental[0] as Block).raw).toBe("item 3");
-    expect(third.supplemental[1].type).toBe("listItem");
-    expect((third.supplemental[1] as Block).raw).toBe("item 4");
+    expect(third.supplemental.map((block) => block.type)).toEqual([
+      "paragraphBreak",
+      "listItem",
+      "paragraphBreak",
+      "listItem",
+    ]);
+    expect((third.supplemental[1] as Block).raw).toBe("item 3");
+    expect((third.supplemental[3] as Block).raw).toBe("item 4");
   });
 
   test.each(sameParse([]))("checkbox items", (p) => {
@@ -697,13 +725,16 @@ after !firstEvent 3 years 8 days 1 month: third event
     expect((second.supplemental[1] as Block).raw).toBe("item 2");
     expect((second.supplemental[1] as Block).value).toBe(false);
 
-    expect(third.supplemental.length).toBe(2);
-    expect(third.supplemental[0].type).toBe("checkbox");
-    expect((third.supplemental[0] as Block).raw).toBe("item 3");
-    expect((third.supplemental[0] as Block).value).toBe(true);
-    expect(third.supplemental[1].type).toBe("checkbox");
-    expect((third.supplemental[1] as Block).raw).toBe("item 4");
+    expect(third.supplemental.map((block) => block.type)).toEqual([
+      "paragraphBreak",
+      "checkbox",
+      "paragraphBreak",
+      "checkbox",
+    ]);
+    expect((third.supplemental[1] as Block).raw).toBe("item 3");
     expect((third.supplemental[1] as Block).value).toBe(true);
+    expect((third.supplemental[3] as Block).raw).toBe("item 4");
+    expect((third.supplemental[3] as Block).value).toBe(true);
   });
 
   test.each(sp())("to now", (p) => {
@@ -1626,14 +1657,19 @@ some text after`);
     const firstEvent = get(mw.events, [0]) as Event;
     const supplemental = firstEvent?.supplemental;
     expect(supplemental).toBeTruthy();
-    expect(supplemental).toHaveLength(7);
-    expect(supplemental![0].type).toBe("image");
-    expect(supplemental![1].type).toBe("text");
-    expect(supplemental![2].type).toBe("image");
-    expect(supplemental![3].type).toBe("text");
-    expect(supplemental![4].type).toBe("image");
-    expect(supplemental![5].type).toBe("checkbox");
-    expect(supplemental![6].type).toBe("text");
+    expect(supplemental?.map((block) => block.type)).toEqual([
+      "image",
+      "text",
+      "paragraphBreak",
+      "image",
+      "paragraphBreak",
+      "text",
+      "paragraphBreak",
+      "image",
+      "paragraphBreak",
+      "checkbox",
+      "text",
+    ]);
   });
 });
 
