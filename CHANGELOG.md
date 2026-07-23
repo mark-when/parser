@@ -1,3 +1,7 @@
+## 1.2.0
+
+- Added `paragraphBreak` supplemental blocks so blank lines in event descriptions are preserved in output
+
 ## 1.1.0
 
 - Breaking: `dateFormat` no longer accepts the legacy string form like `dateFormat: d/M/y`.
