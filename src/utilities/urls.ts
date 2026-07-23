@@ -73,9 +73,10 @@ export function mapUrls(events: { path: Path; event: Event }[]): {
     }
 
     const { supplemental } = event;
-    if (supplemental.length && supplemental[0].type === "text") {
+    const firstTextBlock = supplemental.find((block) => block.type === "text");
+    if (firstTextBlock) {
       // @ts-ignore
-      const titleFromFirstBlock = urlFromString(supplemental[0].raw as string);
+      const titleFromFirstBlock = urlFromString(firstTextBlock.raw as string);
       if (titleFromFirstBlock) {
         return checkForDuplicates(titleFromFirstBlock);
       }

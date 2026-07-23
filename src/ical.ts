@@ -1,6 +1,13 @@
 import { DateTime } from "luxon";
 import { mapUrls, toArray } from "./utilities/urls.js";
-import { Block, Event, Image, ParseResult, toDateRange } from "./Types.js";
+import {
+  Block,
+  Event,
+  Image,
+  ParagraphBreak,
+  ParseResult,
+  toDateRange,
+} from "./Types.js";
 
 function formatDate(date: DateTime): string {
   return (
@@ -55,7 +62,10 @@ export function eventToIcal({
         if (s instanceof Image) {
           return s.link;
         }
-        return s;
+        if (s instanceof ParagraphBreak) {
+          return "";
+        }
+        return "";
       })
       .join("\n") || ""
   );

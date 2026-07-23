@@ -206,4 +206,11 @@ describe("ical production", () => {
     const ical = toICal(mw);
     writeFileSync(resolve("./", "tests/example.ics"), ical);
   });
+
+  test("preserves paragraph breaks in event descriptions", () => {
+    const ical = toICal(parse("now:\nfirst paragraph\n\nsecond paragraph"));
+
+    expect(ical).toContain("DESCRIPTION:first paragraph\\n\\nsecond paragraph");
+    expect(ical).not.toContain("[object Object]");
+  });
 });
